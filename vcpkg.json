@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "container-item-distributor",
+  "version-semver": "1.0.0",
+  "dependencies": [
+    "commonlibsse-ng",
+    "simpleini"
+  ],
+  "license": "GPL-3.0-or-later",
+  "vcpkg-configuration": {
+    "default-registry": {
+      "kind": "git",
+      "repository": "https://github.com/microsoft/vcpkg",
+      "baseline": "218db02d956e4f9c33c49b75d24041e92862e810"
+    },
+    "registries": [
+      {
+        "kind": "git",
+        "repository": "https://gitlab.com/colorglass/vcpkg-colorglass",
+        "baseline": "6309841a1ce770409708a67a9ba5c26c537d2937",
+        "packages": [
+          "commonlibsse-ng",
+          "script-extender-common",
+          "skse"
+        ]
+      }
+    ]
+  }
+}
