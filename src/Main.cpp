@@ -1,3 +1,4 @@
+#include "Conflicts.h"
 #include "Distributor.h"
 #include "Hooks.h"
 #include "Logging.h"
@@ -18,8 +19,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
     if (message->type <=> SKSE::MessagingInterface::kDataLoaded == 0)
     {
         Settings::LoadSettings();
-        Distributor::CheckConflicts();
-        Distributor::PrepareDistribution();
+        Conflicts::PrepareDistribution();
         Distributor::Distribute();
     }
 }

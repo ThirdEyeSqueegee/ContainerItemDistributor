@@ -6,7 +6,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
         ContainerItemDistributor
-        VERSION 1.0.1
+        VERSION 1.1.0
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,13 +29,16 @@ configure_file(
 
 set(PUBLIC_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
 set(headers
-        include/Utility.h)
+        include/Utility.h
+        include/Maps.h)
 
 set(sources
         src/Logging.cpp
         src/Main.cpp
         src/Settings.cpp
         src/Hooks.cpp
+        src/Parser.cpp
+        src/Conflicts.cpp
         src/Distributor.cpp
 
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)

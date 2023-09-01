@@ -116,7 +116,7 @@ namespace Hooks // Lifted shamelessly from the great powerofthree
     {
         if (!std::string{ a_str }.empty() && !a_this->IsDynamicForm())
         {
-            if (const auto& [map, lock] = RE::TESForm::GetAllFormsByEditorID(); map)
+            if (const auto& [map, lock]{ RE::TESForm::GetAllFormsByEditorID() }; map)
             {
                 const RE::BSWriteLockGuard guard{ lock };
                 map->emplace(a_str, a_this);

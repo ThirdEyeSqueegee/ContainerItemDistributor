@@ -1,79 +1,73 @@
 #pragma once
 
-#include "parallel_hashmap/phmap.h"
+#include "Maps.h"
 
-enum class DistrType
-{
-    Add,
-    Remove,
-    Swap,
-    LeveledList,
-    Error
-};
+static constexpr auto is_editor_id{ [](const std::string_view& identifier) { return identifier.find('~') <=> std::string::npos == 0; } };
+
+static constexpr auto get_form_id_and_plugin_name{ [](const std::string_view& identifier) {
+    const auto        tilde{ identifier.find('~') };
+    return FormIDAndPluginName{ to_uint32(identifier.substr(0, tilde)), identifier.substr(tilde + 1).data() };
+} };
+
+static constexpr auto get_bound_object{ [](const std::string_view& identifier) -> RE::TESBoundObject* {
+    if (is_editor_id(identifier))
+    {
+        if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESBoundObject>(identifier) })
+            return obj;
+    }
+    else
+    {
+        const auto handler{ RE::TESDataHandler::GetSingleton() };
+        const auto [form_id, plugin_name]{ get_form_id_and_plugin_name(identifier) };
+        if (const auto obj{ handler->LookupForm(form_id, plugin_name) })
+        {
+            if (const auto bound_obj{ obj->As<RE::TESBoundObject>() })
+                return bound_obj;
+        }
+    }
+    return nullptr;
+} };
+
+static constexpr auto get_container{ [](const std::string_view& to_identifier) {
+    if (is_editor_id(to_identifier))
+    {
+        if (const auto form{ RE::TESForm::LookupByEditorID(to_identifier) })
+        {
+            if (const auto cont{ form->As<RE::TESContainer>() })
+                return Container{ cont, form->GetFormID(), form->GetName() };
+        }
+    }
+    else
+    {
+        const auto handler{ RE::TESDataHandler::GetSingleton() };
+        const auto [form_id, plugin_name]{ get_form_id_and_plugin_name(to_identifier) };
+        if (const auto form{ handler->LookupForm(form_id, plugin_name) })
+        {
+            if (const auto cont{ form->As<RE::TESContainer>() })
+                return Container{ cont, form->GetFormID(), form->GetName() };
+        }
+    }
+    return Container{ nullptr, 0, "" };
+} };
 
 class Utility : public Singleton<Utility>
 {
 public:
-    static constexpr auto is_present = [](const std::size_t idx) { return idx <=> std::string::npos != 0; };
-
-    static constexpr DistrType ClassifyToken(const std::string& token)
+    static constexpr DistrObject BuildDistrObject(const DistrToken& distr_token) noexcept
     {
-        const auto minus{ token.find('-') };
-        const auto caret{ token.find('^') };
-        const auto bar_count{ std::ranges::count(token, '|') };
-
-        if (!is_present(caret) && bar_count <=> 2 == 0)
-            return DistrType::LeveledList;
-        if (!is_present(minus) && !is_present(caret))
-            return DistrType::Add;
-        if (is_present(minus) && !is_present(caret))
-            return DistrType::Remove;
-        if (!is_present(minus) && is_present(caret))
-            return DistrType::Swap;
-
-        return DistrType::Error;
-    }
-
-    template <typename T>
-    static constexpr void LogConflictMap(const T& map)
-    {
-        for (const auto& [k, v] : map)
+        if (const auto bound_obj{ get_bound_object(distr_token.identifier) })
         {
-            if constexpr (std::is_same_v<T, TSwapConflictMap>)
-                logger::info("Found SWAP conflicts for {} and {} ({}):", k.first.first, k.first.second, k.second);
-            else
-                logger::info("Found conflicts for {} ({}):", k.first, k.second);
-
-            for (const auto& [filename, distr_and_count] : v)
-                logger::info("\t{}: {}", filename, distr_and_count);
-
-            logger::info("");
+            if (const auto cont{ get_container(distr_token.to_identifier) }; cont.container)
+            {
+                if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0)
+                {
+                    if (const auto replace_with_obj{ get_bound_object(distr_token.rhs.value()) })
+                        return { distr_token.type, bound_obj, distr_token.count, replace_with_obj, distr_token.rhs_count, cont };
+                }
+                return { distr_token.type, bound_obj, distr_token.count, std::nullopt, std::nullopt, cont };
+            }
         }
+
+        return { DistrType::Error, nullptr, std::nullopt, std::nullopt, std::nullopt, std::nullopt };
     }
-
-    using TStringVec            = std::vector<std::string>;
-    using TStringPair           = std::pair<std::string, std::string>;
-    using TStringPairVec        = std::vector<TStringPair>;
-    using TBoundObjectCountPair = std::pair<RE::TESBoundObject*, std::int32_t>;
-    using TSwapPair             = std::pair<TBoundObjectCountPair, TBoundObjectCountPair>;
-
-    using TConflictTestMap = phmap::parallel_flat_hash_map<std::string, TStringVec>;
-
-    using TConflictMap     = phmap::parallel_flat_hash_map<TStringPair, TStringPairVec>;
-    using TSwapConflictMap = phmap::parallel_flat_hash_map<std::pair<TStringPair, std::string>, TStringPairVec>;
-
-    using TAddRemoveMap = phmap::parallel_flat_hash_map<std::string, std::vector<TBoundObjectCountPair>>;
-    using TSwapMap      = phmap::parallel_flat_hash_map<std::string, std::vector<TSwapPair>>;
-
-    inline static TConflictTestMap add_conflict_test_map{};
-    inline static TConflictTestMap remove_conflict_test_map{};
-    inline static TConflictTestMap swap_conflict_test_map{};
-
-    inline static TConflictMap     add_conflict_map{};
-    inline static TConflictMap     remove_conflict_map{};
-    inline static TSwapConflictMap swap_conflict_map{};
-
-    inline static TAddRemoveMap add_map{};
-    inline static TAddRemoveMap remove_map{};
-    inline static TSwapMap      swap_map{};
 };
