@@ -20,7 +20,8 @@ void Settings::LoadSettings() noexcept
         logger::debug("Debug logging enabled");
     }
 
-    logger::info("Loaded settings\n");
+    logger::info("Loaded settings");
+    logger::info("");
 
     Parser::ParseINIs(ini);
 }

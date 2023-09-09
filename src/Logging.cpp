@@ -19,5 +19,5 @@ void InitializeLogging() noexcept
 
     set_default_logger(std::move(log));
 
-    spdlog::set_pattern("[%T.%e UTC%z] [%L] [%t] [%s:%#] %v");
+    spdlog::set_pattern("[%T.%e UTC%z] [%L] [%=5t] %v");
 }

@@ -1268,21 +1268,16 @@ public:
     size_t max_size() const { return (std::numeric_limits<size_t>::max)(); }
 
     PHMAP_ATTRIBUTE_REINITIALIZES void clear() {
-        // Iterating over this container is O(bucket_count()). When bucket_count()
-        // is much greater than size(), iteration becomes prohibitively expensive.
-        // For clear() it is more important to reuse the allocated array when the
-        // container is small because allocation takes comparatively long time
-        // compared to destruction of the elements of the container. So we pick the
-        // largest bucket_count() threshold for which iteration is still fast and
-        // past that we simply deallocate the array.
         if (empty())
             return;
-        if (capacity_ > 127) {
-            destroy_slots();
-        } else if (capacity_) {
-            for (size_t i = 0; i != capacity_; ++i) {
-                if (IsFull(ctrl_[i])) {
-                    PolicyTraits::destroy(&alloc_ref(), slots_ + i);
+        if (capacity_) {
+            if constexpr (!std::is_trivially_destructible<typename PolicyTraits::value_type>::value ||
+                          std::is_same<typename Policy::is_flat, std::false_type>::value) {
+                // node map or not trivially destructible... we  need to iterate and destroy values one by one
+                for (size_t i = 0; i != capacity_; ++i) {
+                    if (IsFull(ctrl_[i])) {
+                        PolicyTraits::destroy(&alloc_ref(), slots_ + i);
+                    }
                 }
             }
             size_ = 0;
@@ -2011,12 +2006,19 @@ private:
     }
 
     void destroy_slots() {
-        if (!capacity_) return;
-        for (size_t i = 0; i != capacity_; ++i) {
-            if (IsFull(ctrl_[i])) {
-                PolicyTraits::destroy(&alloc_ref(), slots_ + i);
+        if (!capacity_)
+            return;
+        
+        if constexpr (!std::is_trivially_destructible<typename PolicyTraits::value_type>::value ||
+                      std::is_same<typename Policy::is_flat, std::false_type>::value) {
+            // node map, or not trivially destructible... we  need to iterate and destroy values one by one
+            // std::cout << "either this is a node map or " << type_name<typename PolicyTraits::value_type>()  << " is not trivially_destructible\n";
+            for (size_t i = 0; i != capacity_; ++i) {
+                if (IsFull(ctrl_[i])) {
+                    PolicyTraits::destroy(&alloc_ref(), slots_ + i);
+                }
             }
-        }
+        } 
         auto layout = MakeLayout(capacity_);
         // Unpoison before returning the memory to the allocator.
         SanitizerUnpoisonMemoryRegion(slots_, sizeof(slot_type) * capacity_);
@@ -4184,6 +4186,7 @@ struct FlatHashSetPolicy
     using key_type = T;
     using init_type = T;
     using constant_iterators = std::true_type;
+    using is_flat = std::true_type;
 
     template <class Allocator, class... Args>
     static void construct(Allocator* alloc, slot_type* slot, Args&&... args) {
@@ -4226,6 +4229,7 @@ struct FlatHashMapPolicy
     using key_type = K;
     using mapped_type = V;
     using init_type = std::pair</*non const*/ key_type, mapped_type>;
+    using is_flat = std::true_type;
 
     template <class Allocator, class... Args>
     static void construct(Allocator* alloc, slot_type* slot, Args&&... args) {
@@ -4308,6 +4312,7 @@ struct NodeHashSetPolicy
     using key_type = T;
     using init_type = T;
     using constant_iterators = std::true_type;
+    using is_flat = std::false_type;
 
     template <class Allocator, class... Args>
         static T* new_element(Allocator* alloc, Args&&... args) {
@@ -4353,6 +4358,7 @@ public:
     using key_type = Key;
     using mapped_type = Value;
     using init_type = std::pair</*non const*/ key_type, mapped_type>;
+    using is_flat = std::false_type;
 
     template <class Allocator, class... Args>
         static value_type* new_element(Allocator* alloc, Args&&... args) {

@@ -39,6 +39,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
         return false;
 
     logger::info("{} has finished loading.", plugin->GetName());
+    logger::info("");
 
     return true;
 }

@@ -110,6 +110,7 @@ namespace Hooks // Lifted shamelessly from the great powerofthree
         stl::write_vfunc<SetFormEditorID>(RE::VTABLE_BGSMovableStatic[2]);
 
         logger::info("Installed SetFormEditorID hooks");
+        logger::info("");
     }
 
     bool SetFormEditorID::Thunk(RE::TESForm* a_this, const char* a_str) noexcept

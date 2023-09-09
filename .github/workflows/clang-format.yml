@@ -1,0 +1,27 @@
+name: clang-format
+
+on:
+  push:
+    branches: main
+
+jobs:
+  maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@latest
+
+      - name: Run clang-format
+        uses: DoozyX/clang-format-lint-action@latest
+        with:
+          source: "."
+          extensions: "h, cpp"
+          clangFormatVersion: 16
+          inplace: true
+
+      - name: Add & Commit
+        uses: EndBug/add-and-commit@latest
+        with:
+          message: "ci: formatting"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
