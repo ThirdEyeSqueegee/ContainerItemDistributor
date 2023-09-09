@@ -2508,12 +2508,12 @@ namespace phmap
 #pragma warning(push)
 #pragma warning(disable : 4702)
 #endif // _MSC_VER
-        // optional::value()
-        //
-        // Returns a reference to an `optional`s underlying value. The constness
-        // and lvalue/rvalue-ness of the `optional` is preserved to the view of
-        // the `T` sub-object. Throws `phmap::bad_optional_access` when the `optional`
-        // is empty.
+       // optional::value()
+       //
+       // Returns a reference to an `optional`s underlying value. The constness
+       // and lvalue/rvalue-ness of the `optional` is preserved to the view of
+       // the `T` sub-object. Throws `phmap::bad_optional_access` when the `optional`
+       // is empty.
         constexpr const T& value() const&
         {
             return static_cast<bool>(*this) ? reference() : (optional_internal::throw_bad_optional_access(), reference());
