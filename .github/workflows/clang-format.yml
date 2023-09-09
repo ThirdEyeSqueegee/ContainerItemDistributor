@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@latest
 
       - name: Run clang-format
-        uses: DoozyX/clang-format-lint-action@latest
+        uses: DoozyX/clang-format-lint-action@v0.16.2
         with:
           source: "."
           extensions: "h, cpp"
