@@ -8,6 +8,8 @@ on:
       - "src/**"
   workflow_dispatch:
 
+permissions: read-all|write-all
+
 jobs:
   clang-format:
     runs-on: ubuntu-latest
