@@ -17,22 +17,19 @@ class DistrToken
 public:
     bool operator==(const DistrToken&) const = default;
 
-    DistrType                   type{};
-    std::string                 filename{};
-    std::string                 to_identifier{};
-    std::string                 identifier{};
-    std::optional<std::int32_t> count{};
-    std::optional<std::string>  rhs{};
-    std::optional<std::int32_t> rhs_count{};
+    DistrType                  type{};
+    std::string                filename{};
+    std::string                to_identifier{};
+    std::string                identifier{};
+    std::optional<int>         count{};
+    std::optional<std::string> rhs{};
+    std::optional<int>         rhs_count{};
 };
 
 class Container
 {
 public:
-    explicit operator bool() const
-    {
-        return container;
-    }
+    explicit operator bool() const { return container; }
 
     RE::TESContainer* container{};
     RE::FormID        container_form_id{};
@@ -45,9 +42,9 @@ struct DistrObject
     DistrType                          type{};
     RE::TESBoundObject*                bound_object{};
     std::string                        filename{};
-    std::optional<std::int32_t>        count{};
+    std::optional<int>                 count{};
     std::optional<RE::TESBoundObject*> replace_with_object{};
-    std::optional<std::int32_t>        replace_with_count{};
+    std::optional<int>                 replace_with_count{};
     std::optional<Container>           container{};
 };
 
@@ -60,21 +57,15 @@ struct FormIDAndPluginName
 class Maps : public Singleton<Maps>
 {
 public:
-    static std::int32_t ToInt32(const std::string_view& s)
-    {
-        return static_cast<std::int32_t>(std::strtol(s.data(), nullptr, 0));
-    }
+    static int ToInt(const std::string_view& s) { return static_cast<int>(std::strtol(s.data(), nullptr, 0)); }
 
-    static std::uint32_t ToUint32(const std::string_view& s)
-    {
-        return static_cast<std::uint32_t>(std::strtol(s.data(), nullptr, 0));
-    }
+    static unsigned ToUnsignedInt(const std::string_view& s) { return static_cast<unsigned>(std::strtol(s.data(), nullptr, 0)); }
 
     static std::size_t GetPos(const std::string_view s, const char c)
     {
         const auto ptr{ std::strrchr(s.data(), c) };
 
-        return static_cast<std::size_t>(ptr - s.data());
+        return ptr ? static_cast<std::size_t>(ptr - s.data()) : ULLONG_MAX;
     }
 
     using TDistrTokenVec   = std::vector<DistrToken>;
@@ -113,20 +104,18 @@ inline auto format_as(const DistrType& type)
 inline auto format_as(const DistrToken& token)
 {
     const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count]{ token };
-    return fmt::format("[Type: {} / Filename: {} / To: {} / Identifier: {} / Count: {} / RHS: {} / RHS Count: {}]", type, filename, to_identifier,
-                       identifier, count.value_or(-1), rhs.value_or("null"), rhs_count.value_or(-1));
+    return fmt::format("[Type: {} / Filename: {} / To: {} / Identifier: {} / Count: {} / RHS: {} / RHS Count: {}]", type, filename, to_identifier, identifier,
+                       count.value_or(-1), rhs.value_or("null"), rhs_count.value_or(-1));
 }
 
 inline auto format_as(const DistrObject& obj)
 {
     const auto& [type, bound_object, filename, count, replace_with_obj, replace_with_count, container]{ obj };
-    // clang-format off
-    return
-    fmt::format(
-        "[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Count: {} / Replace with: {} (0x{:x}) / Replace count: {} / Container: {} (0x{:x}) ({})]",
-        type, filename, bound_object ? bound_object->GetName() : "null", bound_object ? bound_object->GetFormID() : 0, count.value_or(-1),
-        replace_with_obj.has_value() ? (replace_with_obj.value() ? replace_with_obj.value()->GetName() : "null") : "null",
-        replace_with_obj.has_value() ? (replace_with_obj.value() ? replace_with_obj.value()->GetFormID() : 0) : 0, replace_with_count.value_or(-1),
-        container.has_value() ? container.value().container_name : "null", container.has_value() ? container.value().container_form_id : 0, container.has_value() ? container->container_type : RE::FormType::Container);
-    // clang-format on
+    return fmt::format("[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Count: {} / Replace with: {} (0x{:x}) / Replace count: {} / Container: {} "
+                       "(0x{:x}) ({})]",
+                       type, filename, bound_object ? bound_object->GetName() : "null", bound_object ? bound_object->GetFormID() : 0, count.value_or(-1),
+                       replace_with_obj.has_value() ? (replace_with_obj.value() ? replace_with_obj.value()->GetName() : "null") : "null",
+                       replace_with_obj.has_value() ? (replace_with_obj.value() ? replace_with_obj.value()->GetFormID() : 0) : 0, replace_with_count.value_or(-1),
+                       container.has_value() ? container.value().container_name : "null", container.has_value() ? container.value().container_form_id : 0,
+                       container.has_value() ? container->container_type : RE::FormType::Container);
 }

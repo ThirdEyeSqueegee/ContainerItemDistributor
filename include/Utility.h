@@ -4,17 +4,14 @@
 
 class Utility : public Singleton<Utility>
 {
-    static bool IsEditorID(const std::string_view identifier)
-    {
-        return std::strchr(identifier.data(), '~') == nullptr;
-    }
+    static bool IsEditorID(const std::string_view identifier) { return std::strchr(identifier.data(), '~') == nullptr; }
 
     static FormIDAndPluginName GetFormIDAndPluginName(const std::string_view identifier)
     {
         if (const auto tilde{ std::strchr(identifier.data(), '~') })
         {
             const auto tilde_pos{ static_cast<int>(tilde - identifier.data()) };
-            return { Maps::ToUint32(identifier.substr(0, tilde_pos)), identifier.substr(tilde_pos + 1).data() };
+            return { Maps::ToUnsignedInt(identifier.substr(0, tilde_pos)), identifier.substr(tilde_pos + 1).data() };
         }
         return { 0, "" };
     }
@@ -72,9 +69,7 @@ public:
                 if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0)
                 {
                     if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) })
-                        return {
-                            distr_token.type, bound_obj, distr_token.filename, distr_token.count, replace_with_obj, distr_token.rhs_count, cont
-                        };
+                        return { distr_token.type, bound_obj, distr_token.filename, distr_token.count, replace_with_obj, distr_token.rhs_count, cont };
                 }
                 return { distr_token.type, bound_obj, distr_token.filename, distr_token.count, std::nullopt, std::nullopt, cont };
             }

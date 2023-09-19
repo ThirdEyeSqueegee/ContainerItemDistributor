@@ -100,7 +100,7 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
             {
                 const auto& num_to_remove{ cont->CountObjectsInContainer(bound_object) };
                 cont->RemoveObjectFromContainer(bound_object, num_to_remove);
-                cont->AddObjectToContainer(replace_with_obj.value(), replace_with_count.value(), nullptr);
+                cont->AddObjectToContainer(replace_with_obj.value(), replace_with_count.value_or(num_to_remove), nullptr);
                 logger::info("\t^ {}", distr_obj);
             }
         }

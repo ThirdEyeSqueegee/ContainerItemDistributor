@@ -29,10 +29,9 @@ void Conflicts::PrepareDistributionImpl(const Maps::TConflictTestMap& test_map) 
 
             DistrObject result;
 
-            if (auto matching{
-                    std::ranges::filter_view(distr_token_vec,
-                                             [&](const DistrToken& other) { return other != distr_token && other.identifier <=> identifier == 0; })
-                    | std::ranges::to<std::vector>() };
+            if (auto matching{ std::ranges::filter_view(
+                                   distr_token_vec, [&](const DistrToken& other) { return other != distr_token && other.identifier <=> identifier == 0; })
+                               | std::ranges::to<std::vector>() };
                 !matching.empty())
             {
                 matching.emplace_back(distr_token);
@@ -42,8 +41,7 @@ void Conflicts::PrepareDistributionImpl(const Maps::TConflictTestMap& test_map) 
                 logger::info("\t{} wins for {}", winning.filename, distr_token);
                 result = Utility::BuildDistrObject(winning);
                 Maps::distr_object_vec.emplace_back(result);
-                const auto& [ret,
-                             last]{ std::ranges::remove_if(distr_token_vec, [&](const DistrToken& d) { return d.identifier <=> identifier == 0; }) };
+                const auto& [ret, last]{ std::ranges::remove_if(distr_token_vec, [&](const DistrToken& d) { return d.identifier <=> identifier == 0; }) };
                 distr_token_vec.erase(ret, last);
             }
             else

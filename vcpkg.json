@@ -1,14 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "container-item-distributor",
-  "version-semver": "1.1.1",
+  "version-semver": "1.1.2",
   "dependencies": ["commonlibsse-ng", "simpleini"],
   "license": "GPL-3.0-or-later",
   "vcpkg-configuration": {
     "default-registry": {
       "kind": "git",
       "repository": "https://github.com/microsoft/vcpkg",
-      "baseline": "962e5e39f8a25f42522f51fffc574e05a3efd26b"
+      "baseline": "d99b6930b920d85dd4e1edbac37ecb3f354185c0"
     },
     "registries": [
       {

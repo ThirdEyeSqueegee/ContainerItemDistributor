@@ -15,7 +15,7 @@ DistrType Parser::ClassifyString(const std::string_view str) noexcept
         return DistrType::RemoveAll;
     if (!minus && caret && bar_count <=> 2 == 0)
         return DistrType::Replace;
-    if (!minus && caret && bar_count <=> 1 == 0)
+    if (!minus && caret && bar_count <=> 1 <= 0)
         return DistrType::ReplaceAll;
 
     return DistrType::Error;
@@ -149,9 +149,9 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
         for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count] : distr_token_vec)
         {
             if (count.has_value())
-                logger::debug("\t\t^ REPLACE {} {} with {} {} in {}", count.value(), identifier, rhs_count.value(), rhs.value(), to_identifier);
+                logger::debug("\t\t^ REPLACE {} {} with {} {} in {}", count.value(), identifier, rhs_count.value_or(-1), rhs.value(), to_identifier);
             else
-                logger::debug("\t\t^ REPLACE ALL {} with {} {} in {}", identifier, rhs_count.value(), rhs.value(), to_identifier);
+                logger::debug("\t\t^ REPLACE ALL {} with {} {} in {}", identifier, rhs_count.value_or(-1), rhs.value(), to_identifier);
         }
     }
 }
@@ -167,7 +167,7 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
     case DistrType::Add: {
         const auto  bar_pos{ Maps::GetPos(str, '|') };
         const auto& identifier{ str.substr(0, bar_pos) };
-        const auto  count{ Maps::ToInt32(str.substr(bar_pos + 1)) };
+        const auto  count{ Maps::ToInt(str.substr(bar_pos + 1)) };
 
         DistrToken distr_token{ DistrType::Add, filename, to_container.data(), identifier, count, std::nullopt, std::nullopt };
 
@@ -176,7 +176,7 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
     case DistrType::Remove: {
         const auto  bar_pos{ Maps::GetPos(str, '|') };
         const auto& identifier{ str.substr(1, bar_pos - 1) };
-        const auto  count{ Maps::ToInt32(str.substr(bar_pos + 1)) };
+        const auto  count{ Maps::ToInt(str.substr(bar_pos + 1)) };
 
         DistrToken distr_token{ DistrType::Remove, filename, to_container.data(), identifier, count, std::nullopt, std::nullopt };
 
@@ -197,9 +197,9 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
         const auto rhs_bar_pos{ Maps::GetPos(rhs, '|') };
 
         const auto& lhs_distr{ lhs.substr(0, lhs_bar_pos) };
-        const auto  lhs_count{ Maps::ToInt32(lhs.substr(lhs_bar_pos + 1)) };
+        const auto  lhs_count{ Maps::ToInt(lhs.substr(lhs_bar_pos + 1)) };
         const auto& rhs_distr{ rhs.substr(0, rhs_bar_pos) };
-        const auto  rhs_count{ Maps::ToInt32(rhs.substr(rhs_bar_pos + 1)) };
+        const auto  rhs_count{ Maps::ToInt(rhs.substr(rhs_bar_pos + 1)) };
 
         DistrToken distr_token{ DistrType::Replace, filename, to_container.data(), lhs_distr, lhs_count, rhs_distr, rhs_count };
 
@@ -211,11 +211,16 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
         const auto& lhs{ str.substr(0, caret_pos) };
         const auto& rhs{ str.substr(caret_pos + 1) };
 
-        const auto  rhs_bar_pos{ Maps::GetPos(rhs, '|') };
-        const auto& rhs_distr{ rhs.substr(0, rhs_bar_pos) };
-        const auto  rhs_count{ Maps::ToInt32(rhs.substr(rhs_bar_pos + 1)) };
+        if (const auto rhs_bar_pos{ Maps::GetPos(rhs, '|') }; rhs_bar_pos <=> ULLONG_MAX != 0)
+        {
+            const auto& rhs_distr{ rhs.substr(0, rhs_bar_pos) };
+            const auto  rhs_count{ Maps::ToInt(rhs.substr(rhs_bar_pos + 1)) };
 
-        DistrToken distr_token{ DistrType::ReplaceAll, filename.data(), to_container.data(), lhs.data(), std::nullopt, rhs_distr.data(), rhs_count };
+            DistrToken distr_token{ DistrType::ReplaceAll, filename, to_container.data(), lhs, std::nullopt, rhs_distr, rhs_count };
+
+            return distr_token;
+        }
+        DistrToken distr_token{ DistrType::ReplaceAll, filename, to_container.data(), lhs, std::nullopt, rhs, std::nullopt };
 
         return distr_token;
     }
@@ -225,5 +230,5 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
 
     logger::error("ERROR: Failed to tokenize {}", str);
 
-    return { DistrType::Error, filename.data(), to_container.data(), "", std::nullopt, std::nullopt, std::nullopt };
+    return { DistrType::Error, filename, to_container.data(), "", std::nullopt, std::nullopt, std::nullopt };
 }
