@@ -6,7 +6,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
   ContainerItemDistributor
-  VERSION 1.1.3
+  VERSION 1.1.4
   LANGUAGES CXX
 )
 set(CMAKE_CXX_STANDARD 23)

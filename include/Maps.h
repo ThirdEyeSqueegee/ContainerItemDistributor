@@ -60,11 +60,11 @@ struct FormIDAndPluginName
 class Maps : public Singleton<Maps>
 {
 public:
-    static int ToInt(const std::string_view& s) { return static_cast<int>(std::strtol(s.data(), nullptr, 0)); }
+    static auto ToInt(const std::string_view& s) { return static_cast<int>(std::strtol(s.data(), nullptr, 0)); }
 
-    static unsigned ToUnsignedInt(const std::string_view& s) { return static_cast<unsigned>(std::strtol(s.data(), nullptr, 0)); }
+    static auto ToUnsignedInt(const std::string_view& s) { return static_cast<unsigned>(std::strtol(s.data(), nullptr, 0)); }
 
-    static std::size_t GetPos(const std::string_view s, const char c)
+    static auto GetPos(const std::string_view s, const char c)
     {
         const auto ptr{ std::strrchr(s.data(), c) };
 
@@ -116,9 +116,9 @@ inline auto format_as(const DistrObject& obj)
     return fmt::format("[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Leveled list: {} (0x{:x} / Replace with obj: {} (0x{:x}) / Replace with list: {} (0x{:x}) "
                        "/ Count: {} / Replace count: {} / Container: {} (0x{:x}) ({})]",
                        type, filename, bound_object ? bound_object->GetName() : "null", bound_object ? bound_object->GetFormID() : 0,
-                       leveled_list ? leveled_list->GetName() : "null", leveled_list ? leveled_list->GetFormID() : 0, replace_with_obj ? replace_with_obj->GetName() : "null",
-                       replace_with_obj ? replace_with_obj->GetFormID() : 0, replace_with_list ? replace_with_list->GetName() : "null",
-                       replace_with_list ? replace_with_list->GetFormID() : 0, count.value_or(-1), replace_with_count.value_or(-1),
-                       container.has_value() ? container.value().container_name : "null", container.has_value() ? container.value().container_form_id : 0,
-                       container.has_value() ? container->container_type : RE::FormType::Container);
+                       leveled_list ? leveled_list->GetFormEditorID() : "null", leveled_list ? leveled_list->GetFormID() : 0,
+                       replace_with_obj ? replace_with_obj->GetName() : "null", replace_with_obj ? replace_with_obj->GetFormID() : 0,
+                       replace_with_list ? replace_with_list->GetName() : "null", replace_with_list ? replace_with_list->GetFormID() : 0, count.value_or(-1),
+                       replace_with_count.value_or(-1), container.has_value() ? container.value().container_name : "null",
+                       container.has_value() ? container.value().container_form_id : 0, container.has_value() ? container->container_type : RE::FormType::Container);
 }

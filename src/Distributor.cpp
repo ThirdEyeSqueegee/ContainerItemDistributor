@@ -31,8 +31,10 @@ void Distributor::AddDistribute(const Maps::TDistrVec& distr_vec) noexcept
             const auto& [cont, cont_form_id, cont_type, cont_name]{ container.value() };
             if (bound_object)
                 cont->AddObjectToContainer(bound_object, count.value(), nullptr);
-            else if (leveled_list)
-                cont->AddObjectToContainer(leveled_list, count.value(), nullptr);
+            else if (leveled_list) {
+                for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(leveled_list))
+                    cont->AddObjectToContainer(lobj, lcount, nullptr);
+            }
             logger::info("\t+ {}", distr_obj);
         }
     }
@@ -99,7 +101,8 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(bound_object, count.value());
-                        cont->AddObjectToContainer(replace_with_list, replace_with_count.value(), nullptr);
+                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list))
+                            cont->AddObjectToContainer(lobj, lcount, nullptr);
                     }
                 }
                 else if (leveled_list) {
@@ -109,7 +112,8 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(leveled_list, count.value());
-                        cont->AddObjectToContainer(replace_with_list, replace_with_count.value(), nullptr);
+                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list))
+                            cont->AddObjectToContainer(lobj, lcount, nullptr);
                     }
                 }
                 logger::info("\t^ {}", distr_obj);
@@ -123,7 +127,8 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(bound_object, num_to_remove);
-                        cont->AddObjectToContainer(replace_with_list, num_to_remove, nullptr);
+                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list))
+                            cont->AddObjectToContainer(lobj, lcount, nullptr);
                     }
                 }
                 else if (leveled_list) {
@@ -133,7 +138,8 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(leveled_list, num_to_remove);
-                        cont->AddObjectToContainer(replace_with_list, num_to_remove, nullptr);
+                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list))
+                            cont->AddObjectToContainer(lobj, lcount, nullptr);
                     }
                 }
                 logger::info("\t^ {}", distr_obj);

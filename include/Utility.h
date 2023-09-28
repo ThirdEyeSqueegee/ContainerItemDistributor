@@ -4,7 +4,7 @@
 
 class Utility : public Singleton<Utility>
 {
-    static bool IsEditorID(const std::string_view identifier) { return std::strchr(identifier.data(), '~') == nullptr; }
+    static auto IsEditorID(const std::string_view identifier) { return std::strchr(identifier.data(), '~') == nullptr; }
 
     static FormIDAndPluginName GetFormIDAndPluginName(const std::string_view identifier)
     {
@@ -76,7 +76,25 @@ class Utility : public Singleton<Utility>
         return { nullptr, 0, RE::FormType::Container, "" };
     }
 
+    inline static std::uint16_t player_level{};
+
 public:
+    static auto CachePlayerLevel() { player_level = RE::PlayerCharacter::GetSingleton()->GetLevel(); }
+
+    static auto ResolveLeveledList(RE::TESLevItem* list)
+    {
+        RE::BSScrapArray<RE::CALCED_OBJECT> calced_objects{};
+        list->CalculateCurrentFormList(player_level, 1, calced_objects, 0, true);
+
+        std::vector<std::pair<RE::TESBoundObject*, int>> obj_and_counts{};
+        for (const auto& [form, count, pad0A, pad0C, containerItem] : calced_objects) {
+            if (const auto bound_obj{form->As<RE::TESBoundObject>()})
+                obj_and_counts.emplace_back(bound_obj, count);
+        }
+
+        return obj_and_counts;
+    }
+
     static DistrObject BuildDistrObject(const DistrToken& distr_token) noexcept
     {
         if (const auto leveled_list{ GetLevItem(distr_token.identifier) }) {

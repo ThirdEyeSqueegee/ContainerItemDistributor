@@ -13,6 +13,8 @@ void Conflicts::PrepareDistribution() noexcept
     PrepareDistributionImpl(Maps::remove_conflict_test_map);
     PrepareDistributionImpl(Maps::replace_conflict_test_map);
 
+    Utility::CachePlayerLevel();
+
     const auto elapsed{ std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start_time) };
     logger::info("");
     logger::info(">-------------------------Finished preparing distribution in {} us-------------------------<", elapsed.count());
@@ -37,16 +39,12 @@ void Conflicts::PrepareDistributionImpl(const Maps::TConflictTestMap& test_map) 
                 const auto& winning{ matching.back() };
                 logger::info("\t{} wins for {}", winning.filename, distr_token);
                 result = Utility::BuildDistrObject(winning);
-                if (!result.bound_object)
-                    return;
                 Maps::distr_object_vec.emplace_back(result);
                 const auto& [ret, last]{ std::ranges::remove_if(distr_token_vec, [&](const DistrToken& d) { return d.identifier <=> identifier == 0; }) };
                 distr_token_vec.erase(ret, last);
             }
             else {
                 result = Utility::BuildDistrObject(distr_token);
-                if (!result.bound_object)
-                    return;
                 Maps::distr_object_vec.emplace_back(result);
             }
         }
