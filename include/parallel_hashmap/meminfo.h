@@ -124,8 +124,7 @@ namespace spp
         auto parseLine = [](char* line) -> int {
             auto i = strlen(line);
 
-            while (*line < '0' || *line > '9')
-            {
+            while (*line < '0' || *line > '9') {
                 line++;
             }
 
@@ -138,10 +137,8 @@ namespace spp
         auto result = -1;
         char line[128];
 
-        while (fgets(line, 128, file) != nullptr)
-        {
-            if (strncmp(line, "VmSize:", 7) == 0)
-            {
+        while (fgets(line, 128, file) != nullptr) {
+            if (strncmp(line, "VmSize:", 7) == 0) {
                 result = parseLine(line);
                 break;
             }

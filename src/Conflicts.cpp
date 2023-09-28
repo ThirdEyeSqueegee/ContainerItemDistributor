@@ -21,10 +21,8 @@ void Conflicts::PrepareDistribution() noexcept
 
 void Conflicts::PrepareDistributionImpl(const Maps::TConflictTestMap& test_map) noexcept
 {
-    for (auto distr_token_vec : test_map | std::views::values)
-    {
-        for (const auto& distr_token : distr_token_vec)
-        {
+    for (auto distr_token_vec : test_map | std::views::values) {
+        for (const auto& distr_token : distr_token_vec) {
             const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count]{ distr_token };
 
             DistrObject result;
@@ -45,8 +43,7 @@ void Conflicts::PrepareDistributionImpl(const Maps::TConflictTestMap& test_map) 
                 const auto& [ret, last]{ std::ranges::remove_if(distr_token_vec, [&](const DistrToken& d) { return d.identifier <=> identifier == 0; }) };
                 distr_token_vec.erase(ret, last);
             }
-            else
-            {
+            else {
                 result = Utility::BuildDistrObject(distr_token);
                 if (!result.bound_object)
                     return;

@@ -646,10 +646,8 @@ namespace phmap
 
 #ifndef PHMAP_FALLTHROUGH_INTENDED
 #define PHMAP_FALLTHROUGH_INTENDED                                                                                                                                                 \
-    do                                                                                                                                                                             \
-    {                                                                                                                                                                              \
-    }                                                                                                                                                                              \
-    while (0)
+    do {                                                                                                                                                                           \
+    } while (0)
 #endif
 
 // PHMAP_DEPRECATED()
@@ -721,19 +719,15 @@ namespace phmap
 #define PHMAP_INTERNAL_TRY       try
 #define PHMAP_INTERNAL_CATCH_ANY catch (...)
 #define PHMAP_INTERNAL_RETHROW                                                                                                                                                     \
-    do                                                                                                                                                                             \
-    {                                                                                                                                                                              \
+    do {                                                                                                                                                                           \
         throw;                                                                                                                                                                     \
-    }                                                                                                                                                                              \
-    while (false)
+    } while (false)
 #else // PHMAP_HAVE_EXCEPTIONS
 #define PHMAP_INTERNAL_TRY       if (true)
 #define PHMAP_INTERNAL_CATCH_ANY else if (false)
 #define PHMAP_INTERNAL_RETHROW                                                                                                                                                     \
-    do                                                                                                                                                                             \
-    {                                                                                                                                                                              \
-    }                                                                                                                                                                              \
-    while (false)
+    do {                                                                                                                                                                           \
+    } while (false)
 #endif // PHMAP_HAVE_EXCEPTIONS
 
 #endif // phmap_config_h_guard_

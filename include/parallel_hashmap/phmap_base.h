@@ -1691,16 +1691,14 @@ namespace phmap
         template <typename Allocator, typename Iterator, typename... Args>
         void ConstructRange(Allocator& alloc, Iterator first, Iterator last, const Args&... args)
         {
-            for (Iterator cur = first; cur != last; ++cur)
-            {
+            for (Iterator cur = first; cur != last; ++cur) {
                 PHMAP_INTERNAL_TRY
                 {
                     std::allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), args...);
                 }
                 PHMAP_INTERNAL_CATCH_ANY
                 {
-                    while (cur != first)
-                    {
+                    while (cur != first) {
                         --cur;
                         std::allocator_traits<Allocator>::destroy(alloc, std::addressof(*cur));
                     }
@@ -1712,16 +1710,14 @@ namespace phmap
         template <typename Allocator, typename Iterator, typename InputIterator>
         void CopyRange(Allocator& alloc, Iterator destination, InputIterator first, InputIterator last)
         {
-            for (Iterator cur = destination; first != last; static_cast<void>(++cur), static_cast<void>(++first))
-            {
+            for (Iterator cur = destination; first != last; static_cast<void>(++cur), static_cast<void>(++first)) {
                 PHMAP_INTERNAL_TRY
                 {
                     std::allocator_traits<Allocator>::construct(alloc, std::addressof(*cur), *first);
                 }
                 PHMAP_INTERNAL_CATCH_ANY
                 {
-                    while (cur != destination)
-                    {
+                    while (cur != destination) {
                         --cur;
                         std::allocator_traits<Allocator>::destroy(alloc, std::addressof(*cur));
                     }
@@ -1823,8 +1819,7 @@ namespace phmap
 
             void destruct() noexcept
             {
-                if (engaged_)
-                {
+                if (engaged_) {
                     data_.~T();
                     engaged_ = false;
                 }
@@ -1901,12 +1896,10 @@ namespace phmap
             template <typename U>
             void assign(U&& u)
             {
-                if (this->engaged_)
-                {
+                if (this->engaged_) {
                     this->data_ = std::forward<U>(u);
                 }
-                else
-                {
+                else {
                     construct(std::forward<U>(u));
                 }
             }
@@ -1956,28 +1949,24 @@ namespace phmap
 
             optional_data(const optional_data& rhs) : optional_data_base<T>()
             {
-                if (rhs.engaged_)
-                {
+                if (rhs.engaged_) {
                     this->construct(rhs.data_);
                 }
             }
 
             optional_data(optional_data&& rhs) noexcept(phmap::default_allocator_is_nothrow::value || std::is_nothrow_move_constructible<T>::value) : optional_data_base<T>()
             {
-                if (rhs.engaged_)
-                {
+                if (rhs.engaged_) {
                     this->construct(std::move(rhs.data_));
                 }
             }
 
             optional_data& operator=(const optional_data& rhs)
             {
-                if (rhs.engaged_)
-                {
+                if (rhs.engaged_) {
                     this->assign(rhs.data_);
                 }
-                else
-                {
+                else {
                     this->destruct();
                 }
                 return *this;
@@ -1985,12 +1974,10 @@ namespace phmap
 
             optional_data& operator=(optional_data&& rhs) noexcept(std::is_nothrow_move_assignable<T>::value&& std::is_nothrow_move_constructible<T>::value)
             {
-                if (rhs.engaged_)
-                {
+                if (rhs.engaged_) {
                     this->assign(std::move(rhs.data_));
                 }
-                else
-                {
+                else {
                     this->destruct();
                 }
                 return *this;
@@ -2140,12 +2127,10 @@ namespace phmap
             size_t operator()(const phmap::optional<T>& opt) const
             {
                 phmap::type_traits_internal::AssertHashEnabled<phmap::remove_const_t<T>>();
-                if (opt)
-                {
+                if (opt) {
                     return std::hash<phmap::remove_const_t<T>>()(*opt);
                 }
-                else
-                {
+                else {
                     return static_cast<size_t>(0x297814aaad196e6dULL);
                 }
             }
@@ -2234,8 +2219,7 @@ namespace phmap
                               = false>
         optional(const optional<U>& rhs)
         {
-            if (rhs)
-            {
+            if (rhs) {
                 this->construct(*rhs);
             }
         }
@@ -2248,8 +2232,7 @@ namespace phmap
                               = false>
         explicit optional(const optional<U>& rhs)
         {
-            if (rhs)
-            {
+            if (rhs) {
                 this->construct(*rhs);
             }
         }
@@ -2262,8 +2245,7 @@ namespace phmap
                               = false>
         optional(optional<U>&& rhs)
         {
-            if (rhs)
-            {
+            if (rhs) {
                 this->construct(std::move(*rhs));
             }
         }
@@ -2276,8 +2258,7 @@ namespace phmap
                               = false>
         explicit optional(optional<U>&& rhs)
         {
-            if (rhs)
-            {
+            if (rhs) {
                 this->construct(std::move(*rhs));
             }
         }
@@ -2322,12 +2303,10 @@ namespace phmap
                                                                phmap::negation<optional_internal::is_constructible_convertible_assignable_from_optional<T, U>>>::value>::type>
         optional& operator=(const optional<U>& rhs)
         {
-            if (rhs)
-            {
+            if (rhs) {
                 this->assign(*rhs);
             }
-            else
-            {
+            else {
                 this->destruct();
             }
             return *this;
@@ -2339,12 +2318,10 @@ namespace phmap
                                                                phmap::negation<optional_internal::is_constructible_convertible_assignable_from_optional<T, U>>>::value>::type>
         optional& operator=(optional<U>&& rhs)
         {
-            if (rhs)
-            {
+            if (rhs) {
                 this->assign(std::move(*rhs));
             }
-            else
-            {
+            else {
                 this->destruct();
             }
             return *this;
@@ -2402,28 +2379,22 @@ namespace phmap
         // Swap, standard semantics
         void swap(optional& rhs) noexcept(std::is_nothrow_move_constructible<T>::value&& std::is_trivial<T>::value)
         {
-            if (*this)
-            {
-                if (rhs)
-                {
+            if (*this) {
+                if (rhs) {
                     using std::swap;
                     swap(**this, *rhs);
                 }
-                else
-                {
+                else {
                     rhs.construct(std::move(**this));
                     this->destruct();
                 }
             }
-            else
-            {
-                if (rhs)
-                {
+            else {
+                if (rhs) {
                     this->construct(std::move(*rhs));
                     rhs.destruct();
                 }
-                else
-                {
+                else {
                     // No effect (swap(disengaged, disengaged)).
                 }
             }
@@ -2881,8 +2852,7 @@ namespace phmap
             node_handle_base& operator=(node_handle_base&& other) noexcept
             {
                 destroy();
-                if (!other.empty())
-                {
+                if (!other.empty()) {
                     alloc_ = other.alloc_;
                     PolicyTraits::transfer(alloc(), slot(), other.slot());
                     other.reset();
@@ -2918,8 +2888,7 @@ namespace phmap
 
             void destroy()
             {
-                if (!empty())
-                {
+                if (!empty()) {
                     PolicyTraits::destroy(alloc(), slot());
                     reset();
                 }
@@ -4259,8 +4228,7 @@ namespace phmap
 #ifdef ADDRESS_SANITIZER
                     PoisonPadding<Char, N - 1>(p);
                     // The `if` is an optimization. It doesn't affect the observable behaviour.
-                    if (ElementAlignment<N - 1>::value % ElementAlignment<N>::value)
-                    {
+                    if (ElementAlignment<N - 1>::value % ElementAlignment<N>::value) {
                         size_t start = Offset<N - 1>() + SizeOf<ElementType<N - 1>>::value * size_[N - 1];
                         ASAN_POISON_MEMORY_REGION(p + start, Offset<N>() - start);
                     }
@@ -4641,12 +4609,10 @@ namespace phmap
             static void construct(Allocator* alloc, slot_type* slot, Args&&... args)
             {
                 emplace(slot);
-                if (kMutableKeys::value)
-                {
+                if (kMutableKeys::value) {
                     phmap::allocator_traits<Allocator>::construct(*alloc, &slot->mutable_value, std::forward<Args>(args)...);
                 }
-                else
-                {
+                else {
                     phmap::allocator_traits<Allocator>::construct(*alloc, &slot->value, std::forward<Args>(args)...);
                 }
             }
@@ -4656,12 +4622,10 @@ namespace phmap
             static void construct(Allocator* alloc, slot_type* slot, slot_type* other)
             {
                 emplace(slot);
-                if (kMutableKeys::value)
-                {
+                if (kMutableKeys::value) {
                     phmap::allocator_traits<Allocator>::construct(*alloc, &slot->mutable_value, std::move(other->mutable_value));
                 }
-                else
-                {
+                else {
                     phmap::allocator_traits<Allocator>::construct(*alloc, &slot->value, std::move(other->value));
                 }
             }
@@ -4669,12 +4633,10 @@ namespace phmap
             template <class Allocator>
             static void destroy(Allocator* alloc, slot_type* slot)
             {
-                if (kMutableKeys::value)
-                {
+                if (kMutableKeys::value) {
                     phmap::allocator_traits<Allocator>::destroy(*alloc, &slot->mutable_value);
                 }
-                else
-                {
+                else {
                     phmap::allocator_traits<Allocator>::destroy(*alloc, &slot->value);
                 }
             }
@@ -4683,12 +4645,10 @@ namespace phmap
             static void transfer(Allocator* alloc, slot_type* new_slot, slot_type* old_slot)
             {
                 emplace(new_slot);
-                if (kMutableKeys::value)
-                {
+                if (kMutableKeys::value) {
                     phmap::allocator_traits<Allocator>::construct(*alloc, &new_slot->mutable_value, std::move(old_slot->mutable_value));
                 }
-                else
-                {
+                else {
                     phmap::allocator_traits<Allocator>::construct(*alloc, &new_slot->value, std::move(old_slot->value));
                 }
                 destroy(alloc, old_slot);
@@ -4697,13 +4657,11 @@ namespace phmap
             template <class Allocator>
             static void swap(Allocator* alloc, slot_type* a, slot_type* b)
             {
-                if (kMutableKeys::value)
-                {
+                if (kMutableKeys::value) {
                     using std::swap;
                     swap(a->mutable_value, b->mutable_value);
                 }
-                else
-                {
+                else {
                     value_type tmp = std::move(a->value);
                     phmap::allocator_traits<Allocator>::destroy(*alloc, &a->value);
                     phmap::allocator_traits<Allocator>::construct(*alloc, &a->value, std::move(b->value));
@@ -4715,12 +4673,10 @@ namespace phmap
             template <class Allocator>
             static void move(Allocator* alloc, slot_type* src, slot_type* dest)
             {
-                if (kMutableKeys::value)
-                {
+                if (kMutableKeys::value) {
                     dest->mutable_value = std::move(src->mutable_value);
                 }
-                else
-                {
+                else {
                     phmap::allocator_traits<Allocator>::destroy(*alloc, &dest->value);
                     phmap::allocator_traits<Allocator>::construct(*alloc, &dest->value, std::move(src->value));
                 }
@@ -4865,8 +4821,7 @@ namespace phmap
 
             void lock()
             {
-                if (!locked_)
-                {
+                if (!locked_) {
                     m_->lock();
                     locked_ = true;
                 }
@@ -4874,8 +4829,7 @@ namespace phmap
 
             void unlock()
             {
-                if (locked_)
-                {
+                if (locked_) {
                     m_->unlock();
                     locked_ = false;
                 }
@@ -4945,8 +4899,7 @@ namespace phmap
 
             void lock()
             {
-                if (!locked_)
-                {
+                if (!locked_) {
                     m_->lock_shared();
                     locked_ = true;
                 }
@@ -4954,8 +4907,7 @@ namespace phmap
 
             void unlock()
             {
-                if (locked_)
-                {
+                if (locked_) {
                     m_->unlock_shared();
                     locked_ = false;
                 }

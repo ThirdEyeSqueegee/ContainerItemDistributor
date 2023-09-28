@@ -1182,10 +1182,8 @@ namespace phmap
             template <typename K, typename Compare>
             SearchResult<int, false> linear_search_impl(const K& k, int s, const int e, const Compare& comp, std::false_type /* IsCompareTo */) const
             {
-                while (s < e)
-                {
-                    if (!comp(key(s), k))
-                    {
+                while (s < e) {
+                    if (!comp(key(s), k)) {
                         break;
                     }
                     ++s;
@@ -1198,15 +1196,12 @@ namespace phmap
             template <typename K, typename Compare>
             SearchResult<int, true> linear_search_impl(const K& k, int s, const int e, const Compare& comp, std::true_type /* IsCompareTo */) const
             {
-                while (s < e)
-                {
+                while (s < e) {
                     const phmap::weak_ordering c = comp(key(s), k);
-                    if (c == 0)
-                    {
+                    if (c == 0) {
                         return { s, MatchKind::kEq };
                     }
-                    else if (c > 0)
-                    {
+                    else if (c > 0) {
                         break;
                     }
                     ++s;
@@ -1219,15 +1214,12 @@ namespace phmap
             template <typename K, typename Compare>
             SearchResult<int, false> binary_search_impl(const K& k, int s, int e, const Compare& comp, std::false_type /* IsCompareTo */) const
             {
-                while (s != e)
-                {
+                while (s != e) {
                     const int mid = (s + e) >> 1;
-                    if (comp(key(mid), k))
-                    {
+                    if (comp(key(mid), k)) {
                         s = mid + 1;
                     }
-                    else
-                    {
+                    else {
                         e = mid;
                     }
                 }
@@ -1239,22 +1231,17 @@ namespace phmap
             template <typename K, typename CompareTo>
             SearchResult<int, true> binary_search_impl(const K& k, int s, int e, const CompareTo& comp, std::true_type /* IsCompareTo */) const
             {
-                if (is_multi_container::value)
-                {
+                if (is_multi_container::value) {
                     MatchKind exact_match = MatchKind::kNe;
-                    while (s != e)
-                    {
+                    while (s != e) {
                         const int                  mid = (s + e) >> 1;
                         const phmap::weak_ordering c   = comp(key(mid), k);
-                        if (c < 0)
-                        {
+                        if (c < 0) {
                             s = mid + 1;
                         }
-                        else
-                        {
+                        else {
                             e = mid;
-                            if (c == 0)
-                            {
+                            if (c == 0) {
                                 // Need to return the first value whose key is not less than k,
                                 // which requires continuing the binary search if this is a
                                 // multi-container.
@@ -1264,22 +1251,17 @@ namespace phmap
                     }
                     return { s, exact_match };
                 }
-                else
-                { // Not a multi-container.
-                    while (s != e)
-                    {
+                else { // Not a multi-container.
+                    while (s != e) {
                         const int                  mid = (s + e) >> 1;
                         const phmap::weak_ordering c   = comp(key(mid), k);
-                        if (c < 0)
-                        {
+                        if (c < 0) {
                             s = mid + 1;
                         }
-                        else if (c > 0)
-                        {
+                        else if (c > 0) {
                             e = mid;
                         }
-                        else
-                        {
+                        else {
                             return { mid, MatchKind::kEq };
                         }
                     }
@@ -1338,8 +1320,7 @@ namespace phmap
 
             void destroy(allocator_type* alloc)
             {
-                for (int i = 0; i < count(); ++i)
-                {
+                for (int i = 0; i < count(); ++i) {
                     value_destroy(i, alloc);
                 }
             }
@@ -1367,8 +1348,7 @@ namespace phmap
             void uninitialized_move_n(const size_type n, const size_type i, const size_type j, btree_node* x, allocator_type* alloc)
             {
                 phmap::priv::SanitizerUnpoisonMemoryRegion(x->slot(j), n * sizeof(slot_type));
-                for (slot_type *src = slot(i), *end = src + n, *dest = x->slot(j); src != end; ++src, ++dest)
-                {
+                for (slot_type *src = slot(i), *end = src + n, *dest = x->slot(j); src != end; ++src, ++dest) {
                     params_type::construct(alloc, dest, src);
                 }
             }
@@ -1376,8 +1356,7 @@ namespace phmap
             // Destroys a range of n values, starting at index i.
             void value_destroy_n(const size_type i, const size_type n, allocator_type* alloc)
             {
-                for (size_type j = 0; j < n; ++j)
-                {
+                for (size_type j = 0; j < n; ++j) {
                     value_destroy(i + j, alloc);
                 }
             }
@@ -1446,8 +1425,7 @@ namespace phmap
             // Increment/decrement the iterator.
             void increment()
             {
-                if (node->leaf() && ++position < node->count())
-                {
+                if (node->leaf() && ++position < node->count()) {
                     return;
                 }
                 increment_slow();
@@ -1457,8 +1435,7 @@ namespace phmap
 
             void decrement()
             {
-                if (node->leaf() && --position >= 0)
-                {
+                if (node->leaf() && --position >= 0) {
                     return;
                 }
                 decrement_slow();
@@ -1794,8 +1771,7 @@ namespace phmap
             size_type count_unique(const K& key) const
             {
                 const iterator beg = internal_find(key);
-                if (beg.node == nullptr)
-                {
+                if (beg.node == nullptr) {
                     // The key doesn't exist in the tree.
                     return 0;
                 }
@@ -1840,19 +1816,16 @@ namespace phmap
             size_type height() const
             {
                 size_type h = 0;
-                if (!empty())
-                {
+                if (!empty()) {
                     // Count the length of the chain from the leftmost node up to the
                     // root. We actually count from the root back around to the level below
                     // the root, but the calculation is the same because of the circularity
                     // of that traversal.
                     const node_type* n = root();
-                    do
-                    {
+                    do {
                         ++h;
                         n = n->parent();
-                    }
-                    while (n != root());
+                    } while (n != root());
                 }
                 return h;
             }
@@ -1872,12 +1845,10 @@ namespace phmap
             size_type bytes_used() const
             {
                 node_stats stats = internal_stats(root());
-                if (stats.leaf_nodes == 1 && stats.internal_nodes == 0)
-                {
+                if (stats.leaf_nodes == 1 && stats.internal_nodes == 0) {
                     return sizeof(*this) + node_type::LeafSize(root()->max_count());
                 }
-                else
-                {
+                else {
                     return sizeof(*this) + stats.leaf_nodes * node_type::LeafSize() + stats.internal_nodes * node_type::InternalSize();
                 }
             }
@@ -2051,17 +2022,14 @@ namespace phmap
             node_stats internal_stats(const node_type* node) const
             {
                 // The root can be a static empty node.
-                if (node == nullptr || (node == root() && empty()))
-                {
+                if (node == nullptr || (node == root() && empty())) {
                     return node_stats(0, 0);
                 }
-                if (node->leaf())
-                {
+                if (node->leaf()) {
                     return node_stats(1, 0);
                 }
                 node_stats res(0, 1);
-                for (int i = 0; i <= node->count(); ++i)
-                {
+                for (int i = 0; i <= node->count(); ++i) {
                     res += internal_stats(node->child(i));
                 }
                 return res;
@@ -2091,8 +2059,7 @@ namespace phmap
             assert(i <= count());
             // Shift old values to create space for new value and then construct it in
             // place.
-            if (i < count())
-            {
+            if (i < count()) {
                 value_init(count(), alloc, slot(count() - 1));
                 for (size_type j = count() - 1; j > i; --j)
                     params_type::move(alloc, slot(j - 1), slot(j));
@@ -2101,10 +2068,8 @@ namespace phmap
             value_init(i, alloc, std::forward<Args>(args)...);
             set_count((field_type)(count() + 1));
 
-            if (!leaf() && count() > i + 1)
-            {
-                for (int j = count(); j > (int)(i + 1); --j)
-                {
+            if (!leaf() && count() > i + 1) {
+                for (int j = count(); j > (int)(i + 1); --j) {
                     set_child(j, child(j - 1));
                 }
                 clear_child(i + 1);
@@ -2114,11 +2079,9 @@ namespace phmap
         template <typename P>
         inline void btree_node<P>::remove_value(const int i, allocator_type* alloc)
         {
-            if (!leaf() && count() > i + 1)
-            {
+            if (!leaf() && count() > i + 1) {
                 assert(child(i + 1)->count() == 0);
-                for (size_type j = i + 1; j < count(); ++j)
-                {
+                for (size_type j = i + 1; j < count(); ++j) {
                     set_child(j, child(j + 1));
                 }
                 clear_child(count());
@@ -2159,15 +2122,12 @@ namespace phmap
             // 5) Destroy the now-empty to_move entries in the right node.
             right->value_destroy_n(right->count() - to_move, to_move, alloc);
 
-            if (!leaf())
-            {
+            if (!leaf()) {
                 // Move the child pointers from the right to the left node.
-                for (int i = 0; i < to_move; ++i)
-                {
+                for (int i = 0; i < to_move; ++i) {
                     init_child(count() + i + 1, right->child(i));
                 }
-                for (int i = 0; i <= right->count() - to_move; ++i)
-                {
+                for (int i = 0; i <= right->count() - to_move; ++i) {
                     assert(i + to_move <= right->max_count());
                     right->init_child(i, right->child(i + to_move));
                     right->clear_child(i + to_move);
@@ -2194,17 +2154,14 @@ namespace phmap
             // Lastly, a new delimiting value is moved from the left node into the
             // parent, and the remaining empty left node entries are destroyed.
 
-            if (right->count() >= to_move)
-            {
+            if (right->count() >= to_move) {
                 // The original location of the right->count() values are sufficient to hold
                 // the new to_move entries from the parent and left node.
 
                 // 1) Shift existing values in the right node to their correct positions.
                 right->uninitialized_move_n(to_move, right->count() - to_move, right->count(), right, alloc);
-                if (right->count() > to_move)
-                {
-                    for (slot_type *src = right->slot(right->count() - to_move - 1), *dest = right->slot(right->count() - 1), *end = right->slot(0); src >= end; --src, --dest)
-                    {
+                if (right->count() > to_move) {
+                    for (slot_type *src = right->slot(right->count() - to_move - 1), *dest = right->slot(right->count() - 1), *end = right->slot(0); src >= end; --src, --dest) {
                         params_type::move(alloc, src, dest);
                     }
                 }
@@ -2215,8 +2172,7 @@ namespace phmap
                 // 3) Move the (to_move - 1) values from the left node to the right node.
                 params_type::move(alloc, slot(count() - (to_move - 1)), slot(count()), right->slot(0));
             }
-            else
-            {
+            else {
                 // The right node does not have enough initialized space to hold the new
                 // to_move entries, so part of them will move to uninitialized space.
 
@@ -2238,16 +2194,13 @@ namespace phmap
             // 5) Destroy the now-empty to_move entries in the left node.
             value_destroy_n(count() - to_move, to_move, alloc);
 
-            if (!leaf())
-            {
+            if (!leaf()) {
                 // Move the child pointers from the left to the right node.
-                for (int i = right->count(); i >= 0; --i)
-                {
+                for (int i = right->count(); i >= 0; --i) {
                     right->init_child(i + to_move, right->child(i));
                     right->clear_child(i);
                 }
-                for (int i = 1; i <= to_move; ++i)
-                {
+                for (int i = 1; i <= to_move; ++i) {
                     right->init_child(i - 1, child(count() - to_move + i));
                     clear_child(count() - to_move + i);
                 }
@@ -2268,16 +2221,13 @@ namespace phmap
             // inserting at the beginning of the left node then bias the split to put
             // more values on the right node. If we're inserting at the end of the
             // right node then bias the split to put more values on the left node.
-            if (insert_position == 0)
-            {
+            if (insert_position == 0) {
                 dest->set_count((field_type)(count() - 1));
             }
-            else if (insert_position == kNodeValues)
-            {
+            else if (insert_position == kNodeValues) {
                 dest->set_count(0);
             }
-            else
-            {
+            else {
                 dest->set_count((field_type)(count() / 2));
             }
             set_count((field_type)(count() - dest->count()));
@@ -2295,10 +2245,8 @@ namespace phmap
             value_destroy(count(), alloc);
             parent()->init_child(position() + 1, dest);
 
-            if (!leaf())
-            {
-                for (int i = 0; i <= dest->count(); ++i)
-                {
+            if (!leaf()) {
+                for (int i = 0; i <= dest->count(); ++i) {
                     assert(child(count() + i + 1) != nullptr);
                     dest->init_child(i, child(count() + i + 1));
                     clear_child(count() + i + 1);
@@ -2321,11 +2269,9 @@ namespace phmap
             // Destroy the now-empty entries in the right node.
             src->value_destroy_n(0, src->count(), alloc);
 
-            if (!leaf())
-            {
+            if (!leaf()) {
                 // Move the child pointers from the right to the left node.
-                for (int i = 0; i <= src->count(); ++i)
-                {
+                for (int i = 0; i <= src->count(); ++i) {
                     init_child(count() + i + 1, src->child(i));
                     src->clear_child(i);
                 }
@@ -2347,14 +2293,12 @@ namespace phmap
 
             // Determine which is the smaller/larger node.
             btree_node *smaller = this, *larger = x;
-            if (smaller->count() > larger->count())
-            {
+            if (smaller->count() > larger->count()) {
                 swap(smaller, larger);
             }
 
             // Swap the values.
-            for (slot_type *a = smaller->slot(0), *b = larger->slot(0), *end = a + smaller->count(); a != end; ++a, ++b)
-            {
+            for (slot_type *a = smaller->slot(0), *b = larger->slot(0), *end = a + smaller->count(); a != end; ++a, ++b) {
                 params_type::swap(alloc, a, b);
             }
 
@@ -2363,20 +2307,17 @@ namespace phmap
             larger->uninitialized_move_n(to_move, smaller->count(), smaller->count(), smaller, alloc);
             larger->value_destroy_n(smaller->count(), to_move, alloc);
 
-            if (!leaf())
-            {
+            if (!leaf()) {
                 // Swap the child pointers.
                 std::swap_ranges(&smaller->mutable_child(0), &smaller->mutable_child(smaller->count() + 1), &larger->mutable_child(0));
                 // Update swapped children's parent pointers.
                 int i = 0;
-                for (; i <= smaller->count(); ++i)
-                {
+                for (; i <= smaller->count(); ++i) {
                     smaller->child(i)->set_parent(smaller);
                     larger->child(i)->set_parent(larger);
                 }
                 // Move the child pointers that couldn't be swapped.
-                for (; i <= larger->count(); ++i)
-                {
+                for (; i <= larger->count(); ++i) {
                     smaller->init_child(i, larger->child(i));
                     larger->clear_child(i);
                 }
@@ -2391,27 +2332,22 @@ namespace phmap
         template <typename N, typename R, typename P>
         void btree_iterator<N, R, P>::increment_slow()
         {
-            if (node->leaf())
-            {
+            if (node->leaf()) {
                 assert(position >= node->count());
                 btree_iterator save(*this);
-                while (position == node->count() && !node->is_root())
-                {
+                while (position == node->count() && !node->is_root()) {
                     assert(node->parent()->child(node->position()) == node);
                     position = node->position();
                     node     = node->parent();
                 }
-                if (position == node->count())
-                {
+                if (position == node->count()) {
                     *this = save;
                 }
             }
-            else
-            {
+            else {
                 assert(position < node->count());
                 node = node->child(position + 1);
-                while (!node->leaf())
-                {
+                while (!node->leaf()) {
                     node = node->child(0);
                 }
                 position = 0;
@@ -2421,27 +2357,22 @@ namespace phmap
         template <typename N, typename R, typename P>
         void btree_iterator<N, R, P>::decrement_slow()
         {
-            if (node->leaf())
-            {
+            if (node->leaf()) {
                 assert(position <= -1);
                 btree_iterator save(*this);
-                while (position < 0 && !node->is_root())
-                {
+                while (position < 0 && !node->is_root()) {
                     assert(node->parent()->child(node->position()) == node);
                     position = node->position() - 1;
                     node     = node->parent();
                 }
-                if (position < 0)
-                {
+                if (position < 0) {
                     *this = save;
                 }
             }
-            else
-            {
+            else {
                 assert(position >= 0);
                 node = node->child(position);
-                while (!node->leaf())
-                {
+                while (!node->leaf()) {
                     node = node->child(node->count());
                 }
                 position = node->count() - 1;
@@ -2464,8 +2395,7 @@ namespace phmap
                 return;
             insert_multi(maybe_move_from_iterator(iter));
             ++iter;
-            for (; iter != x->end(); ++iter)
-            {
+            for (; iter != x->end(); ++iter) {
                 // If the btree is not empty, we can just insert the new value at the end
                 // of the tree.
                 internal_emplace(end(), maybe_move_from_iterator(iter));
@@ -2518,27 +2448,22 @@ namespace phmap
         template <typename... Args>
         auto btree<P>::insert_unique(const key_type& key, Args&&... args) -> std::pair<iterator, bool>
         {
-            if (empty())
-            {
+            if (empty()) {
                 mutable_root() = rightmost_ = new_leaf_root_node(1);
             }
 
             auto      res  = internal_locate(key);
             iterator& iter = res.value;
 
-            if (res.HasMatch())
-            {
-                if (res.IsEq())
-                {
+            if (res.HasMatch()) {
+                if (res.IsEq()) {
                     // The key already exists in the tree, do nothing.
                     return { iter, false };
                 }
             }
-            else
-            {
+            else {
                 iterator last = internal_last(iter);
-                if (last.node && !compare_keys(key, last.key()))
-                {
+                if (last.node && !compare_keys(key, last.key())) {
                     // The key already exists in the tree, do nothing.
                     return { last, false };
                 }
@@ -2550,28 +2475,22 @@ namespace phmap
         template <typename... Args>
         inline auto btree<P>::insert_hint_unique(iterator position, const key_type& key, Args&&... args) -> std::pair<iterator, bool>
         {
-            if (!empty())
-            {
-                if (position == end() || compare_keys(key, position.key()))
-                {
+            if (!empty()) {
+                if (position == end() || compare_keys(key, position.key())) {
                     iterator prev = position;
-                    if (position == begin() || compare_keys((--prev).key(), key))
-                    {
+                    if (position == begin() || compare_keys((--prev).key(), key)) {
                         // prev.key() < key < position.key()
                         return { internal_emplace(position, std::forward<Args>(args)...), true };
                     }
                 }
-                else if (compare_keys(position.key(), key))
-                {
+                else if (compare_keys(position.key(), key)) {
                     ++position;
-                    if (position == end() || compare_keys(key, position.key()))
-                    {
+                    if (position == end() || compare_keys(key, position.key())) {
                         // {original `position`}.key() < key < {current `position`}.key()
                         return { internal_emplace(position, std::forward<Args>(args)...), true };
                     }
                 }
-                else
-                {
+                else {
                     // position.key() == key
                     return { position, false };
                 }
@@ -2583,8 +2502,7 @@ namespace phmap
         template <typename InputIterator>
         void btree<P>::insert_iterator_unique(InputIterator b, InputIterator e)
         {
-            for (; b != e; ++b)
-            {
+            for (; b != e; ++b) {
                 insert_hint_unique(end(), params_type::key(*b), *b);
             }
         }
@@ -2593,14 +2511,12 @@ namespace phmap
         template <typename ValueType>
         auto btree<P>::insert_multi(const key_type& key, ValueType&& v) -> iterator
         {
-            if (empty())
-            {
+            if (empty()) {
                 mutable_root() = rightmost_ = new_leaf_root_node(1);
             }
 
             iterator iter = internal_upper_bound(key);
-            if (iter.node == nullptr)
-            {
+            if (iter.node == nullptr) {
                 iter = end();
             }
             return internal_emplace(iter, std::forward<ValueType>(v));
@@ -2610,24 +2526,19 @@ namespace phmap
         template <typename ValueType>
         auto btree<P>::insert_hint_multi(iterator position, ValueType&& v) -> iterator
         {
-            if (!empty())
-            {
+            if (!empty()) {
                 const key_type& key = params_type::key(v);
-                if (position == end() || !compare_keys(position.key(), key))
-                {
+                if (position == end() || !compare_keys(position.key(), key)) {
                     iterator prev = position;
-                    if (position == begin() || !compare_keys(key, (--prev).key()))
-                    {
+                    if (position == begin() || !compare_keys(key, (--prev).key())) {
                         // prev.key() <= key <= position.key()
                         return internal_emplace(position, std::forward<ValueType>(v));
                     }
                 }
-                else
-                {
+                else {
                     iterator next = position;
                     ++next;
-                    if (next == end() || !compare_keys(next.key(), key))
-                    {
+                    if (next == end() || !compare_keys(next.key(), key)) {
                         // position.key() < key <= next.key()
                         return internal_emplace(next, std::forward<ValueType>(v));
                     }
@@ -2640,8 +2551,7 @@ namespace phmap
         template <typename InputIterator>
         void btree<P>::insert_iterator_multi(InputIterator b, InputIterator e)
         {
-            for (; b != e; ++b)
-            {
+            for (; b != e; ++b) {
                 insert_hint_multi(end(), *b);
             }
         }
@@ -2649,13 +2559,11 @@ namespace phmap
         template <typename P>
         auto btree<P>::operator=(const btree& x) -> btree&
         {
-            if (this != &x)
-            {
+            if (this != &x) {
                 clear();
 
                 *mutable_key_comp() = x.key_comp();
-                if (phmap::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value)
-                {
+                if (phmap::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value) {
                     *mutable_allocator() = x.allocator();
                 }
 
@@ -2667,29 +2575,24 @@ namespace phmap
         template <typename P>
         auto btree<P>::operator=(btree&& x) noexcept -> btree&
         {
-            if (this != &x)
-            {
+            if (this != &x) {
                 clear();
 
                 using std::swap;
-                if (phmap::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value)
-                {
+                if (phmap::allocator_traits<allocator_type>::propagate_on_container_copy_assignment::value) {
                     // Note: `root_` also contains the allocator and the key comparator.
                     swap(root_, x.root_);
                     swap(rightmost_, x.rightmost_);
                     swap(size_, x.size_);
                 }
-                else
-                {
-                    if (allocator() == x.allocator())
-                    {
+                else {
+                    if (allocator() == x.allocator()) {
                         swap(mutable_root(), x.mutable_root());
                         swap(*mutable_key_comp(), *x.mutable_key_comp());
                         swap(rightmost_, x.rightmost_);
                         swap(size_, x.size_);
                     }
-                    else
-                    {
+                    else {
                         // We aren't allowed to propagate the allocator and the allocator is
                         // different so we can't take over its memory. We must move each element
                         // individually. We need both `x` and `this` to have `x`s key comparator
@@ -2706,8 +2609,7 @@ namespace phmap
         auto btree<P>::erase(iterator iter) -> iterator
         {
             bool internal_delete = false;
-            if (!iter.node->leaf())
-            {
+            if (!iter.node->leaf()) {
                 // Deletion of a value on an internal node. First, move the largest value
                 // from our left child here, then delete that position (in remove_value()
                 // below). We can get to the largest value from our left child by
@@ -2733,8 +2635,7 @@ namespace phmap
             iterator res = rebalance_after_delete(iter);
 
             // If we erased from an internal node, advance the iterator.
-            if (internal_delete)
-            {
+            if (internal_delete) {
                 ++res;
             }
             return res;
@@ -2746,31 +2647,25 @@ namespace phmap
             // Merge/rebalance as we walk back up the tree.
             iterator res(iter);
             bool     first_iteration = true;
-            for (;;)
-            {
-                if (iter.node == root())
-                {
+            for (;;) {
+                if (iter.node == root()) {
                     try_shrink();
-                    if (empty())
-                    {
+                    if (empty()) {
                         return end();
                     }
                     break;
                 }
-                if (iter.node->count() >= kMinNodeValues)
-                {
+                if (iter.node->count() >= kMinNodeValues) {
                     break;
                 }
                 bool merged = try_merge_or_rebalance(&iter);
                 // On the first iteration, we should update `res` with `iter` because `res`
                 // may have been invalidated.
-                if (first_iteration)
-                {
+                if (first_iteration) {
                     res             = iter;
                     first_iteration = false;
                 }
-                if (!merged)
-                {
+                if (!merged) {
                     break;
                 }
                 iter.position = iter.node->position();
@@ -2779,8 +2674,7 @@ namespace phmap
 
             // Adjust our return value. If we're pointing at the end of a node, advance
             // the iterator.
-            if (res.position == res.node->count())
-            {
+            if (res.position == res.node->count()) {
                 res.position = res.node->count() - 1;
                 ++res;
             }
@@ -2794,35 +2688,29 @@ namespace phmap
             difference_type count = std::distance(_begin, _end);
             assert(count >= 0);
 
-            if (count == 0)
-            {
+            if (count == 0) {
                 return { 0, _begin };
             }
 
-            if (count == (difference_type)size_)
-            {
+            if (count == (difference_type)size_) {
                 clear();
                 return { count, this->end() };
             }
 
-            if (_begin.node == _end.node)
-            {
+            if (_begin.node == _end.node) {
                 erase_same_node(_begin, _end);
                 size_ -= count;
                 return { count, rebalance_after_delete(_begin) };
             }
 
             const size_type target_size = size_ - count;
-            while (size_ > target_size)
-            {
-                if (_begin.node->leaf())
-                {
+            while (size_ > target_size) {
+                if (_begin.node->leaf()) {
                     const size_type remaining_to_erase = size_ - target_size;
                     const size_type remaining_in_node  = _begin.node->count() - _begin.position;
                     _begin                             = erase_from_leaf_node(_begin, (std::min)(remaining_to_erase, remaining_in_node));
                 }
-                else
-                {
+                else {
                     _begin = erase(_begin);
                 }
             }
@@ -2837,16 +2725,13 @@ namespace phmap
 
             node_type* node     = _begin.node;
             size_type  to_erase = _end.position - _begin.position;
-            if (!node->leaf())
-            {
+            if (!node->leaf()) {
                 // Delete all children between _begin and _end.
-                for (size_type i = 0; i < to_erase; ++i)
-                {
+                for (size_type i = 0; i < to_erase; ++i) {
                     internal_clear(node->child(_begin.position + i + 1));
                 }
                 // Rotate children after _end into new positions.
-                for (size_type i = _begin.position + to_erase + 1; i <= node->count(); ++i)
-                {
+                for (size_type i = _begin.position + to_erase + 1; i <= node->count(); ++i) {
                     node->set_child(i - to_erase, node->child(i));
                     node->clear_child(i);
                 }
@@ -2880,8 +2765,7 @@ namespace phmap
         auto btree<P>::erase_unique(const K& key) -> size_type
         {
             const iterator iter = internal_find(key);
-            if (iter.node == nullptr)
-            {
+            if (iter.node == nullptr) {
                 // The key doesn't exist in the tree, return nothing done.
                 return 0;
             }
@@ -2894,8 +2778,7 @@ namespace phmap
         auto btree<P>::erase_multi(const K& key) -> size_type
         {
             const iterator _begin = internal_lower_bound(key);
-            if (_begin.node == nullptr)
-            {
+            if (_begin.node == nullptr) {
                 // The key doesn't exist in the tree, return nothing done.
                 return 0;
             }
@@ -2907,8 +2790,7 @@ namespace phmap
         template <typename P>
         void btree<P>::clear()
         {
-            if (!empty())
-            {
+            if (!empty()) {
                 internal_clear(root());
             }
             mutable_root() = EmptyNode();
@@ -2920,13 +2802,11 @@ namespace phmap
         void btree<P>::swap(btree& x)
         {
             using std::swap;
-            if (phmap::allocator_traits<allocator_type>::propagate_on_container_swap::value)
-            {
+            if (phmap::allocator_traits<allocator_type>::propagate_on_container_swap::value) {
                 // Note: `root_` also contains the allocator and the key comparator.
                 swap(root_, x.root_);
             }
-            else
-            {
+            else {
                 // It's undefined behavior if the allocators are unequal here.
                 assert(allocator() == x.allocator());
                 swap(mutable_root(), x.mutable_root());
@@ -2959,29 +2839,24 @@ namespace phmap
 
             // First try to make room on the node by rebalancing.
             node_type* parent = node->parent();
-            if (node != root())
-            {
-                if (node->position() > 0)
-                {
+            if (node != root()) {
+                if (node->position() > 0) {
                     // Try rebalancing with our left sibling.
                     node_type* left = parent->child(node->position() - 1);
                     assert(left->max_count() == kNodeValues);
-                    if (left->count() < kNodeValues)
-                    {
+                    if (left->count() < kNodeValues) {
                         // We bias rebalancing based on the position being inserted. If we're
                         // inserting at the end of the right node then we bias rebalancing to
                         // fill up the left node.
                         int to_move = (kNodeValues - left->count()) / (1 + (insert_position < kNodeValues));
                         to_move     = (std::max)(1, to_move);
 
-                        if (((insert_position - to_move) >= 0) || ((left->count() + to_move) < kNodeValues))
-                        {
+                        if (((insert_position - to_move) >= 0) || ((left->count() + to_move) < kNodeValues)) {
                             left->rebalance_right_to_left(to_move, node, mutable_allocator());
 
                             assert(node->max_count() - node->count() == to_move);
                             insert_position = insert_position - to_move;
-                            if (insert_position < 0)
-                            {
+                            if (insert_position < 0) {
                                 insert_position = insert_position + left->count() + 1;
                                 node            = left;
                             }
@@ -2992,25 +2867,21 @@ namespace phmap
                     }
                 }
 
-                if (node->position() < parent->count())
-                {
+                if (node->position() < parent->count()) {
                     // Try rebalancing with our right sibling.
                     node_type* right = parent->child(node->position() + 1);
                     assert(right->max_count() == kNodeValues);
-                    if (right->count() < kNodeValues)
-                    {
+                    if (right->count() < kNodeValues) {
                         // We bias rebalancing based on the position being inserted. If we're
                         // inserting at the _beginning of the left node then we bias rebalancing
                         // to fill up the right node.
                         int to_move = (kNodeValues - right->count()) / (1 + (insert_position > 0));
                         to_move     = (std::max)(1, to_move);
 
-                        if ((insert_position <= (node->count() - to_move)) || ((right->count() + to_move) < kNodeValues))
-                        {
+                        if ((insert_position <= (node->count() - to_move)) || ((right->count() + to_move) < kNodeValues)) {
                             node->rebalance_left_to_right(to_move, right, mutable_allocator());
 
-                            if (insert_position > node->count())
-                            {
+                            if (insert_position > node->count()) {
                                 insert_position = insert_position - node->count() - 1;
                                 node            = right;
                             }
@@ -3024,14 +2895,12 @@ namespace phmap
                 // Rebalancing failed, make sure there is room on the parent node for a new
                 // value.
                 assert(parent->max_count() == kNodeValues);
-                if (parent->count() == kNodeValues)
-                {
+                if (parent->count() == kNodeValues) {
                     iterator parent_iter(node->parent(), node->position());
                     rebalance_or_split(&parent_iter);
                 }
             }
-            else
-            {
+            else {
                 // Rebalancing not possible because this is the root node.
                 // Create a new root node and set the current root node as the child of the
                 // new root.
@@ -3044,21 +2913,18 @@ namespace phmap
 
             // Split the node.
             node_type* split_node;
-            if (node->leaf())
-            {
+            if (node->leaf()) {
                 split_node = new_leaf_node(parent);
                 node->split(insert_position, split_node, mutable_allocator());
                 if (rightmost_ == node)
                     rightmost_ = split_node;
             }
-            else
-            {
+            else {
                 split_node = new_internal_node(parent);
                 node->split(insert_position, split_node, mutable_allocator());
             }
 
-            if (insert_position > node->count())
-            {
+            if (insert_position > node->count()) {
                 insert_position = insert_position - node->count() - 1;
                 node            = split_node;
             }
@@ -3068,14 +2934,12 @@ namespace phmap
         void btree<P>::merge_nodes(node_type* left, node_type* right)
         {
             left->merge(right, mutable_allocator());
-            if (right->leaf())
-            {
+            if (right->leaf()) {
                 if (rightmost_ == right)
                     rightmost_ = left;
                 delete_leaf_node(right);
             }
-            else
-            {
+            else {
                 delete_internal_node(right);
             }
         }
@@ -3084,26 +2948,22 @@ namespace phmap
         bool btree<P>::try_merge_or_rebalance(iterator* iter)
         {
             node_type* parent = iter->node->parent();
-            if (iter->node->position() > 0)
-            {
+            if (iter->node->position() > 0) {
                 // Try merging with our left sibling.
                 node_type* left = parent->child(iter->node->position() - 1);
                 assert(left->max_count() == kNodeValues);
-                if ((1 + left->count() + iter->node->count()) <= kNodeValues)
-                {
+                if ((1 + left->count() + iter->node->count()) <= kNodeValues) {
                     iter->position += 1 + left->count();
                     merge_nodes(left, iter->node);
                     iter->node = left;
                     return true;
                 }
             }
-            if (iter->node->position() < parent->count())
-            {
+            if (iter->node->position() < parent->count()) {
                 // Try merging with our right sibling.
                 node_type* right = parent->child(iter->node->position() + 1);
                 assert(right->max_count() == kNodeValues);
-                if ((1 + iter->node->count() + right->count()) <= kNodeValues)
-                {
+                if ((1 + iter->node->count() + right->count()) <= kNodeValues) {
                     merge_nodes(iter->node, right);
                     return true;
                 }
@@ -3111,23 +2971,20 @@ namespace phmap
                 // we deleted the first element from iter->node and the node is not
                 // empty. This is a small optimization for the common pattern of deleting
                 // from the front of the tree.
-                if ((right->count() > kMinNodeValues) && ((iter->node->count() == 0) || (iter->position > 0)))
-                {
+                if ((right->count() > kMinNodeValues) && ((iter->node->count() == 0) || (iter->position > 0))) {
                     int to_move = (right->count() - iter->node->count()) / 2;
                     to_move     = (std::min)(to_move, right->count() - 1);
                     iter->node->rebalance_right_to_left(to_move, right, mutable_allocator());
                     return false;
                 }
             }
-            if (iter->node->position() > 0)
-            {
+            if (iter->node->position() > 0) {
                 // Try rebalancing with our left sibling. We don't perform rebalancing if
                 // we deleted the last element from iter->node and the node is not
                 // empty. This is a small optimization for the common pattern of deleting
                 // from the back of the tree.
                 node_type* left = parent->child(iter->node->position() - 1);
-                if ((left->count() > kMinNodeValues) && ((iter->node->count() == 0) || (iter->position < iter->node->count())))
-                {
+                if ((left->count() > kMinNodeValues) && ((iter->node->count() == 0) || (iter->position < iter->node->count()))) {
                     int to_move = (left->count() - iter->node->count()) / 2;
                     to_move     = (std::min)(to_move, left->count() - 1);
                     left->rebalance_left_to_right(to_move, iter->node, mutable_allocator());
@@ -3141,20 +2998,17 @@ namespace phmap
         template <typename P>
         void btree<P>::try_shrink()
         {
-            if (root()->count() > 0)
-            {
+            if (root()->count() > 0) {
                 return;
             }
             // Deleted the last item on the root node, shrink the height of the tree.
-            if (root()->leaf())
-            {
+            if (root()->leaf()) {
                 assert(size() == 0);
                 delete_leaf_node(root());
                 mutable_root() = EmptyNode();
                 rightmost_     = EmptyNode();
             }
-            else
-            {
+            else {
                 node_type* child = root()->child(0);
                 child->make_root();
                 delete_internal_node(root());
@@ -3167,12 +3021,10 @@ namespace phmap
         inline IterType btree<P>::internal_last(IterType iter)
         {
             assert(iter.node != nullptr);
-            while (iter.position == iter.node->count())
-            {
+            while (iter.position == iter.node->count()) {
                 iter.position = iter.node->position();
                 iter.node     = iter.node->parent();
-                if (iter.node->leaf())
-                {
+                if (iter.node->leaf()) {
                     iter.node = nullptr;
                     break;
                 }
@@ -3184,19 +3036,16 @@ namespace phmap
         template <typename... Args>
         inline auto btree<P>::internal_emplace(iterator iter, Args&&... args) -> iterator
         {
-            if (!iter.node->leaf())
-            {
+            if (!iter.node->leaf()) {
                 // We can't insert on an internal node. Instead, we'll insert after the
                 // previous value which is guaranteed to be on a leaf node.
                 --iter;
                 ++iter.position;
             }
             const int max_count = iter.node->max_count();
-            if (iter.node->count() == max_count)
-            {
+            if (iter.node->count() == max_count) {
                 // Make room in the leaf for the new item.
-                if (max_count < kNodeValues)
-                {
+                if (max_count < kNodeValues) {
                     // Insertion into the root where the root is smaller than the full node
                     // size. Simply grow the size of the root node.
                     assert(iter.node == root());
@@ -3206,8 +3055,7 @@ namespace phmap
                     mutable_root() = iter.node;
                     rightmost_     = iter.node;
                 }
-                else
-                {
+                else {
                     rebalance_or_split(&iter);
                 }
             }
@@ -3228,15 +3076,13 @@ namespace phmap
         inline auto btree<P>::internal_locate_impl(const K& key, std::false_type /* IsCompareTo */) const -> SearchResult<iterator, false>
         {
             iterator iter(const_cast<node_type*>(root()), 0);
-            for (;;)
-            {
+            for (;;) {
                 iter.position = iter.node->lower_bound(key, key_comp()).value;
                 // NOTE: we don't need to walk all the way down the tree if the keys are
                 // equal, but determining equality would require doing an extra comparison
                 // on each node on the way down, and we will need to go all the way to the
                 // leaf node in the expected case.
-                if (iter.node->leaf())
-                {
+                if (iter.node->leaf()) {
                     break;
                 }
                 iter.node = iter.node->child(iter.position);
@@ -3249,16 +3095,13 @@ namespace phmap
         inline auto btree<P>::internal_locate_impl(const K& key, std::true_type /* IsCompareTo */) const -> SearchResult<iterator, true>
         {
             iterator iter(const_cast<node_type*>(root()), 0);
-            for (;;)
-            {
+            for (;;) {
                 SearchResult<int, true> res = iter.node->lower_bound(key, key_comp());
                 iter.position               = res.value;
-                if (res.match == MatchKind::kEq)
-                {
+                if (res.match == MatchKind::kEq) {
                     return { iter, MatchKind::kEq };
                 }
-                if (iter.node->leaf())
-                {
+                if (iter.node->leaf()) {
                     break;
                 }
                 iter.node = iter.node->child(iter.position);
@@ -3271,11 +3114,9 @@ namespace phmap
         auto btree<P>::internal_lower_bound(const K& key) const -> iterator
         {
             iterator iter(const_cast<node_type*>(root()), 0);
-            for (;;)
-            {
+            for (;;) {
                 iter.position = iter.node->lower_bound(key, key_comp()).value;
-                if (iter.node->leaf())
-                {
+                if (iter.node->leaf()) {
                     break;
                 }
                 iter.node = iter.node->child(iter.position);
@@ -3288,11 +3129,9 @@ namespace phmap
         auto btree<P>::internal_upper_bound(const K& key) const -> iterator
         {
             iterator iter(const_cast<node_type*>(root()), 0);
-            for (;;)
-            {
+            for (;;) {
                 iter.position = iter.node->upper_bound(key, key_comp());
-                if (iter.node->leaf())
-                {
+                if (iter.node->leaf()) {
                     break;
                 }
                 iter.node = iter.node->child(iter.position);
@@ -3305,18 +3144,14 @@ namespace phmap
         auto btree<P>::internal_find(const K& key) const -> iterator
         {
             auto res = internal_locate(key);
-            if (res.HasMatch())
-            {
-                if (res.IsEq())
-                {
+            if (res.HasMatch()) {
+                if (res.IsEq()) {
                     return res.value;
                 }
             }
-            else
-            {
+            else {
                 const iterator iter = internal_last(res.value);
-                if (iter.node != nullptr && !compare_keys(key, iter.key()))
-                {
+                if (iter.node != nullptr && !compare_keys(key, iter.key())) {
                     return iter;
                 }
             }
@@ -3326,16 +3161,13 @@ namespace phmap
         template <typename P>
         void btree<P>::internal_clear(node_type* node)
         {
-            if (!node->leaf())
-            {
-                for (int i = 0; i <= node->count(); ++i)
-                {
+            if (!node->leaf()) {
+                for (int i = 0; i <= node->count(); ++i) {
                     internal_clear(node->child(i));
                 }
                 delete_internal_node(node);
             }
-            else
-            {
+            else {
                 delete_leaf_node(node);
             }
         }
@@ -3345,23 +3177,18 @@ namespace phmap
         {
             assert(node->count() > 0);
             assert(node->count() <= node->max_count());
-            if (lo)
-            {
+            if (lo) {
                 assert(!compare_keys(node->key(0), *lo));
             }
-            if (hi)
-            {
+            if (hi) {
                 assert(!compare_keys(*hi, node->key(node->count() - 1)));
             }
-            for (int i = 1; i < node->count(); ++i)
-            {
+            for (int i = 1; i < node->count(); ++i) {
                 assert(!compare_keys(node->key(i), node->key(i - 1)));
             }
             size_type count = node->count();
-            if (!node->leaf())
-            {
-                for (int i = 0; i <= node->count(); ++i)
-                {
+            if (!node->leaf()) {
+                for (int i = 0; i <= node->count(); ++i) {
                     assert(node->child(i) != nullptr);
                     assert(node->child(i)->parent() == node);
                     assert(node->child(i)->position() == i);
@@ -3568,8 +3395,7 @@ namespace phmap
             template <typename State>
             friend State AbslHashValue(State h, const btree_container& b)
             {
-                for (const auto& v : b)
-                {
+                for (const auto& v : b) {
                     h = State::combine(std::move(h), v);
                 }
                 return State::combine(std::move(h), b.size());
@@ -3664,13 +3490,11 @@ namespace phmap
                 if (!node)
                     return { this->end(), false, node_type() };
                 std::pair<iterator, bool> res = this->tree_.insert_unique(params_type::key(CommonAccess::GetSlot(node)), CommonAccess::GetSlot(node));
-                if (res.second)
-                {
+                if (res.second) {
                     CommonAccess::Destroy(&node);
                     return { res.first, true, node_type() };
                 }
-                else
-                {
+                else {
                     return { res.first, false, std::move(node) };
                 }
             }
@@ -3712,14 +3536,11 @@ namespace phmap
                       = 0>
             void merge(btree_container<T>& src)
             { // NOLINT
-                for (auto src_it = src.begin(); src_it != src.end();)
-                {
-                    if (insert(std::move(*src_it)).second)
-                    {
+                for (auto src_it = src.begin(); src_it != src.end();) {
+                    if (insert(std::move(*src_it)).second) {
                         src_it = src.erase(src_it);
                     }
-                    else
-                    {
+                    else {
                         ++src_it;
                     }
                 }
@@ -4030,14 +3851,11 @@ namespace phmap
     template <typename K, typename C, typename A, typename Pred>
     void erase_if(btree_set<K, C, A>& set, Pred pred)
     {
-        for (auto it = set.begin(); it != set.end();)
-        {
-            if (pred(*it))
-            {
+        for (auto it = set.begin(); it != set.end();) {
+            if (pred(*it)) {
                 it = set.erase(it);
             }
-            else
-            {
+            else {
                 ++it;
             }
         }
@@ -4094,14 +3912,11 @@ namespace phmap
     template <typename K, typename C, typename A, typename Pred>
     void erase_if(btree_multiset<K, C, A>& set, Pred pred)
     {
-        for (auto it = set.begin(); it != set.end();)
-        {
-            if (pred(*it))
-            {
+        for (auto it = set.begin(); it != set.end();) {
+            if (pred(*it)) {
                 it = set.erase(it);
             }
-            else
-            {
+            else {
                 ++it;
             }
         }
@@ -4160,14 +3975,11 @@ namespace phmap
     template <typename K, typename V, typename C, typename A, typename Pred>
     void erase_if(btree_map<K, V, C, A>& map, Pred pred)
     {
-        for (auto it = map.begin(); it != map.end();)
-        {
-            if (pred(*it))
-            {
+        for (auto it = map.begin(); it != map.end();) {
+            if (pred(*it)) {
                 it = map.erase(it);
             }
-            else
-            {
+            else {
                 ++it;
             }
         }
@@ -4224,14 +4036,11 @@ namespace phmap
     template <typename K, typename V, typename C, typename A, typename Pred>
     void erase_if(btree_multimap<K, V, C, A>& map, Pred pred)
     {
-        for (auto it = map.begin(); it != map.end();)
-        {
-            if (pred(*it))
-            {
+        for (auto it = map.begin(); it != map.end();) {
+            if (pred(*it)) {
                 it = map.erase(it);
             }
-            else
-            {
+            else {
                 ++it;
             }
         }

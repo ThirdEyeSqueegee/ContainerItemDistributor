@@ -86,19 +86,16 @@ namespace phmap
 
             size_t version = 0;
             ar.loadBinary(&version, sizeof(size_t));
-            if (version < s_version_base)
-            {
+            if (version < s_version_base) {
                 // we didn't store the version, version actually contains the size
                 size_ = version;
             }
-            else
-            {
+            else {
                 ar.loadBinary(&size_, sizeof(size_t));
             }
             ar.loadBinary(&capacity_, sizeof(size_t));
 
-            if (capacity_)
-            {
+            if (capacity_) {
                 // allocate memory for ctrl_ and slots_
                 initialize_slots(capacity_);
             }
@@ -106,8 +103,7 @@ namespace phmap
                 return true;
             ar.loadBinary(ctrl_, sizeof(ctrl_t) * (capacity_ + Group::kWidth + 1));
             ar.loadBinary(slots_, sizeof(slot_type) * capacity_);
-            if (version >= s_version_base)
-            {
+            if (version >= s_version_base) {
                 // growth_left should be restored after calling initialize_slots() which resets it.
                 ar.loadBinary(&growth_left(), sizeof(size_t));
             }
@@ -125,12 +121,10 @@ namespace phmap
 
             size_t submap_count = subcnt();
             ar.saveBinary(&submap_count, sizeof(size_t));
-            for (size_t i = 0; i < sets_.size(); ++i)
-            {
+            for (size_t i = 0; i < sets_.size(); ++i) {
                 auto&                         inner = sets_[i];
                 typename Lockable::UniqueLock m(const_cast<Inner&>(inner));
-                if (!inner.set_.phmap_dump(ar))
-                {
+                if (!inner.set_.phmap_dump(ar)) {
                     std::cerr << "Failed to dump submap " << i << std::endl;
                     return false;
                 }
@@ -146,18 +140,15 @@ namespace phmap
 
             size_t submap_count = 0;
             ar.loadBinary(&submap_count, sizeof(size_t));
-            if (submap_count != subcnt())
-            {
+            if (submap_count != subcnt()) {
                 std::cerr << "submap count(" << submap_count << ") != N(" << N << ")" << std::endl;
                 return false;
             }
 
-            for (size_t i = 0; i < submap_count; ++i)
-            {
+            for (size_t i = 0; i < submap_count; ++i) {
                 auto&                         inner = sets_[i];
                 typename Lockable::UniqueLock m(const_cast<Inner&>(inner));
-                if (!inner.set_.phmap_load(ar))
-                {
+                if (!inner.set_.phmap_load(ar)) {
                     std::cerr << "Failed to load submap " << i << std::endl;
                     return false;
                 }

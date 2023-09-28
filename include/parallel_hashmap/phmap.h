@@ -399,8 +399,7 @@ namespace phmap
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverflow"
 
-            if (std::is_unsigned<char>::value)
-            {
+            if (std::is_unsigned<char>::value) {
                 const __m128i mask = _mm_set1_epi8(static_cast<char>(0x80));
                 const __m128i diff = _mm_subs_epi8(b, a);
                 return _mm_cmpeq_epi8(_mm_and_si128(diff, mask), mask);
@@ -587,8 +586,7 @@ namespace phmap
         {
             assert(ctrl[capacity] == kSentinel);
             assert(IsValidCapacity(capacity));
-            for (ctrl_t* pos = ctrl; pos != ctrl + capacity + 1; pos += Group::kWidth)
-            {
+            for (ctrl_t* pos = ctrl; pos != ctrl + capacity + 1; pos += Group::kWidth) {
                 Group{ pos }.ConvertSpecialToEmptyAndFullToDeleted(pos);
             }
             // Copy the cloned ctrl bytes.
@@ -614,8 +612,7 @@ namespace phmap
             // `capacity*7/8`
             PHMAP_IF_CONSTEXPR(Group::kWidth == 8)
             {
-                if (capacity == 7)
-                {
+                if (capacity == 7) {
                     // x-x/8 does not work when x==7.
                     return 6;
                 }
@@ -632,8 +629,7 @@ namespace phmap
             // `growth*8/7`
             PHMAP_IF_CONSTEXPR(Group::kWidth == 8)
             {
-                if (growth == 7)
-                {
+                if (growth == 7) {
                     // x+(x-1)/7 does not work when x==7.
                     return 8;
                 }
@@ -682,8 +678,7 @@ namespace phmap
                         return {};
                     size_t num_probes = 0;
                     size_t bucket     = c.bucket(key);
-                    for (auto it = c.begin(bucket), e = c.end(bucket);; ++it, ++num_probes)
-                    {
+                    for (auto it = c.begin(bucket), e = c.end(bucket);; ++it, ++num_probes) {
                         if (it == e)
                             return num_probes;
                         if (c.key_eq()(key, GetKey<Container>(*it, 0)))
@@ -1041,8 +1036,7 @@ namespace phmap
 
                 void skip_empty_or_deleted()
                 {
-                    while (IsEmptyOrDeleted(*ctrl_))
-                    {
+                    while (IsEmptyOrDeleted(*ctrl_)) {
                         // ctrl is not necessarily aligned to Group::kWidth. It is also likely
                         // to read past the space for ctrl bytes and into slots. This is ok
                         // because ctrl has sizeof() == 1 and slot has sizeof() >= 1 so there
@@ -1112,8 +1106,7 @@ namespace phmap
             explicit raw_hash_set(size_t bucket_cnt, const hasher& hashfn = hasher(), const key_equal& eq = key_equal(), const allocator_type& alloc = allocator_type())
                 : ctrl_(EmptyGroup()), settings_(0, hashfn, eq, alloc)
             {
-                if (bucket_cnt)
-                {
+                if (bucket_cnt) {
                     size_t new_capacity = NormalizeCapacity(bucket_cnt);
                     reset_growth_left(new_capacity);
                     initialize_slots(new_capacity);
@@ -1217,8 +1210,7 @@ namespace phmap
                 rehash(that.capacity()); // operator=() should preserve load_factor
                 // Because the table is guaranteed to be empty, we can do something faster
                 // than a full `insert`.
-                for (const auto& v : that)
-                {
+                for (const auto& v : that) {
                     const size_t hashval = PolicyTraits::apply(HashElement{ hash_ref() }, v);
                     auto         target  = find_first_non_full(hashval);
                     set_ctrl(target.offset, H2(hashval));
@@ -1245,8 +1237,7 @@ namespace phmap
             raw_hash_set(raw_hash_set&& that, const allocator_type& a)
                 : ctrl_(EmptyGroup()), slots_(nullptr), size_(0), capacity_(0), settings_(0, that.hash_ref(), that.eq_ref(), a)
             {
-                if (a == that.alloc_ref())
-                {
+                if (a == that.alloc_ref()) {
                     std::swap(ctrl_, that.ctrl_);
                     std::swap(slots_, that.slots_);
                     std::swap(size_, that.size_);
@@ -1254,8 +1245,7 @@ namespace phmap
                     std::swap(growth_left(), that.growth_left());
                     std::swap(infoz_, that.infoz_);
                 }
-                else
-                {
+                else {
                     reserve(that.size());
                     // Note: this will copy elements of dense_set and unordered_set instead of
                     // moving them. This can be fixed if it ever becomes an issue.
@@ -1317,15 +1307,11 @@ namespace phmap
             {
                 if (empty())
                     return;
-                if (capacity_)
-                {
-                    if constexpr (!std::is_trivially_destructible<typename PolicyTraits::value_type>::value || std::is_same<typename Policy::is_flat, std::false_type>::value)
-                    {
+                if (capacity_) {
+                    if constexpr (!std::is_trivially_destructible<typename PolicyTraits::value_type>::value || std::is_same<typename Policy::is_flat, std::false_type>::value) {
                         // node map or not trivially destructible... we  need to iterate and destroy values one by one
-                        for (size_t i = 0; i != capacity_; ++i)
-                        {
-                            if (IsFull(ctrl_[i]))
-                            {
+                        for (size_t i = 0; i != capacity_; ++i) {
+                            if (IsFull(ctrl_[i])) {
                                 PolicyTraits::destroy(&alloc_ref(), slots_ + i);
                             }
                         }
@@ -1441,13 +1427,11 @@ namespace phmap
                     return { end(), false, node_type() };
                 const auto& elem = PolicyTraits::element(CommonAccess::GetSlot(node));
                 auto        res  = PolicyTraits::apply(InsertSlot<false>{ *this, std::move(*CommonAccess::GetSlot(node)) }, elem);
-                if (res.second)
-                {
+                if (res.second) {
                     CommonAccess::Reset(&node);
                     return { res.first, true, node_type() };
                 }
-                else
-                {
+                else {
                     return { res.first, false, std::move(node) };
                 }
             }
@@ -1458,13 +1442,11 @@ namespace phmap
                     return { end(), false, node_type() };
                 const auto& elem = PolicyTraits::element(CommonAccess::GetSlot(node));
                 auto        res  = PolicyTraits::apply(InsertSlotWithHash<false>{ *this, std::move(*CommonAccess::GetSlot(node)), hashval }, elem);
-                if (res.second)
-                {
+                if (res.second) {
                     CommonAccess::Reset(&node);
                     return { res.first, true, node_type() };
                 }
-                else
-                {
+                else {
                     return { res.first, false, std::move(node) };
                 }
             }
@@ -1605,8 +1587,7 @@ namespace phmap
             iterator lazy_emplace_with_hash(const key_arg<K>& key, size_t hashval, F&& f)
             {
                 auto res = find_or_prepare_insert(key, hashval);
-                if (res.second)
-                {
+                if (res.second) {
                     lazy_emplace_at(res.first, std::forward<F>(f));
                     this->set_ctrl(res.first, H2(hashval));
                 }
@@ -1625,8 +1606,7 @@ namespace phmap
             void emplace_single_with_hash(const key_arg<K>& key, size_t hashval, F&& f)
             {
                 auto res = find_or_prepare_insert(key, hashval);
-                if (res.second)
-                {
+                if (res.second) {
                     lazy_emplace_at(res.first, std::forward<F>(f));
                     this->set_ctrl(res.first, H2(hashval));
                 }
@@ -1688,8 +1668,7 @@ namespace phmap
 
             iterator erase(const_iterator first, const_iterator last)
             {
-                while (first != last)
-                {
+                while (first != last) {
                     _erase(first++);
                 }
                 return last.inner_;
@@ -1701,10 +1680,8 @@ namespace phmap
             void merge(raw_hash_set<Policy, H, E, Alloc>& src)
             { // NOLINT
                 assert(this != &src);
-                for (auto it = src.begin(), e = src.end(); it != e; ++it)
-                {
-                    if (PolicyTraits::apply(InsertSlot<false>{ *this, std::move(*it.slot_) }, PolicyTraits::element(it.slot_)).second)
-                    {
+                for (auto it = src.begin(), e = src.end(); it != e; ++it) {
+                    if (PolicyTraits::apply(InsertSlot<false>{ *this, std::move(*it.slot_) }, PolicyTraits::element(it.slot_)).second) {
                         src.erase_meta_only(it);
                     }
                 }
@@ -1758,8 +1735,7 @@ namespace phmap
             {
                 if (n == 0 && capacity_ == 0)
                     return;
-                if (n == 0 && size_ == 0)
-                {
+                if (n == 0 && size_ == 0) {
                     destroy_slots();
                     infoz_.RecordStorageChanged(0, 0);
                     return;
@@ -1768,8 +1744,7 @@ namespace phmap
                 // power-of-2-minus-1, so bitor is good enough.
                 auto m = NormalizeCapacity((std::max)(n, size()));
                 // n == 0 unconditionally rehashes as per the standard.
-                if (n == 0 || m > capacity_)
-                {
+                if (n == 0 || m > capacity_) {
                     resize(m);
                 }
             }
@@ -1940,11 +1915,9 @@ namespace phmap
             bool find_impl(const key_arg<K>& key, size_t hashval, size_t& offset)
             {
                 auto seq = probe(hashval);
-                while (true)
-                {
+                while (true) {
                     Group g{ ctrl_ + seq.offset() };
-                    for (uint32_t i : g.Match((h2_t)H2(hashval)))
-                    {
+                    for (uint32_t i : g.Match((h2_t)H2(hashval))) {
                         offset = seq.offset((size_t)i);
                         if (PHMAP_PREDICT_TRUE(PolicyTraits::apply(EqualElement<K>{ key, eq_ref() }, PolicyTraits::element(slots_ + offset))))
                             return true;
@@ -1994,8 +1967,7 @@ namespace phmap
             std::pair<iterator, bool> emplace_decomposable(const K& key, size_t hashval, Args&&... args)
             {
                 auto res = find_or_prepare_insert(key, hashval);
-                if (res.second)
-                {
+                if (res.second) {
                     emplace_at(res.first, std::forward<Args>(args)...);
                     this->set_ctrl(res.first, H2(hashval));
                 }
@@ -2033,13 +2005,11 @@ namespace phmap
                 {
                     size_t hashval = s.hash(key);
                     auto   res     = s.find_or_prepare_insert(key, hashval);
-                    if (res.second)
-                    {
+                    if (res.second) {
                         PolicyTraits::transfer(&s.alloc_ref(), s.slots_ + res.first, &slot);
                         s.set_ctrl(res.first, H2(hashval));
                     }
-                    else if (do_destroy)
-                    {
+                    else if (do_destroy) {
                         PolicyTraits::destroy(&s.alloc_ref(), &slot);
                     }
                     return { s.iterator_at(res.first), res.second };
@@ -2057,13 +2027,11 @@ namespace phmap
                 std::pair<iterator, bool> operator()(const K& key, Args&&...) &&
                 {
                     auto res = s.find_or_prepare_insert(key, hashval);
-                    if (res.second)
-                    {
+                    if (res.second) {
                         PolicyTraits::transfer(&s.alloc_ref(), s.slots_ + res.first, &slot);
                         s.set_ctrl(res.first, H2(hashval));
                     }
-                    else if (do_destroy)
-                    {
+                    else if (do_destroy) {
                         PolicyTraits::destroy(&s.alloc_ref(), &slot);
                     }
                     return { s.iterator_at(res.first), res.second };
@@ -2101,8 +2069,7 @@ namespace phmap
             void initialize_slots(size_t new_capacity)
             {
                 assert(new_capacity);
-                if (std::is_same<SlotAlloc, std::allocator<slot_type>>::value && slots_ == nullptr)
-                {
+                if (std::is_same<SlotAlloc, std::allocator<slot_type>>::value && slots_ == nullptr) {
                     infoz_ = Sample();
                 }
 
@@ -2120,14 +2087,11 @@ namespace phmap
                 if (!capacity_)
                     return;
 
-                if constexpr (!std::is_trivially_destructible<typename PolicyTraits::value_type>::value || std::is_same<typename Policy::is_flat, std::false_type>::value)
-                {
+                if constexpr (!std::is_trivially_destructible<typename PolicyTraits::value_type>::value || std::is_same<typename Policy::is_flat, std::false_type>::value) {
                     // node map, or not trivially destructible... we  need to iterate and destroy values one by one
                     // std::cout << "either this is a node map or " << type_name<typename PolicyTraits::value_type>()  << " is not trivially_destructible\n";
-                    for (size_t i = 0; i != capacity_; ++i)
-                    {
-                        if (IsFull(ctrl_[i]))
-                        {
+                    for (size_t i = 0; i != capacity_; ++i) {
+                        if (IsFull(ctrl_[i])) {
                             PolicyTraits::destroy(&alloc_ref(), slots_ + i);
                         }
                     }
@@ -2152,10 +2116,8 @@ namespace phmap
                 initialize_slots(new_capacity);
                 capacity_ = new_capacity;
 
-                for (size_t i = 0; i != old_capacity; ++i)
-                {
-                    if (IsFull(old_ctrl[i]))
-                    {
+                for (size_t i = 0; i != old_capacity; ++i) {
+                    if (IsFull(old_ctrl[i])) {
                         size_t hashval = PolicyTraits::apply(HashElement{ hash_ref() }, PolicyTraits::element(old_slots + i));
                         auto   target  = find_first_non_full(hashval);
                         size_t new_i   = target.offset;
@@ -2163,8 +2125,7 @@ namespace phmap
                         PolicyTraits::transfer(&alloc_ref(), slots_ + new_i, old_slots + i);
                     }
                 }
-                if (old_capacity)
-                {
+                if (old_capacity) {
                     SanitizerUnpoisonMemoryRegion(old_slots, sizeof(slot_type) * old_capacity);
                     auto layout = MakeLayout(old_capacity);
                     Deallocate<Layout::Alignment()>(&alloc_ref(), old_ctrl, layout.AllocSize());
@@ -2194,8 +2155,7 @@ namespace phmap
                 ConvertDeletedToEmptyAndFullToDeleted(ctrl_, capacity_);
                 typename phmap::aligned_storage<sizeof(slot_type), alignof(slot_type)>::type raw;
                 slot_type*                                                                   slot = reinterpret_cast<slot_type*>(&raw);
-                for (size_t i = 0; i != capacity_; ++i)
-                {
+                for (size_t i = 0; i != capacity_; ++i) {
                     if (!IsDeleted(ctrl_[i]))
                         continue;
                     size_t hashval = PolicyTraits::apply(HashElement{ hash_ref() }, PolicyTraits::element(slots_ + i));
@@ -2208,13 +2168,11 @@ namespace phmap
                     const auto probe_index = [&](size_t pos) { return ((pos - probe(hashval).offset()) & capacity_) / Group::kWidth; };
 
                     // Element doesn't move.
-                    if (PHMAP_PREDICT_TRUE(probe_index(new_i) == probe_index(i)))
-                    {
+                    if (PHMAP_PREDICT_TRUE(probe_index(new_i) == probe_index(i))) {
                         set_ctrl(i, H2(hashval));
                         continue;
                     }
-                    if (IsEmpty(ctrl_[new_i]))
-                    {
+                    if (IsEmpty(ctrl_[new_i])) {
                         // Transfer element to the empty spot.
                         // set_ctrl poisons/unpoisons the slots so we have to call it at the
                         // right time.
@@ -2222,8 +2180,7 @@ namespace phmap
                         PolicyTraits::transfer(&alloc_ref(), slots_ + new_i, slots_ + i);
                         set_ctrl(i, kEmpty);
                     }
-                    else
-                    {
+                    else {
                         assert(IsDeleted(ctrl_[new_i]));
                         set_ctrl(new_i, H2(hashval));
                         // Until we are done rehashing, DELETED marks previously FULL slots.
@@ -2239,17 +2196,14 @@ namespace phmap
 
             void rehash_and_grow_if_necessary()
             {
-                if (capacity_ == 0)
-                {
+                if (capacity_ == 0) {
                     resize(1);
                 }
-                else if (size() <= CapacityToGrowth(capacity()) / 2)
-                {
+                else if (size() <= CapacityToGrowth(capacity()) / 2) {
                     // Squash DELETED without growing if there is enough capacity.
                     drop_deletes_without_resize();
                 }
-                else
-                {
+                else {
                     // Otherwise grow the container.
                     resize(capacity_ * 2 + 1);
                 }
@@ -2258,11 +2212,9 @@ namespace phmap
             bool has_element(const value_type& elem, size_t hashval) const
             {
                 auto seq = probe(hashval);
-                while (true)
-                {
+                while (true) {
                     Group g{ ctrl_ + seq.offset() };
-                    for (uint32_t i : g.Match((h2_t)H2(hashval)))
-                    {
+                    for (uint32_t i : g.Match((h2_t)H2(hashval))) {
                         if (PHMAP_PREDICT_TRUE(PolicyTraits::element(slots_ + seq.offset((size_t)i)) == elem))
                             return true;
                     }
@@ -2298,12 +2250,10 @@ namespace phmap
             FindInfo find_first_non_full(size_t hashval)
             {
                 auto seq = probe(hashval);
-                while (true)
-                {
+                while (true) {
                     Group g{ ctrl_ + seq.offset() };
                     auto  mask = g.MatchEmptyOrDeleted();
-                    if (mask)
-                    {
+                    if (mask) {
                         return { seq.offset((size_t)mask.LowestBitSet()), seq.getindex() };
                     }
                     assert(seq.getindex() < capacity_ && "full table!");
@@ -2331,11 +2281,9 @@ namespace phmap
             std::pair<size_t, bool> find_or_prepare_insert(const K& key, size_t hashval)
             {
                 auto seq = probe(hashval);
-                while (true)
-                {
+                while (true) {
                     Group g{ ctrl_ + seq.offset() };
-                    for (uint32_t i : g.Match((h2_t)H2(hashval)))
-                    {
+                    for (uint32_t i : g.Match((h2_t)H2(hashval))) {
                         if (PHMAP_PREDICT_TRUE(PolicyTraits::apply(EqualElement<K>{ key, eq_ref() }, PolicyTraits::element(slots_ + seq.offset((size_t)i)))))
                             return { seq.offset((size_t)i), false };
                     }
@@ -2349,8 +2297,7 @@ namespace phmap
             size_t prepare_insert(size_t hashval) PHMAP_ATTRIBUTE_NOINLINE
             {
                 auto target = find_first_non_full(hashval);
-                if (PHMAP_PREDICT_FALSE(growth_left() == 0 && !IsDeleted(ctrl_[target.offset])))
-                {
+                if (PHMAP_PREDICT_FALSE(growth_left() == 0 && !IsDeleted(ctrl_[target.offset]))) {
                     rehash_and_grow_if_necessary();
                     target = find_first_non_full(hashval);
                 }
@@ -2391,12 +2338,10 @@ namespace phmap
             {
                 assert(i < capacity_);
 
-                if (IsFull(h))
-                {
+                if (IsFull(h)) {
                     SanitizerUnpoisonObject(slots_ + i);
                 }
-                else
-                {
+                else {
                     SanitizerPoisonObject(slots_ + i);
                 }
 
@@ -2621,8 +2566,7 @@ namespace phmap
             {
                 size_t hashval = this->hash(k);
                 auto   res     = this->find_or_prepare_insert(k, hashval);
-                if (res.second)
-                {
+                if (res.second) {
                     this->emplace_at(res.first, std::forward<K>(k), std::forward<V>(v));
                     this->set_ctrl(res.first, H2(hashval));
                 }
@@ -2636,8 +2580,7 @@ namespace phmap
             {
                 size_t hashval = this->hash(k);
                 auto   res     = this->find_or_prepare_insert(k, hashval);
-                if (res.second)
-                {
+                if (res.second) {
                     this->emplace_at(res.first, std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)), std::forward_as_tuple(std::forward<Args>(args)...));
                     this->set_ctrl(res.first, H2(hashval));
                 }
@@ -2814,16 +2757,13 @@ namespace phmap
 
                 void skip_empty()
                 {
-                    while (it_ == it_end_)
-                    {
+                    while (it_ == it_end_) {
                         ++inner_;
-                        if (inner_ == inner_end_)
-                        {
+                        if (inner_ == inner_end_) {
                             inner_ = nullptr; // marks end()
                             break;
                         }
-                        else
-                        {
+                        else {
                             it_     = inner_->set_.begin();
                             it_end_ = inner_->set_.end();
                         }
@@ -3076,8 +3016,7 @@ namespace phmap
 
             PHMAP_ATTRIBUTE_REINITIALIZES void clear()
             {
-                for (auto& inner : sets_)
-                {
+                for (auto& inner : sets_) {
                     typename Lockable::UniqueLock m(inner);
                     inner.set_.clear();
                 }
@@ -3440,8 +3379,7 @@ namespace phmap
                 auto it = this->template find<K, L>(key, this->hash(key), m);
                 if (it == this->end())
                     return false;
-                if (std::forward<F>(f)(const_cast<value_type&>(*it)))
-                {
+                if (std::forward<F>(f)(const_cast<value_type&>(*it))) {
                     this->erase(it);
                     return true;
                 }
@@ -3461,13 +3399,11 @@ namespace phmap
                 typename Lockable::UniqueLock m;
                 auto                          res   = this->find_or_prepare_insert_with_hash(hashval, key, m);
                 Inner*                        inner = std::get<0>(res);
-                if (std::get<2>(res))
-                {
+                if (std::get<2>(res)) {
                     inner->set_.lazy_emplace_at(std::get<1>(res), std::forward<FEmplace>(fEmplace));
                     inner->set_.set_ctrl(std::get<1>(res), H2(hashval));
                 }
-                else
-                {
+                else {
                     auto it = this->iterator_at(inner, inner->set_.iterator_at(std::get<1>(res)));
                     std::forward<FExists>(fExists)(const_cast<value_type&>(*it)); // in case of the set, non "key" part of value_type can be changed
                 }
@@ -3484,8 +3420,7 @@ namespace phmap
             template <class F>
             void for_each(F&& fCallback) const
             {
-                for (const auto& inner : sets_)
-                {
+                for (const auto& inner : sets_) {
                     typename Lockable::SharedLock m(const_cast<Inner&>(inner));
                     std::for_each(inner.set_.begin(), inner.set_.end(), fCallback);
                 }
@@ -3495,8 +3430,7 @@ namespace phmap
             template <class F>
             void for_each_m(F&& fCallback)
             {
-                for (auto& inner : sets_)
-                {
+                for (auto& inner : sets_) {
                     typename Lockable::UniqueLock m(inner);
                     std::for_each(inner.set_.begin(), inner.set_.end(), fCallback);
                 }
@@ -3617,8 +3551,7 @@ namespace phmap
 
             iterator erase(const_iterator first, const_iterator last)
             {
-                while (first != last)
-                {
+                while (first != last) {
                     _erase(first++);
                 }
                 return last.iter_;
@@ -3632,10 +3565,8 @@ namespace phmap
             void merge(parallel_hash_set<N, RefSet, Mtx_, Policy, Hash, E, Alloc>& src)
             { // NOLINT
                 assert(this != &src);
-                if (this != &src)
-                {
-                    for (size_t i = 0; i < num_tables; ++i)
-                    {
+                if (this != &src) {
+                    for (size_t i = 0; i < num_tables; ++i) {
                         typename Lockable::UniqueLocks l(sets_[i], src.sets_[i]);
                         sets_[i].set_.merge(src.sets_[i].set_);
                     }
@@ -3665,8 +3596,7 @@ namespace phmap
                 using std::swap;
                 using Lockable2 = phmap::LockableImpl<Mtx2_>;
 
-                for (size_t i = 0; i < num_tables; ++i)
-                {
+                for (size_t i = 0; i < num_tables; ++i) {
                     typename Lockable::UniqueLock  l(sets_[i]);
                     typename Lockable2::UniqueLock l2(that.get_inner(i));
                     swap(sets_[i].set_, that.get_inner(i).set_);
@@ -3676,8 +3606,7 @@ namespace phmap
             void rehash(size_t n)
             {
                 size_t nn = n / num_tables;
-                for (auto& inner : sets_)
-                {
+                for (auto& inner : sets_) {
                     typename Lockable::UniqueLock m(inner);
                     inner.set_.rehash(nn);
                 }
@@ -3792,8 +3721,7 @@ namespace phmap
             size_t bucket_count() const
             {
                 size_t sz = 0;
-                for (const auto& inner : sets_)
-                {
+                for (const auto& inner : sets_) {
                     typename Lockable::SharedLock m(const_cast<Inner&>(inner));
                     sz += inner.set_.bucket_count();
                 }
@@ -3896,8 +3824,7 @@ namespace phmap
 
             void drop_deletes_without_resize() PHMAP_ATTRIBUTE_NOINLINE
             {
-                for (auto& inner : sets_)
-                {
+                for (auto& inner : sets_) {
                     typename Lockable::UniqueLock m(inner);
                     inner.set_.drop_deletes_without_resize();
                 }
@@ -4179,14 +4106,12 @@ namespace phmap
                 typename Lockable::UniqueLock m;
                 auto                          res   = this->find_or_prepare_insert_with_hash(hashval, k, m);
                 typename Base::Inner*         inner = std::get<0>(res);
-                if (std::get<2>(res))
-                {
+                if (std::get<2>(res)) {
                     inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)),
                                            std::forward_as_tuple(std::forward<Args>(args)...));
                     inner->set_.set_ctrl(std::get<1>(res), H2(hashval));
                 }
-                else
-                {
+                else {
                     auto it = this->iterator_at(inner, inner->set_.iterator_at(std::get<1>(res)));
                     std::forward<F>(f)(const_cast<value_type&>(*it)); // in case of the set, non "key" part of value_type can be changed
                 }
@@ -4202,8 +4127,7 @@ namespace phmap
                 typename Lockable::UniqueLock m;
                 auto                          res   = this->find_or_prepare_insert_with_hash(hashval, k, m);
                 typename Base::Inner*         inner = std::get<0>(res);
-                if (std::get<2>(res))
-                {
+                if (std::get<2>(res)) {
                     inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)),
                                            std::forward_as_tuple(std::forward<Args>(args)...));
                     inner->set_.set_ctrl(std::get<1>(res), H2(hashval));
@@ -4234,8 +4158,7 @@ namespace phmap
                 typename Lockable::UniqueLock m;
                 auto                          res   = this->find_or_prepare_insert_with_hash(hashval, k, m);
                 typename Base::Inner*         inner = std::get<0>(res);
-                if (std::get<2>(res))
-                {
+                if (std::get<2>(res)) {
                     inner->set_.emplace_at(std::get<1>(res), std::forward<K>(k), std::forward<V>(v));
                     inner->set_.set_ctrl(std::get<1>(res), H2(hashval));
                 }
@@ -4256,8 +4179,7 @@ namespace phmap
                 typename Lockable::UniqueLock m;
                 auto                          res   = this->find_or_prepare_insert_with_hash(hashval, k, m);
                 typename Base::Inner*         inner = std::get<0>(res);
-                if (std::get<2>(res))
-                {
+                if (std::get<2>(res)) {
                     inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)),
                                            std::forward_as_tuple(std::forward<Args>(args)...));
                     inner->set_.set_ctrl(std::get<1>(res), H2(hashval));
@@ -4723,11 +4645,9 @@ namespace phmap
                     size_t num_probes = 0;
                     size_t hashval    = set.hash(key);
                     auto   seq        = set.probe(hashval);
-                    while (true)
-                    {
+                    while (true) {
                         priv::Group g{ set.ctrl_ + seq.offset() };
-                        for (uint32_t i : g.Match(priv::H2(hashval)))
-                        {
+                        for (uint32_t i : g.Match(priv::H2(hashval))) {
                             if (Traits::apply(typename Set::template EqualElement<typename Set::key_type>{ key, set.eq_ref() },
                                               Traits::element(set.slots_ + seq.offset((size_t)i))))
                                 return num_probes;
@@ -4749,16 +4669,12 @@ namespace phmap
                     size_t m      = layout.AllocSize();
 
                     size_t per_slot = Traits::space_used(static_cast<const Slot*>(nullptr));
-                    if (per_slot != ~size_t{})
-                    {
+                    if (per_slot != ~size_t{}) {
                         m += per_slot * c.size();
                     }
-                    else
-                    {
-                        for (size_t i = 0; i != capacity; ++i)
-                        {
-                            if (priv::IsFull(c.ctrl_[i]))
-                            {
+                    else {
+                        for (size_t i = 0; i != capacity; ++i) {
+                            if (priv::IsFull(c.ctrl_[i])) {
                                 m += Traits::space_used(c.slots_ + i);
                             }
                         }
@@ -4774,8 +4690,7 @@ namespace phmap
                     auto   layout   = Set::MakeLayout(NormalizeCapacity(capacity));
                     size_t m        = layout.AllocSize();
                     size_t per_slot = Traits::space_used(static_cast<const Slot*>(nullptr));
-                    if (per_slot != ~size_t{})
-                    {
+                    if (per_slot != ~size_t{}) {
                         m += per_slot * size;
                     }
                     return m;
@@ -5295,14 +5210,11 @@ namespace phmap
         std::size_t erase_if(C& c, Pred pred)
         {
             auto old_size = c.size();
-            for (auto i = c.begin(), last = c.end(); i != last;)
-            {
-                if (pred(*i))
-                {
+            for (auto i = c.begin(), last = c.end(); i != last;) {
+                if (pred(*i)) {
                     i = c.erase(i);
                 }
-                else
-                {
+                else {
                     ++i;
                 }
             }

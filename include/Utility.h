@@ -8,8 +8,7 @@ class Utility : public Singleton<Utility>
 
     static FormIDAndPluginName GetFormIDAndPluginName(const std::string_view identifier)
     {
-        if (const auto tilde{ std::strchr(identifier.data(), '~') })
-        {
+        if (const auto tilde{ std::strchr(identifier.data(), '~') }) {
             const auto tilde_pos{ static_cast<int>(tilde - identifier.data()) };
             return { Maps::ToUnsignedInt(identifier.substr(0, tilde_pos)), identifier.substr(tilde_pos + 1).data() };
         }
@@ -20,17 +19,14 @@ class Utility : public Singleton<Utility>
 
     static RE::TESBoundObject* GetBoundObject(const std::string_view identifier)
     {
-        if (IsEditorID(identifier))
-        {
+        if (IsEditorID(identifier)) {
             if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESBoundObject>(identifier) })
                 return obj;
         }
-        else
-        {
+        else {
             const auto handler{ RE::TESDataHandler::GetSingleton() };
             const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
-            if (const auto obj{ handler->LookupForm(form_id, plugin_name) })
-            {
+            if (const auto obj{ handler->LookupForm(form_id, plugin_name) }) {
                 if (const auto bound_obj{ obj->As<RE::TESBoundObject>() })
                     return bound_obj;
             }
@@ -42,17 +38,14 @@ class Utility : public Singleton<Utility>
 
     static RE::TESLevItem* GetLevItem(const std::string_view identifier)
     {
-        if (IsEditorID(identifier))
-        {
+        if (IsEditorID(identifier)) {
             if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESLevItem>(identifier) })
                 return obj;
         }
-        else
-        {
+        else {
             const auto handler{ RE::TESDataHandler::GetSingleton() };
             const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
-            if (const auto obj{ handler->LookupForm(form_id, plugin_name) })
-            {
+            if (const auto obj{ handler->LookupForm(form_id, plugin_name) }) {
                 if (const auto lev_item{ obj->As<RE::TESLevItem>() })
                     return lev_item;
             }
@@ -64,20 +57,16 @@ class Utility : public Singleton<Utility>
 
     static Container GetContainer(const std::string_view to_identifier)
     {
-        if (IsEditorID(to_identifier))
-        {
-            if (const auto form{ RE::TESForm::LookupByEditorID(to_identifier) })
-            {
+        if (IsEditorID(to_identifier)) {
+            if (const auto form{ RE::TESForm::LookupByEditorID(to_identifier) }) {
                 if (const auto cont{ form->As<RE::TESContainer>() })
                     return { cont, form->GetFormID(), form->GetFormType(), form->GetName() };
             }
         }
-        else
-        {
+        else {
             const auto handler{ RE::TESDataHandler::GetSingleton() };
             const auto [form_id, plugin_name]{ GetFormIDAndPluginName(to_identifier) };
-            if (const auto form{ handler->LookupForm(form_id, plugin_name) })
-            {
+            if (const auto form{ handler->LookupForm(form_id, plugin_name) }) {
                 if (const auto cont{ form->As<RE::TESContainer>() })
                     return { cont, form->GetFormID(), form->GetFormType(), form->GetName() };
             }
@@ -90,12 +79,9 @@ class Utility : public Singleton<Utility>
 public:
     static DistrObject BuildDistrObject(const DistrToken& distr_token) noexcept
     {
-        if (const auto leveled_list{ GetLevItem(distr_token.identifier) })
-        {
-            if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container)
-            {
-                if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0)
-                {
+        if (const auto leveled_list{ GetLevItem(distr_token.identifier) }) {
+            if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container) {
+                if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0) {
                     if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) })
                         return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, replace_with_list, distr_token.count, distr_token.rhs_count, cont };
 
@@ -105,12 +91,9 @@ public:
                 return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont };
             }
         }
-        else if (const auto bound_obj{ GetBoundObject(distr_token.identifier) })
-        {
-            if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container)
-            {
-                if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0)
-                {
+        else if (const auto bound_obj{ GetBoundObject(distr_token.identifier) }) {
+            if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container) {
+                if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0) {
                     if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) })
                         return { distr_token.type, bound_obj, nullptr, distr_token.filename, nullptr, replace_with_list, distr_token.count, distr_token.rhs_count, cont };
 

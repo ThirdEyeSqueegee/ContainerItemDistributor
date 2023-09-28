@@ -22,14 +22,12 @@ void Distributor::AddDistribute(const Maps::TDistrVec& distr_vec) noexcept
 
     const auto start_time{ std::chrono::system_clock::now() };
 
-    for (const auto& distr_obj : distr_vec)
-    {
+    for (const auto& distr_obj : distr_vec) {
         const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container]{ distr_obj };
         if (type <=> DistrType::Add != 0)
             continue;
 
-        if (container.has_value())
-        {
+        if (container.has_value()) {
             const auto& [cont, cont_form_id, cont_type, cont_name]{ container.value() };
             if (bound_object)
                 cont->AddObjectToContainer(bound_object, count.value(), nullptr);
@@ -50,26 +48,21 @@ void Distributor::RemoveDistribute(const Maps::TDistrVec& distr_vec) noexcept
 
     const auto start_time{ std::chrono::system_clock::now() };
 
-    for (const auto& distr_obj : distr_vec)
-
-    {
+    for (const auto& distr_obj : distr_vec) {
         const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container]{ distr_obj };
         if (type <=> DistrType::Remove != 0 && type <=> DistrType::RemoveAll != 0)
             continue;
 
-        if (container.has_value())
-        {
+        if (container.has_value()) {
             const auto& [cont, cont_form_id, cont_type, cont_name]{ container.value() };
-            if (count.has_value())
-            {
+            if (count.has_value()) {
                 if (bound_object)
                     cont->RemoveObjectFromContainer(bound_object, count.value());
                 else if (leveled_list)
                     cont->RemoveObjectFromContainer(leveled_list, count.value());
                 logger::info("\t- {}", distr_obj);
             }
-            else
-            {
+            else {
                 const auto& num_to_remove{ cont->CountObjectsInContainer(bound_object) };
                 if (bound_object)
                     cont->RemoveObjectFromContainer(bound_object, num_to_remove);
@@ -91,70 +84,54 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
 
     const auto start_time{ std::chrono::system_clock::now() };
 
-    for (const auto& distr_obj : distr_vec)
-    {
+    for (const auto& distr_obj : distr_vec) {
         const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container]{ distr_obj };
         if (type <=> DistrType::Replace != 0 && type <=> DistrType::ReplaceAll != 0)
             continue;
 
-        if (container.has_value())
-        {
+        if (container.has_value()) {
             const auto& [cont, cont_form_id, cont_type, cont_name]{ container.value() };
-            if (count.has_value())
-            {
-                if (bound_object)
-                {
-                    if (replace_with_obj)
-                    {
+            if (count.has_value()) {
+                if (bound_object) {
+                    if (replace_with_obj) {
                         cont->RemoveObjectFromContainer(bound_object, count.value());
                         cont->AddObjectToContainer(replace_with_obj, replace_with_count.value(), nullptr);
                     }
-                    else if (replace_with_list)
-                    {
+                    else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(bound_object, count.value());
                         cont->AddObjectToContainer(replace_with_list, replace_with_count.value(), nullptr);
                     }
                 }
-                else if (leveled_list)
-                {
-                    if (replace_with_obj)
-                    {
+                else if (leveled_list) {
+                    if (replace_with_obj) {
                         cont->RemoveObjectFromContainer(leveled_list, count.value());
                         cont->AddObjectToContainer(replace_with_obj, replace_with_count.value(), nullptr);
                     }
-                    else if (replace_with_list)
-                    {
+                    else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(leveled_list, count.value());
                         cont->AddObjectToContainer(replace_with_list, replace_with_count.value(), nullptr);
                     }
                 }
                 logger::info("\t^ {}", distr_obj);
             }
-            else
-            {
+            else {
                 const auto& num_to_remove{ cont->CountObjectsInContainer(bound_object) };
-                if (bound_object)
-                {
-                    if (replace_with_obj)
-                    {
+                if (bound_object) {
+                    if (replace_with_obj) {
                         cont->RemoveObjectFromContainer(bound_object, num_to_remove);
                         cont->AddObjectToContainer(replace_with_obj, num_to_remove, nullptr);
                     }
-                    else if (replace_with_list)
-                    {
+                    else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(bound_object, num_to_remove);
                         cont->AddObjectToContainer(replace_with_list, num_to_remove, nullptr);
                     }
                 }
-                else if (leveled_list)
-                {
-                    if (replace_with_obj)
-                    {
+                else if (leveled_list) {
+                    if (replace_with_obj) {
                         cont->RemoveObjectFromContainer(leveled_list, num_to_remove);
                         cont->AddObjectToContainer(replace_with_obj, num_to_remove, nullptr);
                     }
-                    else if (replace_with_list)
-                    {
+                    else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(leveled_list, num_to_remove);
                         cont->AddObjectToContainer(replace_with_list, num_to_remove, nullptr);
                     }

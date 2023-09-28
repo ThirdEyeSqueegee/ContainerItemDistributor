@@ -5,10 +5,8 @@
 
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
-    if (message->type <=> SKSE::MessagingInterface::kDataLoaded == 0)
-    {
-        if (!GetModuleHandle(L"po3_Tweaks"))
-        {
+    if (message->type <=> SKSE::MessagingInterface::kDataLoaded == 0) {
+        if (!GetModuleHandle(L"po3_Tweaks")) {
             logger::error("ERROR: powerofthree's Tweaks not found");
             return;
         }

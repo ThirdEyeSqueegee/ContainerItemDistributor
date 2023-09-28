@@ -184,8 +184,7 @@ namespace phmap
 
 #if defined(__pnacl__)
 #define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION()                                                                                                                                       \
-    if (volatile int x = 0)                                                                                                                                                        \
-    {                                                                                                                                                                              \
+    if (volatile int x = 0) {                                                                                                                                                      \
         (void)x;                                                                                                                                                                   \
     }
 #elif defined(__clang__)
@@ -200,8 +199,7 @@ namespace phmap
 #define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() __nop()
 #else
 #define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION()                                                                                                                                       \
-    if (volatile int x = 0)                                                                                                                                                        \
-    {                                                                                                                                                                              \
+    if (volatile int x = 0) {                                                                                                                                                      \
         (void)x;                                                                                                                                                                   \
     }
 #endif
@@ -322,20 +320,17 @@ namespace phmap
 #if defined(_MSC_VER) && defined(_M_X64)
             // MSVC does not have __buitin_clzll. Use _BitScanReverse64.
             unsigned long result = 0; // NOLINT(runtime/int)
-            if (_BitScanReverse64(&result, n))
-            {
+            if (_BitScanReverse64(&result, n)) {
                 return (int)(63 - result);
             }
             return 64;
 #elif defined(_MSC_VER) && !defined(__clang__)
             // MSVC does not have __buitin_clzll. Compose two calls to _BitScanReverse
             unsigned long result = 0; // NOLINT(runtime/int)
-            if ((n >> 32) && _BitScanReverse(&result, (unsigned long)(n >> 32)))
-            {
+            if ((n >> 32) && _BitScanReverse(&result, (unsigned long)(n >> 32))) {
                 return 31 - result;
             }
-            if (_BitScanReverse(&result, (unsigned long)n))
-            {
+            if (_BitScanReverse(&result, (unsigned long)n)) {
                 return 63 - result;
             }
             return 64;
@@ -348,8 +343,7 @@ namespace phmap
                           "__builtin_clzll does not take 64-bit arg");
 
             // Handle 0 as a special case because __builtin_clzll(0) is undefined.
-            if (n == 0)
-            {
+            if (n == 0) {
                 return 64;
             }
             return __builtin_clzll(n);
@@ -374,8 +368,7 @@ namespace phmap
         {
 #if defined(_MSC_VER) && !defined(__clang__)
             unsigned long result = 0; // NOLINT(runtime/int)
-            if (_BitScanReverse(&result, n))
-            {
+            if (_BitScanReverse(&result, n)) {
                 return (uint32_t)(31 - result);
             }
             return 32;
@@ -387,8 +380,7 @@ namespace phmap
             static_assert(sizeof(int) == sizeof(n), "__builtin_clz does not take 32-bit arg");
 
             // Handle 0 as a special case because __builtin_clz(0) is undefined.
-            if (n == 0)
-            {
+            if (n == 0) {
                 return 32;
             }
             return __builtin_clz(n);
@@ -424,8 +416,7 @@ namespace phmap
             return (uint32_t)result;
 #elif defined(_MSC_VER) && !defined(__clang__)
             unsigned long result = 0; // NOLINT(runtime/int)
-            if (static_cast<uint32_t>(n) == 0)
-            {
+            if (static_cast<uint32_t>(n) == 0) {
                 _BitScanForward(&result, (unsigned long)(n >> 32));
                 return result + 32;
             }
@@ -544,12 +535,10 @@ namespace phmap
     {
 #if defined(__GNUC__) && defined(__x86_64__) && !defined(__APPLE__)
         // Adapted from /usr/include/byteswap.h.  Not available on Mac.
-        if (__builtin_constant_p(host_int))
-        {
+        if (__builtin_constant_p(host_int)) {
             return __bswap_constant_64(host_int);
         }
-        else
-        {
+        else {
             uint64_t result;
             __asm__("bswap %0" : "=r"(result) : "0"(host_int));
             return result;

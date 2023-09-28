@@ -26,8 +26,7 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
     const std::filesystem::path data_dir{ R"(.\Data)" };
     const auto                  pattern{ L"_CID.ini" };
 
-    if (!exists(data_dir))
-    {
+    if (!exists(data_dir)) {
         logger::error("ERROR: Failed to find Data directory");
         stl::report_and_fail(fmt::format("{}: Failed to find Data directory", SKSE::PluginDeclaration::GetSingleton()->GetName()));
     }
@@ -37,10 +36,8 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
 
     const auto start_time{ std::chrono::system_clock::now() };
 
-    for (std::error_code ec{}; const auto& file : std::filesystem::directory_iterator{ data_dir, ec })
-    {
-        if (ec.value())
-        {
+    for (std::error_code ec{}; const auto& file : std::filesystem::directory_iterator{ data_dir, ec }) {
+        if (ec.value()) {
             logger::debug("ERROR CODE: {}", ec.value());
             continue;
         }
@@ -67,21 +64,18 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
         logger::debug("");
         logger::debug("{} has {} keys", filename.string(), keys.size());
 
-        for (const auto& [key, key_order, key_count] : keys)
-        {
+        for (const auto& [key, key_order, key_count] : keys) {
             CSimpleIniA::TNamesDepend values{};
             ini.GetAllValues("General", key, values);
 
             logger::debug("Key {} has {} values:", key, values.size());
 
-            for (const auto& [val, order, val_count] : values)
-            {
+            for (const auto& [val, order, val_count] : values) {
                 auto        value{ std::string{ val } + "/" + filename.string() };
                 const auto& distr_type{ ClassifyString(value) };
 
                 auto* map_to_use{ &Maps::add_conflict_test_map };
-                switch (distr_type)
-                {
+                switch (distr_type) {
                 case DistrType::Add:
                     break;
                 case DistrType::Remove:
@@ -98,19 +92,16 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
 
                 logger::debug("\t* {} {}", distr_type, value);
 
-                if (!map_to_use)
-                {
+                if (!map_to_use) {
                     logger::error("ERROR: Could not find conflict test map to use");
                     continue;
                 }
-                if (!map_to_use->contains(key))
-                {
+                if (!map_to_use->contains(key)) {
                     Maps::TDistrTokenVec new_vec;
                     new_vec.emplace_back(Tokenize(value, key));
                     map_to_use->emplace(key, new_vec);
                 }
-                else
-                {
+                else {
                     auto& conflict_test_vec{ map_to_use->at(key) };
                     conflict_test_vec.emplace_back(Tokenize(value, key));
                 }
@@ -126,19 +117,16 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
     logger::info("");
 
     logger::debug("ADD conflict test map:");
-    for (const auto& [key, distr_token_vec] : Maps::add_conflict_test_map)
-    {
+    for (const auto& [key, distr_token_vec] : Maps::add_conflict_test_map) {
         logger::debug("\t* Key {}:", key);
         for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count] : distr_token_vec)
             logger::debug("\t\t+ ADD {} {} to {}", count.value_or(-1), identifier, to_identifier);
     }
 
     logger::debug("REMOVE conflict test map:");
-    for (const auto& [key, distr_token_vec] : Maps::remove_conflict_test_map)
-    {
+    for (const auto& [key, distr_token_vec] : Maps::remove_conflict_test_map) {
         logger::debug("\t* Key {}:", key);
-        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count] : distr_token_vec)
-        {
+        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count] : distr_token_vec) {
             if (count.has_value())
                 logger::debug("\t\t- REMOVE {} {} from {}", count.value(), identifier, to_identifier);
             else
@@ -147,11 +135,9 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
     }
 
     logger::debug("REPLACE conflict test map:");
-    for (const auto& [key, distr_token_vec] : Maps::replace_conflict_test_map)
-    {
+    for (const auto& [key, distr_token_vec] : Maps::replace_conflict_test_map) {
         logger::debug("\t* Key {}:", key);
-        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count] : distr_token_vec)
-        {
+        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count] : distr_token_vec) {
             if (count.has_value())
                 logger::debug("\t\t^ REPLACE {} {} with {} {} in {}", count.value(), identifier, rhs_count.value_or(-1), rhs.value(), to_identifier);
             else
@@ -169,10 +155,8 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
 
     const auto filename{ str.substr(slash_pos + 1) };
 
-    switch (ClassifyString(str))
-    {
-    case DistrType::Add:
-    {
+    switch (ClassifyString(str)) {
+    case DistrType::Add: {
         const auto  bar_pos{ Maps::GetPos(str, '|') };
         const auto& identifier{ str.substr(0, bar_pos) };
         const auto  count{ Maps::ToInt(str.substr(bar_pos + 1)) };
@@ -181,8 +165,7 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
 
         return distr_token;
     }
-    case DistrType::Remove:
-    {
+    case DistrType::Remove: {
         const auto  bar_pos{ Maps::GetPos(str, '|') };
         const auto& identifier{ str.substr(1, bar_pos - 1) };
         const auto  count{ Maps::ToInt(str.substr(bar_pos + 1)) };
@@ -191,14 +174,12 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
 
         return distr_token;
     }
-    case DistrType::RemoveAll:
-    {
+    case DistrType::RemoveAll: {
         DistrToken distr_token{ DistrType::RemoveAll, filename, to_container.data(), str.substr(1), std::nullopt, std::nullopt, std::nullopt };
 
         return distr_token;
     }
-    case DistrType::Replace:
-    {
+    case DistrType::Replace: {
         const auto caret_pos{ Maps::GetPos(str, '^') };
 
         const auto& lhs{ str.substr(0, caret_pos) };
@@ -216,15 +197,13 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
 
         return distr_token;
     }
-    case DistrType::ReplaceAll:
-    {
+    case DistrType::ReplaceAll: {
         const auto caret_pos{ Maps::GetPos(str, '^') };
 
         const auto& lhs{ str.substr(0, caret_pos) };
         const auto& rhs{ str.substr(caret_pos + 1) };
 
-        if (const auto rhs_bar_pos{ Maps::GetPos(rhs, '|') }; rhs_bar_pos <=> ULLONG_MAX != 0)
-        {
+        if (const auto rhs_bar_pos{ Maps::GetPos(rhs, '|') }; rhs_bar_pos <=> ULLONG_MAX != 0) {
             const auto& rhs_distr{ rhs.substr(0, rhs_bar_pos) };
             const auto  rhs_count{ Maps::ToInt(rhs.substr(rhs_bar_pos + 1)) };
 

@@ -87,8 +87,7 @@ public:
 // fmt helpers
 inline auto format_as(const DistrType& type)
 {
-    switch (type)
-    {
+    switch (type) {
     case DistrType::Add:
         return "ADD";
     case DistrType::Remove:
