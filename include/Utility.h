@@ -88,7 +88,7 @@ public:
 
         std::vector<std::pair<RE::TESBoundObject*, int>> obj_and_counts{};
         for (const auto& [form, count, pad0A, pad0C, containerItem] : calced_objects) {
-            if (const auto bound_obj{form->As<RE::TESBoundObject>()})
+            if (const auto bound_obj{ form->As<RE::TESBoundObject>() })
                 obj_and_counts.emplace_back(bound_obj, count);
         }
 
