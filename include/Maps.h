@@ -37,15 +37,18 @@ public:
     std::string       container_name{};
 };
 
-struct DistrObject
+class DistrObject
 {
-    DistrType                          type{};
-    RE::TESBoundObject*                bound_object{};
-    std::string                        filename{};
-    std::optional<int>                 count{};
-    std::optional<RE::TESBoundObject*> replace_with_object{};
-    std::optional<int>                 replace_with_count{};
-    std::optional<Container>           container{};
+public:
+    DistrType                type{};
+    RE::TESBoundObject*      bound_object{};
+    RE::TESLevItem*          leveled_list{};
+    std::string              filename{};
+    RE::TESBoundObject*      replace_with_object{};
+    RE::TESLevItem*          replace_with_list{};
+    std::optional<int>       count{};
+    std::optional<int>       replace_with_count{};
+    std::optional<Container> container{};
 };
 
 struct FormIDAndPluginName
@@ -104,18 +107,19 @@ inline auto format_as(const DistrType& type)
 inline auto format_as(const DistrToken& token)
 {
     const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count]{ token };
-    return fmt::format("[Type: {} / Filename: {} / To: {} / Identifier: {} / Count: {} / RHS: {} / RHS Count: {}]", type, filename, to_identifier, identifier,
-                       count.value_or(-1), rhs.value_or("null"), rhs_count.value_or(-1));
+    return fmt::format("[Type: {} / Filename: {} / To: {} / Identifier: {} / Count: {} / RHS: {} / RHS Count: {}]", type, filename, to_identifier, identifier, count.value_or(-1),
+                       rhs.value_or("null"), rhs_count.value_or(-1));
 }
 
 inline auto format_as(const DistrObject& obj)
 {
-    const auto& [type, bound_object, filename, count, replace_with_obj, replace_with_count, container]{ obj };
-    return fmt::format("[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Count: {} / Replace with: {} (0x{:x}) / Replace count: {} / Container: {} "
-                       "(0x{:x}) ({})]",
-                       type, filename, bound_object ? bound_object->GetName() : "null", bound_object ? bound_object->GetFormID() : 0, count.value_or(-1),
-                       replace_with_obj.has_value() ? (replace_with_obj.value() ? replace_with_obj.value()->GetName() : "null") : "null",
-                       replace_with_obj.has_value() ? (replace_with_obj.value() ? replace_with_obj.value()->GetFormID() : 0) : 0, replace_with_count.value_or(-1),
+    const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container]{ obj };
+    return fmt::format("[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Leveled list: {} (0x{:x} / Replace with obj: {} (0x{:x}) / Replace with list: {} (0x{:x}) "
+                       "/ Count: {} / Replace count: {} / Container: {} (0x{:x}) ({})]",
+                       type, filename, bound_object ? bound_object->GetName() : "null", bound_object ? bound_object->GetFormID() : 0,
+                       leveled_list ? leveled_list->GetName() : "null", leveled_list ? leveled_list->GetFormID() : 0, replace_with_obj ? replace_with_obj->GetName() : "null",
+                       replace_with_obj ? replace_with_obj->GetFormID() : 0, replace_with_list ? replace_with_list->GetName() : "null",
+                       replace_with_list ? replace_with_list->GetFormID() : 0, count.value_or(-1), replace_with_count.value_or(-1),
                        container.has_value() ? container.value().container_name : "null", container.has_value() ? container.value().container_form_id : 0,
                        container.has_value() ? container->container_type : RE::FormType::Container);
 }

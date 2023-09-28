@@ -13,6 +13,8 @@ class Utility : public Singleton<Utility>
             const auto tilde_pos{ static_cast<int>(tilde - identifier.data()) };
             return { Maps::ToUnsignedInt(identifier.substr(0, tilde_pos)), identifier.substr(tilde_pos + 1).data() };
         }
+        logger::error("ERROR: Failed to get FormID and plugin name for {}", identifier);
+
         return { 0, "" };
     }
 
@@ -33,6 +35,30 @@ class Utility : public Singleton<Utility>
                     return bound_obj;
             }
         }
+        logger::error("ERROR: Failed to find bound object for {}", identifier);
+
+        return nullptr;
+    }
+
+    static RE::TESLevItem* GetLevItem(const std::string_view identifier)
+    {
+        if (IsEditorID(identifier))
+        {
+            if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESLevItem>(identifier) })
+                return obj;
+        }
+        else
+        {
+            const auto handler{ RE::TESDataHandler::GetSingleton() };
+            const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
+            if (const auto obj{ handler->LookupForm(form_id, plugin_name) })
+            {
+                if (const auto lev_item{ obj->As<RE::TESLevItem>() })
+                    return lev_item;
+            }
+        }
+        logger::error("ERROR: Failed to find leveled list for {}", identifier);
+
         return nullptr;
     }
 
@@ -56,25 +82,46 @@ class Utility : public Singleton<Utility>
                     return { cont, form->GetFormID(), form->GetFormType(), form->GetName() };
             }
         }
+        logger::error("ERROR: Failed to find container for {}", to_identifier);
+
         return { nullptr, 0, RE::FormType::Container, "" };
     }
 
 public:
     static DistrObject BuildDistrObject(const DistrToken& distr_token) noexcept
     {
-        if (const auto bound_obj{ GetBoundObject(distr_token.identifier) })
+        if (const auto leveled_list{ GetLevItem(distr_token.identifier) })
         {
             if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container)
             {
                 if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0)
                 {
+                    if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) })
+                        return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, replace_with_list, distr_token.count, distr_token.rhs_count, cont };
+
                     if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) })
-                        return { distr_token.type, bound_obj, distr_token.filename, distr_token.count, replace_with_obj, distr_token.rhs_count, cont };
+                        return { distr_token.type, nullptr, leveled_list, distr_token.filename, replace_with_obj, nullptr, distr_token.count, distr_token.rhs_count, cont };
                 }
-                return { distr_token.type, bound_obj, distr_token.filename, distr_token.count, std::nullopt, std::nullopt, cont };
+                return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont };
             }
         }
+        else if (const auto bound_obj{ GetBoundObject(distr_token.identifier) })
+        {
+            if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container)
+            {
+                if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0)
+                {
+                    if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) })
+                        return { distr_token.type, bound_obj, nullptr, distr_token.filename, nullptr, replace_with_list, distr_token.count, distr_token.rhs_count, cont };
 
-        return { DistrType::Error, nullptr, distr_token.filename, std::nullopt, std::nullopt, std::nullopt, std::nullopt };
+                    if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) })
+                        return { distr_token.type, bound_obj, nullptr, distr_token.filename, replace_with_obj, nullptr, distr_token.count, distr_token.rhs_count, cont };
+                }
+                return { distr_token.type, bound_obj, nullptr, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont };
+            }
+        }
+        logger::error("ERROR: Failed to build DistrObject for {}", distr_token);
+
+        return { DistrType::Error, nullptr, nullptr, distr_token.filename, nullptr, nullptr, std::nullopt, std::nullopt, std::nullopt };
     }
 };

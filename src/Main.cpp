@@ -1,21 +1,17 @@
 #include "Conflicts.h"
 #include "Distributor.h"
-#include "Hooks.h"
 #include "Logging.h"
 #include "Settings.h"
 
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
-    if (message->type <=> SKSE::MessagingInterface::kPostLoad == 0)
+    if (message->type <=> SKSE::MessagingInterface::kDataLoaded == 0)
     {
         if (!GetModuleHandle(L"po3_Tweaks"))
         {
-            logger::info("po3_Tweaks.dll not found, installing EditorID caching fix...");
-            Hooks::Install();
+            logger::error("ERROR: powerofthree's Tweaks not found");
+            return;
         }
-    }
-    if (message->type <=> SKSE::MessagingInterface::kDataLoaded == 0)
-    {
         Settings::LoadSettings();
         Conflicts::PrepareDistribution();
         Distributor::Distribute();

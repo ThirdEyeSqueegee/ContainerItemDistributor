@@ -6,7 +6,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ########################################################################################################################
 project(
   ContainerItemDistributor
-  VERSION 1.1.2
+  VERSION 1.1.3
   LANGUAGES CXX
 )
 set(CMAKE_CXX_STANDARD 23)
@@ -35,7 +35,6 @@ set(
     src/Logging.cpp
     src/Main.cpp
     src/Settings.cpp
-    src/Hooks.cpp
     src/Parser.cpp
     src/Conflicts.cpp
     src/Distributor.cpp

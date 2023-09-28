@@ -24,7 +24,7 @@ DistrType Parser::ClassifyString(const std::string_view str) noexcept
 void Parser::ParseINIs(CSimpleIniA& ini) noexcept
 {
     const std::filesystem::path data_dir{ R"(.\Data)" };
-    const auto                  pattern{ "_CID.ini" };
+    const auto                  pattern{ L"_CID.ini" };
 
     if (!exists(data_dir))
     {
@@ -45,24 +45,27 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
             continue;
         }
 
-        const auto path_str{ file.path().string() };
-        const auto filepath{ path_str.data() };
-        if (!std::strstr(filepath, pattern))
+        if (file.path().extension() != ".ini")
             continue;
 
-        if (const auto underscore{ std::strrchr(filepath, '_') }; std::strcmp(underscore, pattern))
+        const auto& filepath{ file.path() };
+        const auto  filename{ filepath.filename() };
+        const auto  filename_cstr{ filepath.filename().c_str() };
+        if (!std::wcsstr(filename_cstr, pattern))
             continue;
 
-        logger::info("Loading config file: {}", filepath);
+        if (const auto underscore{ std::wcschr(filename_cstr, '_') }; underscore && std::wcscmp(underscore, pattern) != 0)
+            continue;
 
-        ini.LoadFile(filepath);
+        logger::info("Loading config file: {}", filename.string());
+
+        ini.LoadFile(filepath.c_str());
 
         CSimpleIniA::TNamesDepend keys{};
         ini.GetAllKeys("General", keys);
 
-        const auto ini_file_name{ file.path().filename().string() };
-
-        logger::debug("{} has {} keys", ini_file_name, keys.size());
+        logger::debug("");
+        logger::debug("{} has {} keys", filename.string(), keys.size());
 
         for (const auto& [key, key_order, key_count] : keys)
         {
@@ -73,7 +76,7 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
 
             for (const auto& [val, order, val_count] : values)
             {
-                auto        value{ std::string{ val } + "/" + ini_file_name };
+                auto        value{ std::string{ val } + "/" + filename.string() };
                 const auto& distr_type{ ClassifyString(value) };
 
                 auto* map_to_use{ &Maps::add_conflict_test_map };
@@ -112,6 +115,7 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
                     conflict_test_vec.emplace_back(Tokenize(value, key));
                 }
             }
+            logger::debug("-------");
         }
         ini.Reset();
     }
@@ -160,11 +164,15 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
 {
     const auto slash_pos{ Maps::GetPos(str, '/') };
 
+    if (slash_pos <=> ULLONG_MAX == 0)
+        logger::error("ERROR: Failed to find slash in {}", str);
+
     const auto filename{ str.substr(slash_pos + 1) };
 
     switch (ClassifyString(str))
     {
-    case DistrType::Add: {
+    case DistrType::Add:
+    {
         const auto  bar_pos{ Maps::GetPos(str, '|') };
         const auto& identifier{ str.substr(0, bar_pos) };
         const auto  count{ Maps::ToInt(str.substr(bar_pos + 1)) };
@@ -173,7 +181,8 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
 
         return distr_token;
     }
-    case DistrType::Remove: {
+    case DistrType::Remove:
+    {
         const auto  bar_pos{ Maps::GetPos(str, '|') };
         const auto& identifier{ str.substr(1, bar_pos - 1) };
         const auto  count{ Maps::ToInt(str.substr(bar_pos + 1)) };
@@ -182,12 +191,14 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
 
         return distr_token;
     }
-    case DistrType::RemoveAll: {
+    case DistrType::RemoveAll:
+    {
         DistrToken distr_token{ DistrType::RemoveAll, filename, to_container.data(), str.substr(1), std::nullopt, std::nullopt, std::nullopt };
 
         return distr_token;
     }
-    case DistrType::Replace: {
+    case DistrType::Replace:
+    {
         const auto caret_pos{ Maps::GetPos(str, '^') };
 
         const auto& lhs{ str.substr(0, caret_pos) };
@@ -205,7 +216,8 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
 
         return distr_token;
     }
-    case DistrType::ReplaceAll: {
+    case DistrType::ReplaceAll:
+    {
         const auto caret_pos{ Maps::GetPos(str, '^') };
 
         const auto& lhs{ str.substr(0, caret_pos) };
@@ -227,7 +239,6 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
     default:
         break;
     }
-
     logger::error("ERROR: Failed to tokenize {}", str);
 
     return { DistrType::Error, filename, to_container.data(), "", std::nullopt, std::nullopt, std::nullopt };
