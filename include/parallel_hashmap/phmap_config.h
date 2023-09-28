@@ -179,7 +179,8 @@
 #ifdef PHMAP_HAVE_INTRINSIC_INT128
 #error PHMAP_HAVE_INTRINSIC_INT128 cannot be directly set
 #elif defined(__SIZEOF_INT128__)
-#if (defined(__clang__) && !defined(_WIN32) && !defined(__aarch64__)) || (defined(__CUDACC__) && __CUDACC_VER_MAJOR__ >= 9) || (defined(__GNUC__) && !defined(__clang__) && !defined(__CUDACC__))
+#if (defined(__clang__) && !defined(_WIN32) && !defined(__aarch64__)) || (defined(__CUDACC__) && __CUDACC_VER_MAJOR__ >= 9)                                                        \
+    || (defined(__GNUC__) && !defined(__clang__) && !defined(__CUDACC__))
 #define PHMAP_HAVE_INTRINSIC_INT128 1
 #elif defined(__CUDACC__)
 #if __CUDACC_VER__ >= 70000
@@ -197,7 +198,8 @@
 #if defined(__EXCEPTIONS) && __has_feature(cxx_exceptions)
 #define PHMAP_HAVE_EXCEPTIONS 1
 #endif // defined(__EXCEPTIONS) && __has_feature(cxx_exceptions)
-#elif !(defined(__GNUC__) && (__GNUC__ < 5) && !defined(__EXCEPTIONS)) && !(defined(__GNUC__) && (__GNUC__ >= 5) && !defined(__cpp_exceptions)) && !(defined(_MSC_VER) && !defined(_CPPUNWIND))
+#elif !(defined(__GNUC__) && (__GNUC__ < 5) && !defined(__EXCEPTIONS)) && !(defined(__GNUC__) && (__GNUC__ >= 5) && !defined(__cpp_exceptions))                                    \
+    && !(defined(_MSC_VER) && !defined(_CPPUNWIND))
 #define PHMAP_HAVE_EXCEPTIONS 1
 #endif
 
@@ -207,7 +209,8 @@
 // -----------------------------------------------------------------------
 #ifdef PHMAP_HAVE_MMAP
 #error PHMAP_HAVE_MMAP cannot be directly set
-#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__ros__) || defined(__native_client__) || defined(__asmjs__) || defined(__wasm__) || defined(__Fuchsia__) || defined(__sun) || defined(__ASYLO__)
+#elif defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__ros__) || defined(__native_client__) || defined(__asmjs__) || defined(__wasm__)                \
+    || defined(__Fuchsia__) || defined(__sun) || defined(__ASYLO__)
 #define PHMAP_HAVE_MMAP 1
 #endif
 
@@ -478,8 +481,8 @@
 #define PHMAP_ATTRIBUTE_SECTION_VARIABLE(name) __attribute__((section(#name)))
 #endif
 #ifndef PHMAP_DECLARE_ATTRIBUTE_SECTION_VARS
-#define PHMAP_DECLARE_ATTRIBUTE_SECTION_VARS(name)                                                                                                             \
-    extern char __start_##name[] PHMAP_ATTRIBUTE_WEAK;                                                                                                         \
+#define PHMAP_DECLARE_ATTRIBUTE_SECTION_VARS(name)                                                                                                                                 \
+    extern char __start_##name[] PHMAP_ATTRIBUTE_WEAK;                                                                                                                             \
     extern char __stop_##name[] PHMAP_ATTRIBUTE_WEAK
 #endif
 #ifndef PHMAP_DEFINE_ATTRIBUTE_SECTION_VARS
@@ -642,10 +645,11 @@ namespace phmap
 #endif
 
 #ifndef PHMAP_FALLTHROUGH_INTENDED
-#define PHMAP_FALLTHROUGH_INTENDED                                                                                                                             \
-    do                                                                                                                                                         \
-    {                                                                                                                                                          \
-    } while (0)
+#define PHMAP_FALLTHROUGH_INTENDED                                                                                                                                                 \
+    do                                                                                                                                                                             \
+    {                                                                                                                                                                              \
+    }                                                                                                                                                                              \
+    while (0)
 #endif
 
 // PHMAP_DEPRECATED()
@@ -716,18 +720,20 @@ namespace phmap
 #ifdef PHMAP_HAVE_EXCEPTIONS
 #define PHMAP_INTERNAL_TRY       try
 #define PHMAP_INTERNAL_CATCH_ANY catch (...)
-#define PHMAP_INTERNAL_RETHROW                                                                                                                                 \
-    do                                                                                                                                                         \
-    {                                                                                                                                                          \
-        throw;                                                                                                                                                 \
-    } while (false)
+#define PHMAP_INTERNAL_RETHROW                                                                                                                                                     \
+    do                                                                                                                                                                             \
+    {                                                                                                                                                                              \
+        throw;                                                                                                                                                                     \
+    }                                                                                                                                                                              \
+    while (false)
 #else // PHMAP_HAVE_EXCEPTIONS
 #define PHMAP_INTERNAL_TRY       if (true)
 #define PHMAP_INTERNAL_CATCH_ANY else if (false)
-#define PHMAP_INTERNAL_RETHROW                                                                                                                                 \
-    do                                                                                                                                                         \
-    {                                                                                                                                                          \
-    } while (false)
+#define PHMAP_INTERNAL_RETHROW                                                                                                                                                     \
+    do                                                                                                                                                                             \
+    {                                                                                                                                                                              \
+    }                                                                                                                                                                              \
+    while (false)
 #endif // PHMAP_HAVE_EXCEPTIONS
 
 #endif // phmap_config_h_guard_

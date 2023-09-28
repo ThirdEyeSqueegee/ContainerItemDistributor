@@ -352,7 +352,7 @@ namespace phmap
     template <class T1, class T2>
     struct Hash<std::pair<T1, T2>>
     {
-        size_t operator()(std::pair<T1, T2> const& p) const noexcept { return phmap::HashState().combine(phmap::Hash<T1>()(p.first), p.second); }
+        size_t operator()(const std::pair<T1, T2>& p) const noexcept { return phmap::HashState().combine(phmap::Hash<T1>()(p.first), p.second); }
     };
 
     // define Hash for std::tuple
@@ -360,7 +360,7 @@ namespace phmap
     template <class... T>
     struct Hash<std::tuple<T...>>
     {
-        size_t operator()(std::tuple<T...> const& t) const noexcept
+        size_t operator()(const std::tuple<T...>& t) const noexcept
         {
             size_t seed = 0;
             return _hash_helper(seed, t);

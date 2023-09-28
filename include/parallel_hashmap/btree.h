@@ -98,12 +98,14 @@ namespace phmap
 #endif // defined(_MSC_VER) && !defined(__GNUC__)
 
         template <class T>
-        struct IsTriviallyMoveConstructibleObject : std::integral_constant<bool, std::is_move_constructible<type_traits_internal::SingleMemberUnion<T>>::value && std::is_trivially_destructible<T>::value>
+        struct IsTriviallyMoveConstructibleObject
+            : std::integral_constant<bool, std::is_move_constructible<type_traits_internal::SingleMemberUnion<T>>::value && std::is_trivially_destructible<T>::value>
         {
         };
 
         template <class T>
-        struct IsTriviallyCopyConstructibleObject : std::integral_constant<bool, std::is_copy_constructible<type_traits_internal::SingleMemberUnion<T>>::value && std::is_trivially_destructible<T>::value>
+        struct IsTriviallyCopyConstructibleObject
+            : std::integral_constant<bool, std::is_copy_constructible<type_traits_internal::SingleMemberUnion<T>>::value && std::is_trivially_destructible<T>::value>
         {
         };
 #if 0
@@ -134,12 +136,14 @@ namespace phmap
         template <typename T>
         class is_trivially_copyable_impl
         {
-            using ExtentsRemoved = typename std::remove_all_extents<T>::type;
+            using ExtentsRemoved                             = typename std::remove_all_extents<T>::type;
             static constexpr bool kIsCopyOrMoveConstructible = std::is_copy_constructible<ExtentsRemoved>::value || std::is_move_constructible<ExtentsRemoved>::value;
-            static constexpr bool kIsCopyOrMoveAssignable = phmap::is_copy_assignable<ExtentsRemoved>::value || phmap::is_move_assignable<ExtentsRemoved>::value;
+            static constexpr bool kIsCopyOrMoveAssignable    = phmap::is_copy_assignable<ExtentsRemoved>::value || phmap::is_move_assignable<ExtentsRemoved>::value;
 
         public:
-            static constexpr bool kValue = (phmap::is_trivially_copyable<ExtentsRemoved>::value || !kIsCopyOrMoveConstructible) && (phmap::is_trivially_copy_assignable<ExtentsRemoved>::value || !kIsCopyOrMoveAssignable) && (kIsCopyOrMoveConstructible || kIsCopyOrMoveAssignable) && std::is_trivially_destructible<ExtentsRemoved>::value &&
+            static constexpr bool kValue = (phmap::is_trivially_copyable<ExtentsRemoved>::value || !kIsCopyOrMoveConstructible)
+                                           && (phmap::is_trivially_copy_assignable<ExtentsRemoved>::value || !kIsCopyOrMoveAssignable)
+                                           && (kIsCopyOrMoveConstructible || kIsCopyOrMoveAssignable) && std::is_trivially_destructible<ExtentsRemoved>::value &&
                                            // We need to check for this explicitly because otherwise we'll say
                                            // references are trivial copyable when compiled by MSVC.
                                            !std::is_reference<ExtentsRemoved>::value;
@@ -253,8 +257,8 @@ namespace phmap
 
 #define PHMAP_COMPARE_INLINE_SUBCLASS_DECL(type, name)
 
-#define PHMAP_COMPARE_INLINE_INIT(type, name, init)                                                                                                            \
-    template <typename T>                                                                                                                                      \
+#define PHMAP_COMPARE_INLINE_INIT(type, name, init)                                                                                                                                \
+    template <typename T>                                                                                                                                                          \
     const T compare_internal::type##_base<T>::name(init)
 
 #endif // __cpp_inline_variables
@@ -316,14 +320,18 @@ namespace phmap
         PHMAP_COMPARE_INLINE_SUBCLASS_DECL(weak_equality, nonequivalent)
 
         // Comparisons
-        friend constexpr bool operator==(weak_equality v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ == 0; }
-        friend constexpr bool operator!=(weak_equality v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ != 0; }
-        friend constexpr bool operator==(compare_internal::OnlyLiteralZero<>, weak_equality v) noexcept { return 0 == v.value_; }
-        friend constexpr bool operator!=(compare_internal::OnlyLiteralZero<>, weak_equality v) noexcept { return 0 != v.value_; }
+        constexpr friend bool operator==(weak_equality v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ == 0; }
+
+        constexpr friend bool operator!=(weak_equality v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ != 0; }
+
+        constexpr friend bool operator==(compare_internal::OnlyLiteralZero<>, weak_equality v) noexcept { return 0 == v.value_; }
+
+        constexpr friend bool operator!=(compare_internal::OnlyLiteralZero<>, weak_equality v) noexcept { return 0 != v.value_; }
 
     private:
         compare_internal::value_type value_;
     };
+
     PHMAP_COMPARE_INLINE_INIT(weak_equality, equivalent, compare_internal::eq::equivalent);
     PHMAP_COMPARE_INLINE_INIT(weak_equality, nonequivalent, compare_internal::eq::nonequivalent);
 
@@ -343,11 +351,15 @@ namespace phmap
         { // NOLINT
             return value_ == 0 ? weak_equality::equivalent : weak_equality::nonequivalent;
         }
+
         // Comparisons
-        friend constexpr bool operator==(strong_equality v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ == 0; }
-        friend constexpr bool operator!=(strong_equality v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ != 0; }
-        friend constexpr bool operator==(compare_internal::OnlyLiteralZero<>, strong_equality v) noexcept { return 0 == v.value_; }
-        friend constexpr bool operator!=(compare_internal::OnlyLiteralZero<>, strong_equality v) noexcept { return 0 != v.value_; }
+        constexpr friend bool operator==(strong_equality v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ == 0; }
+
+        constexpr friend bool operator!=(strong_equality v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ != 0; }
+
+        constexpr friend bool operator==(compare_internal::OnlyLiteralZero<>, strong_equality v) noexcept { return 0 == v.value_; }
+
+        constexpr friend bool operator!=(compare_internal::OnlyLiteralZero<>, strong_equality v) noexcept { return 0 != v.value_; }
 
     private:
         compare_internal::value_type value_;
@@ -361,7 +373,9 @@ namespace phmap
     class partial_ordering : public compare_internal::partial_ordering_base<partial_ordering>
     {
         explicit constexpr partial_ordering(compare_internal::eq v) noexcept : value_(static_cast<compare_internal::value_type>(v)) {}
+
         explicit constexpr partial_ordering(compare_internal::ord v) noexcept : value_(static_cast<compare_internal::value_type>(v)) {}
+
         explicit constexpr partial_ordering(compare_internal::ncmp v) noexcept : value_(static_cast<compare_internal::value_type>(v)) {}
         friend struct compare_internal::partial_ordering_base<partial_ordering>;
 
@@ -378,19 +392,31 @@ namespace phmap
         { // NOLINT
             return value_ == 0 ? weak_equality::equivalent : weak_equality::nonequivalent;
         }
+
         // Comparisons
-        friend constexpr bool operator==(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ == 0; }
-        friend constexpr bool operator!=(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return !v.is_ordered() || v.value_ != 0; }
-        friend constexpr bool operator<(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ < 0; }
-        friend constexpr bool operator<=(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ <= 0; }
-        friend constexpr bool operator>(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ > 0; }
-        friend constexpr bool operator>=(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ >= 0; }
-        friend constexpr bool operator==(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 == v.value_; }
-        friend constexpr bool operator!=(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return !v.is_ordered() || 0 != v.value_; }
-        friend constexpr bool operator<(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 < v.value_; }
-        friend constexpr bool operator<=(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 <= v.value_; }
-        friend constexpr bool operator>(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 > v.value_; }
-        friend constexpr bool operator>=(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 >= v.value_; }
+        constexpr friend bool operator==(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ == 0; }
+
+        constexpr friend bool operator!=(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return !v.is_ordered() || v.value_ != 0; }
+
+        constexpr friend bool operator<(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ < 0; }
+
+        constexpr friend bool operator<=(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ <= 0; }
+
+        constexpr friend bool operator>(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ > 0; }
+
+        constexpr friend bool operator>=(partial_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.is_ordered() && v.value_ >= 0; }
+
+        constexpr friend bool operator==(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 == v.value_; }
+
+        constexpr friend bool operator!=(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return !v.is_ordered() || 0 != v.value_; }
+
+        constexpr friend bool operator<(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 < v.value_; }
+
+        constexpr friend bool operator<=(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 <= v.value_; }
+
+        constexpr friend bool operator>(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 > v.value_; }
+
+        constexpr friend bool operator>=(compare_internal::OnlyLiteralZero<>, partial_ordering v) noexcept { return v.is_ordered() && 0 >= v.value_; }
 
     private:
         compare_internal::value_type value_;
@@ -404,6 +430,7 @@ namespace phmap
     class weak_ordering : public compare_internal::weak_ordering_base<weak_ordering>
     {
         explicit constexpr weak_ordering(compare_internal::eq v) noexcept : value_(static_cast<compare_internal::value_type>(v)) {}
+
         explicit constexpr weak_ordering(compare_internal::ord v) noexcept : value_(static_cast<compare_internal::value_type>(v)) {}
         friend struct compare_internal::weak_ordering_base<weak_ordering>;
 
@@ -417,23 +444,36 @@ namespace phmap
         { // NOLINT
             return value_ == 0 ? weak_equality::equivalent : weak_equality::nonequivalent;
         }
+
         constexpr operator partial_ordering() const noexcept
         { // NOLINT
             return value_ == 0 ? partial_ordering::equivalent : (value_ < 0 ? partial_ordering::less : partial_ordering::greater);
         }
+
         // Comparisons
-        friend constexpr bool operator==(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ == 0; }
-        friend constexpr bool operator!=(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ != 0; }
-        friend constexpr bool operator<(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ < 0; }
-        friend constexpr bool operator<=(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ <= 0; }
-        friend constexpr bool operator>(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ > 0; }
-        friend constexpr bool operator>=(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ >= 0; }
-        friend constexpr bool operator==(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 == v.value_; }
-        friend constexpr bool operator!=(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 != v.value_; }
-        friend constexpr bool operator<(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 < v.value_; }
-        friend constexpr bool operator<=(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 <= v.value_; }
-        friend constexpr bool operator>(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 > v.value_; }
-        friend constexpr bool operator>=(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 >= v.value_; }
+        constexpr friend bool operator==(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ == 0; }
+
+        constexpr friend bool operator!=(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ != 0; }
+
+        constexpr friend bool operator<(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ < 0; }
+
+        constexpr friend bool operator<=(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ <= 0; }
+
+        constexpr friend bool operator>(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ > 0; }
+
+        constexpr friend bool operator>=(weak_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ >= 0; }
+
+        constexpr friend bool operator==(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 == v.value_; }
+
+        constexpr friend bool operator!=(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 != v.value_; }
+
+        constexpr friend bool operator<(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 < v.value_; }
+
+        constexpr friend bool operator<=(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 <= v.value_; }
+
+        constexpr friend bool operator>(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 > v.value_; }
+
+        constexpr friend bool operator>=(compare_internal::OnlyLiteralZero<>, weak_ordering v) noexcept { return 0 >= v.value_; }
 
     private:
         compare_internal::value_type value_;
@@ -446,6 +486,7 @@ namespace phmap
     class strong_ordering : public compare_internal::strong_ordering_base<strong_ordering>
     {
         explicit constexpr strong_ordering(compare_internal::eq v) noexcept : value_(static_cast<compare_internal::value_type>(v)) {}
+
         explicit constexpr strong_ordering(compare_internal::ord v) noexcept : value_(static_cast<compare_internal::value_type>(v)) {}
         friend struct compare_internal::strong_ordering_base<strong_ordering>;
 
@@ -460,35 +501,51 @@ namespace phmap
         { // NOLINT
             return value_ == 0 ? weak_equality::equivalent : weak_equality::nonequivalent;
         }
+
         constexpr operator strong_equality() const noexcept
         { // NOLINT
             return value_ == 0 ? strong_equality::equal : strong_equality::nonequal;
         }
+
         constexpr operator partial_ordering() const noexcept
         { // NOLINT
             return value_ == 0 ? partial_ordering::equivalent : (value_ < 0 ? partial_ordering::less : partial_ordering::greater);
         }
+
         constexpr operator weak_ordering() const noexcept
         { // NOLINT
             return value_ == 0 ? weak_ordering::equivalent : (value_ < 0 ? weak_ordering::less : weak_ordering::greater);
         }
+
         // Comparisons
-        friend constexpr bool operator==(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ == 0; }
-        friend constexpr bool operator!=(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ != 0; }
-        friend constexpr bool operator<(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ < 0; }
-        friend constexpr bool operator<=(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ <= 0; }
-        friend constexpr bool operator>(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ > 0; }
-        friend constexpr bool operator>=(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ >= 0; }
-        friend constexpr bool operator==(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 == v.value_; }
-        friend constexpr bool operator!=(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 != v.value_; }
-        friend constexpr bool operator<(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 < v.value_; }
-        friend constexpr bool operator<=(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 <= v.value_; }
-        friend constexpr bool operator>(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 > v.value_; }
-        friend constexpr bool operator>=(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 >= v.value_; }
+        constexpr friend bool operator==(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ == 0; }
+
+        constexpr friend bool operator!=(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ != 0; }
+
+        constexpr friend bool operator<(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ < 0; }
+
+        constexpr friend bool operator<=(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ <= 0; }
+
+        constexpr friend bool operator>(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ > 0; }
+
+        constexpr friend bool operator>=(strong_ordering v, compare_internal::OnlyLiteralZero<>) noexcept { return v.value_ >= 0; }
+
+        constexpr friend bool operator==(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 == v.value_; }
+
+        constexpr friend bool operator!=(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 != v.value_; }
+
+        constexpr friend bool operator<(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 < v.value_; }
+
+        constexpr friend bool operator<=(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 <= v.value_; }
+
+        constexpr friend bool operator>(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 > v.value_; }
+
+        constexpr friend bool operator>=(compare_internal::OnlyLiteralZero<>, strong_ordering v) noexcept { return 0 >= v.value_; }
 
     private:
         compare_internal::value_type value_;
     };
+
     PHMAP_COMPARE_INLINE_INIT(strong_ordering, less, compare_internal::ord::less);
     PHMAP_COMPARE_INLINE_INIT(strong_ordering, equal, compare_internal::eq::equal);
     PHMAP_COMPARE_INLINE_INIT(strong_ordering, equivalent, compare_internal::eq::equivalent);
@@ -510,6 +567,7 @@ namespace phmap
         {
             return r;
         }
+
         constexpr bool compare_result_as_less_than(const phmap::weak_ordering r)
         {
             return r < 0;
@@ -529,6 +587,7 @@ namespace phmap
         {
             return c < 0 ? phmap::weak_ordering::less : c == 0 ? phmap::weak_ordering::equivalent : phmap::weak_ordering::greater;
         }
+
         constexpr phmap::weak_ordering compare_result_as_ordering(const phmap::weak_ordering c)
         {
             return c;
@@ -539,6 +598,7 @@ namespace phmap
         {
             return compare_result_as_ordering(compare(x, y));
         }
+
         template <typename Compare, typename K, typename LK, phmap::enable_if_t<std::is_same<bool, phmap::invoke_result_t<Compare, const K&, const LK&>>::value, int> = 0>
         constexpr phmap::weak_ordering do_three_way_comparison(const Compare& compare, const K& x, const LK& y)
         {
@@ -568,7 +628,8 @@ namespace phmap
             // Compatibility constructor.
             StringBtreeDefaultLess(std::less<std::string>) {} // NOLINT
 #if PHMAP_HAVE_STD_STRING_VIEW
-            StringBtreeDefaultLess(std::less<std::string_view>) {}   // NOLINT
+            StringBtreeDefaultLess(std::less<std::string_view>) {} // NOLINT
+
             StringBtreeDefaultLess(phmap::Less<std::string_view>) {} // NOLINT
 
             phmap::weak_ordering operator()(const std::string_view& lhs, const std::string_view& rhs) const
@@ -576,10 +637,7 @@ namespace phmap
                 return compare_internal::compare_result_as_ordering(lhs.compare(rhs));
             }
 #else
-            phmap::weak_ordering operator()(const std::string& lhs, const std::string& rhs) const
-            {
-                return compare_internal::compare_result_as_ordering(lhs.compare(rhs));
-            }
+            phmap::weak_ordering operator()(const std::string& lhs, const std::string& rhs) const { return compare_internal::compare_result_as_ordering(lhs.compare(rhs)); }
 #endif
         };
 
@@ -593,15 +651,9 @@ namespace phmap
 #if PHMAP_HAVE_STD_STRING_VIEW
             StringBtreeDefaultGreater(std::greater<std::string_view>) {} // NOLINT
 
-            phmap::weak_ordering operator()(std::string_view lhs, std::string_view rhs) const
-            {
-                return compare_internal::compare_result_as_ordering(rhs.compare(lhs));
-            }
+            phmap::weak_ordering operator()(std::string_view lhs, std::string_view rhs) const { return compare_internal::compare_result_as_ordering(rhs.compare(lhs)); }
 #else
-            phmap::weak_ordering operator()(const std::string& lhs, const std::string& rhs) const
-            {
-                return compare_internal::compare_result_as_ordering(rhs.compare(lhs));
-            }
+            phmap::weak_ordering operator()(const std::string& lhs, const std::string& rhs) const { return compare_internal::compare_result_as_ordering(rhs.compare(lhs)); }
 #endif
         };
 
@@ -703,22 +755,30 @@ namespace phmap
 
             // The following methods are necessary for passing this struct as PolicyTraits
             // for node_handle and/or are used within btree.
-            static value_type&       element(slot_type* slot) { return slot_policy::element(slot); }
+            static value_type& element(slot_type* slot) { return slot_policy::element(slot); }
+
             static const value_type& element(const slot_type* slot) { return slot_policy::element(slot); }
+
             template <class... Args>
             static void construct(Alloc* alloc, slot_type* slot, Args&&... args)
             {
                 slot_policy::construct(alloc, slot, std::forward<Args>(args)...);
             }
+
             static void construct(Alloc* alloc, slot_type* slot, slot_type* other) { slot_policy::construct(alloc, slot, other); }
+
             static void destroy(Alloc* alloc, slot_type* slot) { slot_policy::destroy(alloc, slot); }
+
             static void transfer(Alloc* alloc, slot_type* new_slot, slot_type* old_slot)
             {
                 construct(alloc, new_slot, old_slot);
                 destroy(alloc, old_slot);
             }
+
             static void swap(Alloc* alloc, slot_type* a, slot_type* b) { slot_policy::swap(alloc, a, b); }
+
             static void move(Alloc* alloc, slot_type* src, slot_type* dest) { slot_policy::move(alloc, src, dest); }
+
             static void move(Alloc* alloc, slot_type* first, slot_type* last, slot_type* result) { slot_policy::move(alloc, first, last, result); }
         };
 
@@ -737,10 +797,12 @@ namespace phmap
             using init_type   = typename super_type::init_type;
 
             using key_compare = typename super_type::key_compare;
+
             // Inherit from key_compare for empty base class optimization.
             struct value_compare : private key_compare
             {
                 value_compare() = default;
+
                 explicit value_compare(const key_compare& cmp) : key_compare(cmp) {}
 
                 template <typename T, typename U>
@@ -749,11 +811,15 @@ namespace phmap
                     return key_compare::operator()(left.first, right.first);
                 }
             };
+
             using is_map_container = std::true_type;
 
-            static const Key&   key(const value_type& x) { return x.first; }
-            static const Key&   key(const init_type& x) { return x.first; }
-            static const Key&   key(const slot_type* x) { return slot_policy::key(x); }
+            static const Key& key(const value_type& x) { return x.first; }
+
+            static const Key& key(const init_type& x) { return x.first; }
+
+            static const Key& key(const slot_type* x) { return slot_policy::key(x); }
+
             static mapped_type& value(value_type* value) { return value->second; }
         };
 
@@ -766,7 +832,8 @@ namespace phmap
             using value_type         = Key;
             using mutable_value_type = Key;
 
-            static value_type&       element(slot_type* slot) { return *slot; }
+            static value_type& element(slot_type* slot) { return *slot; }
+
             static const value_type& element(const slot_type* slot) { return *slot; }
 
             template <typename Alloc, class... Args>
@@ -819,6 +886,7 @@ namespace phmap
             using is_map_container = std::false_type;
 
             static const Key& key(const value_type& x) { return x; }
+
             static const Key& key(const slot_type* x) { return *x; }
         };
 
@@ -830,6 +898,7 @@ namespace phmap
         struct upper_bound_adapter
         {
             explicit upper_bound_adapter(const Compare& c) : comp(c) {}
+
             template <typename K, typename LK>
             bool operator()(const K& a, const LK& b) const
             {
@@ -854,7 +923,8 @@ namespace phmap
             MatchKind match;
 
             static constexpr bool HasMatch() { return true; }
-            bool                  IsEq() const { return match == MatchKind::kEq; }
+
+            bool IsEq() const { return match == MatchKind::kEq; }
         };
 
         // When we don't use CompareTo, `match` is not present.
@@ -866,6 +936,7 @@ namespace phmap
             V value;
 
             static constexpr bool HasMatch() { return false; }
+
             static constexpr bool IsEq() { return false; }
         };
 
@@ -898,14 +969,17 @@ namespace phmap
             //     std::greater, choose linear.
             //   - Otherwise, choose binary.
             // TODO(ezb): Might make sense to add condition(s) based on node-size.
-            using use_linear_search = std::integral_constant<bool, std::is_arithmetic<key_type>::value && (std::is_same<phmap::Less<key_type>, key_compare>::value || std::is_same<std::less<key_type>, key_compare>::value || std::is_same<std::greater<key_type>, key_compare>::value)>;
+            using use_linear_search
+                = std::integral_constant<bool, std::is_arithmetic<key_type>::value
+                                                   && (std::is_same<phmap::Less<key_type>, key_compare>::value || std::is_same<std::less<key_type>, key_compare>::value
+                                                       || std::is_same<std::greater<key_type>, key_compare>::value)>;
 
             ~btree_node()                            = default;
-            btree_node(btree_node const&)            = delete;
-            btree_node& operator=(btree_node const&) = delete;
+            btree_node(const btree_node&)            = delete;
+            btree_node& operator=(const btree_node&) = delete;
 
             // Public for EmptyNodeType.
-            constexpr static size_type Alignment()
+            static constexpr size_type Alignment()
             {
                 static_assert(LeafLayout(1).Alignment() == InternalLayout().Alignment(), "Alignment of all nodes must be equal.");
                 return (size_type)InternalLayout().Alignment();
@@ -916,7 +990,8 @@ namespace phmap
 
         private:
             using layout_type = phmap::priv::Layout<btree_node*, field_type, slot_type, btree_node*>;
-            constexpr static size_type SizeWithNValues(size_type n)
+
+            static constexpr size_type SizeWithNValues(size_type n)
             {
                 return (size_type)layout_type(/*parent*/ 1,
                                               /*position, start, count, max_count*/ 4,
@@ -924,12 +999,13 @@ namespace phmap
                                               /*children*/ 0)
                     .AllocSize();
             }
+
             // A lower bound for the overhead of fields other than values in a leaf node.
-            constexpr static size_type MinimumOverhead() { return (size_type)(SizeWithNValues(1) - sizeof(value_type)); }
+            static constexpr size_type MinimumOverhead() { return (size_type)(SizeWithNValues(1) - sizeof(value_type)); }
 
             // Compute how many values we can fit onto a leaf node taking into account
             // padding.
-            constexpr static size_type NodeTargetValues(const int begin, const int end)
+            static constexpr size_type NodeTargetValues(const int begin, const int end)
             {
                 return begin == end                                                            ? begin
                        : SizeWithNValues((begin + end) / 2 + 1) > params_type::kTargetNodeSize ? NodeTargetValues(begin, (begin + end) / 2)
@@ -952,22 +1028,25 @@ namespace phmap
             };
 
             // Leaves can have less than kNodeValues values.
-            constexpr static layout_type LeafLayout(const int max_values = kNodeValues)
+            static constexpr layout_type LeafLayout(const int max_values = kNodeValues)
             {
                 return layout_type(/*parent*/ 1,
                                    /*position, start, count, max_count*/ 4,
                                    /*values*/ (size_t)max_values,
                                    /*children*/ 0);
             }
-            constexpr static layout_type InternalLayout()
+
+            static constexpr layout_type InternalLayout()
             {
                 return layout_type(/*parent*/ 1,
                                    /*position, start, count, max_count*/ 4,
                                    /*values*/ kNodeValues,
                                    /*children*/ kNodeValues + 1);
             }
-            constexpr static size_type LeafSize(const int max_values = kNodeValues) { return (size_type)LeafLayout(max_values).AllocSize(); }
-            constexpr static size_type InternalSize() { return (size_type)InternalLayout().AllocSize(); }
+
+            static constexpr size_type LeafSize(const int max_values = kNodeValues) { return (size_type)LeafLayout(max_values).AllocSize(); }
+
+            static constexpr size_type InternalSize() { return (size_type)InternalLayout().AllocSize(); }
 
             // N is the index of the type in the Layout definition.
             // ElementType<N> is the Nth type in the Layout definition.
@@ -986,14 +1065,21 @@ namespace phmap
                 return InternalLayout().template Pointer<N>(reinterpret_cast<const char*>(this));
             }
 
-            void             set_parent(btree_node* p) { *GetField<0>() = p; }
-            field_type&      mutable_count() { return GetField<1>()[2]; }
-            slot_type*       slot(size_type i) { return &GetField<2>()[i]; }
+            void set_parent(btree_node* p) { *GetField<0>() = p; }
+
+            field_type& mutable_count() { return GetField<1>()[2]; }
+
+            slot_type* slot(size_type i) { return &GetField<2>()[i]; }
+
             const slot_type* slot(size_type i) const { return &GetField<2>()[i]; }
-            void             set_position(field_type v) { GetField<1>()[0] = v; }
-            void             set_start(field_type v) { GetField<1>()[1] = v; }
-            void             set_count(field_type v) { GetField<1>()[2] = v; }
-            void             set_max_count(field_type v) { GetField<1>()[3] = v; }
+
+            void set_position(field_type v) { GetField<1>()[0] = v; }
+
+            void set_start(field_type v) { GetField<1>()[1] = v; }
+
+            void set_count(field_type v) { GetField<1>()[2] = v; }
+
+            void set_max_count(field_type v) { GetField<1>()[3] = v; }
 
         public:
             // Whether this is a leaf node or not. This value doesn't change after the
@@ -1008,6 +1094,7 @@ namespace phmap
 
             // Getters for the number of values stored in this node.
             field_type count() const { return GetField<1>()[2]; }
+
             field_type max_count() const
             {
                 // Internal nodes have max_count==kInternalNodeMaxCount.
@@ -1018,10 +1105,12 @@ namespace phmap
 
             // Getter for the parent of this node.
             btree_node* parent() const { return *GetField<0>(); }
+
             // Getter for whether the node is the root of the tree. The parent of the
             // root of the tree is the leftmost node in the tree which is guaranteed to
             // be a leaf.
             bool is_root() const { return parent()->leaf(); }
+
             void make_root()
             {
                 assert(parent()->is_root());
@@ -1030,7 +1119,9 @@ namespace phmap
 
             // Getters for the key/value at position i in the node.
             const key_type& key(size_type i) const { return params_type::key(slot(i)); }
-            reference       value(size_type i) { return params_type::element(slot(i)); }
+
+            reference value(size_type i) { return params_type::element(slot(i)); }
+
             const_reference value(size_type i) const { return params_type::element(slot(i)); }
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -1038,10 +1129,13 @@ namespace phmap
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
             // Getters/setter for the child at position i in the node.
-            btree_node*  child(size_type i) const { return GetField<3>()[i]; }
+            btree_node* child(size_type i) const { return GetField<3>()[i]; }
+
             btree_node*& mutable_child(size_type i) { return GetField<3>()[i]; }
-            void         clear_child(size_type i) { phmap::priv::SanitizerPoisonObject(&mutable_child(i)); }
-            void         set_child(size_type i, btree_node* c)
+
+            void clear_child(size_type i) { phmap::priv::SanitizerPoisonObject(&mutable_child(i)); }
+
+            void set_child(size_type i, btree_node* c)
             {
                 phmap::priv::SanitizerUnpoisonObject(&mutable_child(i));
                 mutable_child(i) = c;
@@ -1062,6 +1156,7 @@ namespace phmap
             {
                 return use_linear_search::value ? linear_search(k, comp) : binary_search(k, comp);
             }
+
             // Returns the position of the first value whose key is greater than k.
             template <typename K>
             int upper_bound(const K& k, const key_compare& comp) const
@@ -1230,6 +1325,7 @@ namespace phmap
                 phmap::priv::SanitizerPoisonMemoryRegion(n->slot(0), max_cnt * sizeof(slot_type));
                 return n;
             }
+
             static btree_node* init_internal(btree_node* n, btree_node* parent)
             {
                 init_leaf(n, parent, kNodeValues);
@@ -1239,6 +1335,7 @@ namespace phmap
                 phmap::priv::SanitizerPoisonMemoryRegion(&n->mutable_child(0), (kNodeValues + 1) * sizeof(btree_node*));
                 return n;
             }
+
             void destroy(allocator_type* alloc)
             {
                 for (int i = 0; i < count(); ++i)
@@ -1258,6 +1355,7 @@ namespace phmap
                 phmap::priv::SanitizerUnpoisonObject(slot(i));
                 params_type::construct(alloc, slot(i), std::forward<Args>(args)...);
             }
+
             void value_destroy(const size_type i, allocator_type* alloc)
             {
                 params_type::destroy(alloc, slot(i));
@@ -1320,13 +1418,15 @@ namespace phmap
             using iterator_category = std::bidirectional_iterator_tag;
 
             btree_iterator() : node(nullptr), position(-1) {}
+
             btree_iterator(Node* n, int p) : node(n), position(p) {}
 
             // NOTE: this SFINAE allows for implicit conversions from iterator to
             // const_iterator, but it specifically avoids defining copy constructors so
             // that btree_iterator can be trivially copyable. This is for performance and
             // binary size reasons.
-            template <typename N, typename R, typename P, phmap::enable_if_t<std::is_same<btree_iterator<N, R, P>, iterator>::value && std::is_same<btree_iterator, const_iterator>::value, int> = 0>
+            template <typename N, typename R, typename P,
+                      phmap::enable_if_t<std::is_same<btree_iterator<N, R, P>, iterator>::value && std::is_same<btree_iterator, const_iterator>::value, int> = 0>
             btree_iterator(const btree_iterator<N, R, P>& x) // NOLINT
                 : node(x.node), position(x.position)
             {
@@ -1337,7 +1437,8 @@ namespace phmap
             // iterator, but also avoids defining a copy constructor.
             // NOTE: the const_cast is safe because this constructor is only called by
             // non-const methods and the container owns the nodes.
-            template <typename N, typename R, typename P, phmap::enable_if_t<std::is_same<btree_iterator<N, R, P>, const_iterator>::value && std::is_same<btree_iterator, iterator>::value, int> = 0>
+            template <typename N, typename R, typename P,
+                      phmap::enable_if_t<std::is_same<btree_iterator<N, R, P>, const_iterator>::value && std::is_same<btree_iterator, iterator>::value, int> = 0>
             explicit btree_iterator(const btree_iterator<N, R, P>& x) : node(const_cast<node_type*>(x.node)), position(x.position)
             {
             }
@@ -1351,6 +1452,7 @@ namespace phmap
                 }
                 increment_slow();
             }
+
             void increment_slow();
 
             void decrement()
@@ -1361,34 +1463,42 @@ namespace phmap
                 }
                 decrement_slow();
             }
+
             void decrement_slow();
 
         public:
             bool operator==(const const_iterator& x) const { return node == x.node && position == x.position; }
+
             bool operator!=(const const_iterator& x) const { return node != x.node || position != x.position; }
+
             bool operator==(const iterator& x) const { return node == x.node && position == x.position; }
+
             bool operator!=(const iterator& x) const { return node != x.node || position != x.position; }
 
             // Accessors for the key/value the iterator is pointing at.
             reference operator*() const { return node->value(position); }
-            pointer   operator->() const { return &node->value(position); }
+
+            pointer operator->() const { return &node->value(position); }
 
             btree_iterator& operator++()
             {
                 increment();
                 return *this;
             }
+
             btree_iterator& operator--()
             {
                 decrement();
                 return *this;
             }
+
             btree_iterator operator++(int)
             {
                 btree_iterator tmp = *this;
                 ++*this;
                 return tmp;
             }
+
             btree_iterator operator--(int)
             {
                 btree_iterator tmp = *this;
@@ -1413,7 +1523,8 @@ namespace phmap
             friend class base_checker;
 
             const key_type& key() const { return node->key(position); }
-            slot_type*      slot() { return node->slot(position); }
+
+            slot_type* slot() { return node->slot(position); }
 
             // The node in the tree the iterator is pointing at.
             Node* node;
@@ -1510,7 +1621,8 @@ namespace phmap
         private:
             // For use in copy_or_move_values_in_order.
             const value_type& maybe_move_from_iterator(const_iterator x) { return *x; }
-            value_type&&      maybe_move_from_iterator(iterator x) { return std::move(*x); }
+
+            value_type&& maybe_move_from_iterator(iterator x) { return std::move(*x); }
 
             // Copies or moves (depending on the template parameter) the values in
             // x into this btree in their order in x. This btree must be empty before this
@@ -1520,12 +1632,13 @@ namespace phmap
             void copy_or_move_values_in_order(Btree* x);
 
             // Validates that various assumptions/requirements are true at compile time.
-            constexpr static bool static_assert_validation();
+            static constexpr bool static_assert_validation();
 
         public:
             btree(const key_compare& comp, const allocator_type& alloc);
 
             btree(const btree& x);
+
             btree(btree&& x) noexcept : root_(std::move(x.root_)), rightmost_(phmap::exchange(x.rightmost_, EmptyNode())), size_(phmap::exchange(x.size_, 0))
             {
                 x.mutable_root() = EmptyNode();
@@ -1543,13 +1656,20 @@ namespace phmap
             btree& operator=(const btree& x);
             btree& operator=(btree&& x) noexcept;
 
-            iterator               begin() { return iterator(leftmost(), 0); }
-            const_iterator         begin() const { return const_iterator(leftmost(), 0); }
-            iterator               end() { return iterator(rightmost_, rightmost_->count()); }
-            const_iterator         end() const { return const_iterator(rightmost_, rightmost_->count()); }
-            reverse_iterator       rbegin() { return reverse_iterator(end()); }
+            iterator begin() { return iterator(leftmost(), 0); }
+
+            const_iterator begin() const { return const_iterator(leftmost(), 0); }
+
+            iterator end() { return iterator(rightmost_, rightmost_->count()); }
+
+            const_iterator end() const { return const_iterator(rightmost_, rightmost_->count()); }
+
+            reverse_iterator rbegin() { return reverse_iterator(end()); }
+
             const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
-            reverse_iterator       rend() { return reverse_iterator(begin()); }
+
+            reverse_iterator rend() { return reverse_iterator(begin()); }
+
             const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 
             // Finds the first element whose key is not less than key.
@@ -1558,6 +1678,7 @@ namespace phmap
             {
                 return internal_end(internal_lower_bound(key));
             }
+
             template <typename K>
             const_iterator lower_bound(const K& key) const
             {
@@ -1570,6 +1691,7 @@ namespace phmap
             {
                 return internal_end(internal_upper_bound(key));
             }
+
             template <typename K>
             const_iterator upper_bound(const K& key) const
             {
@@ -1584,6 +1706,7 @@ namespace phmap
             {
                 return { lower_bound(key), upper_bound(key) };
             }
+
             template <typename K>
             std::pair<const_iterator, const_iterator> equal_range(const K& key) const
             {
@@ -1659,6 +1782,7 @@ namespace phmap
             {
                 return internal_end(internal_find(key));
             }
+
             template <typename K>
             const_iterator find(const K& key) const
             {
@@ -1677,6 +1801,7 @@ namespace phmap
                 }
                 return 1;
             }
+
             // Returns a count of the number of times the key appears in the btree.
             template <typename K>
             size_type count_multi(const K& key) const
@@ -1692,6 +1817,7 @@ namespace phmap
             void swap(btree& x);
 
             const key_compare& key_comp() const noexcept { return std::get<0>(root_); }
+
             template <typename K, typename LK>
             bool compare_keys(const K& x, const LK& y) const
             {
@@ -1705,8 +1831,10 @@ namespace phmap
 
             // Size routines.
             size_type size() const { return size_; }
+
             size_type max_size() const { return (std::numeric_limits<size_type>::max)(); }
-            bool      empty() const { return size_ == 0; }
+
+            bool empty() const { return size_ == 0; }
 
             // The height of the btree. An empty tree will have height 0.
             size_type height() const
@@ -1723,14 +1851,17 @@ namespace phmap
                     {
                         ++h;
                         n = n->parent();
-                    } while (n != root());
+                    }
+                    while (n != root());
                 }
                 return h;
             }
 
             // The number of internal, leaf and total nodes used by the btree.
             size_type leaf_nodes() const { return internal_stats(root()).leaf_nodes; }
+
             size_type internal_nodes() const { return internal_stats(root()).internal_nodes; }
+
             size_type nodes() const
             {
                 node_stats stats = internal_stats(root());
@@ -1771,6 +1902,7 @@ namespace phmap
                     return 0.0;
                 return static_cast<double>(size()) / (nodes() * kNodeValues);
             }
+
             // The overhead of the btree structure in bytes per node. Computed as the
             // total number of bytes used by the btree minus the number of bytes used for
             // storing elements divided by the number of elements.
@@ -1787,25 +1919,27 @@ namespace phmap
 
         private:
             // Internal accessor routines.
-            node_type*       root() { return std::get<2>(root_); }
+            node_type* root() { return std::get<2>(root_); }
+
             const node_type* root() const { return std::get<2>(root_); }
-            node_type*&      mutable_root() noexcept { return std::get<2>(root_); }
-            key_compare*     mutable_key_comp() noexcept { return &std::get<0>(root_); }
+
+            node_type*& mutable_root() noexcept { return std::get<2>(root_); }
+
+            key_compare* mutable_key_comp() noexcept { return &std::get<0>(root_); }
 
             // The leftmost node is stored as the parent of the root node.
-            node_type*       leftmost() { return root()->parent(); }
+            node_type* leftmost() { return root()->parent(); }
+
             const node_type* leftmost() const { return root()->parent(); }
 
             // Allocator routines.
-            allocator_type*       mutable_allocator() noexcept { return &std::get<1>(root_); }
+            allocator_type* mutable_allocator() noexcept { return &std::get<1>(root_); }
+
             const allocator_type& allocator() const noexcept { return std::get<1>(root_); }
 
             // Allocates a correctly aligned node of at least size bytes using the
             // allocator.
-            node_type* allocate(const size_type sz)
-            {
-                return reinterpret_cast<node_type*>(phmap::priv::Allocate<node_type::Alignment()>(mutable_allocator(), (size_t)sz));
-            }
+            node_type* allocate(const size_type sz) { return reinterpret_cast<node_type*>(phmap::priv::Allocate<node_type::Alignment()>(mutable_allocator(), (size_t)sz)); }
 
             // Node creation/deletion routines.
             node_type* new_internal_node(node_type* parent)
@@ -1813,11 +1947,13 @@ namespace phmap
                 node_type* p = allocate(node_type::InternalSize());
                 return node_type::init_internal(p, parent);
             }
+
             node_type* new_leaf_node(node_type* parent)
             {
                 node_type* p = allocate(node_type::LeafSize());
                 return node_type::init_leaf(p, parent, kNodeValues);
             }
+
             node_type* new_leaf_root_node(const int max_count)
             {
                 node_type* p = allocate(node_type::LeafSize(max_count));
@@ -1837,6 +1973,7 @@ namespace phmap
                 node->destroy(mutable_allocator());
                 deallocate(node_type::InternalSize(), node);
             }
+
             void delete_leaf_node(node_type* node)
             {
                 node->destroy(mutable_allocator());
@@ -1859,7 +1996,8 @@ namespace phmap
             // Tries to shrink the height of the tree by 1.
             void try_shrink();
 
-            iterator       internal_end(iterator iter) { return iter.node != nullptr ? iter : end(); }
+            iterator internal_end(iterator iter) { return iter.node != nullptr ? iter : end(); }
+
             const_iterator internal_end(const_iterator iter) const { return iter.node != nullptr ? iter : end(); }
 
             // Emplaces a value into the btree immediately before iter. Requires that
@@ -3268,24 +3406,37 @@ namespace phmap
 
             // Constructors/assignments.
             btree_container() : tree_(key_compare(), allocator_type()) {}
+
             explicit btree_container(const key_compare& comp, const allocator_type& alloc = allocator_type()) : tree_(comp, alloc) {}
+
             btree_container(const btree_container& x)                                                              = default;
             btree_container(btree_container&& x) noexcept                                                          = default;
             btree_container& operator=(const btree_container& x)                                                   = default;
             btree_container& operator=(btree_container&& x) noexcept(std::is_nothrow_move_assignable<Tree>::value) = default;
 
             // Iterator routines.
-            iterator               begin() { return tree_.begin(); }
-            const_iterator         begin() const { return tree_.begin(); }
-            const_iterator         cbegin() const { return tree_.begin(); }
-            iterator               end() { return tree_.end(); }
-            const_iterator         end() const { return tree_.end(); }
-            const_iterator         cend() const { return tree_.end(); }
-            reverse_iterator       rbegin() { return tree_.rbegin(); }
+            iterator begin() { return tree_.begin(); }
+
+            const_iterator begin() const { return tree_.begin(); }
+
+            const_iterator cbegin() const { return tree_.begin(); }
+
+            iterator end() { return tree_.end(); }
+
+            const_iterator end() const { return tree_.end(); }
+
+            const_iterator cend() const { return tree_.end(); }
+
+            reverse_iterator rbegin() { return tree_.rbegin(); }
+
             const_reverse_iterator rbegin() const { return tree_.rbegin(); }
+
             const_reverse_iterator crbegin() const { return tree_.rbegin(); }
-            reverse_iterator       rend() { return tree_.rend(); }
+
+            reverse_iterator rend() { return tree_.rend(); }
+
             const_reverse_iterator rend() const { return tree_.rend(); }
+
             const_reverse_iterator crend() const { return tree_.rend(); }
 
             // Lookup routines.
@@ -3296,11 +3447,13 @@ namespace phmap
                 auto er = this->equal_range(key);
                 return std::distance(er.first, er.second);
             }
+
             template <typename K = key_type>
             iterator find(const key_arg<K>& key)
             {
                 return tree_.find(key);
             }
+
             template <typename K = key_type>
             const_iterator find(const key_arg<K>& key) const
             {
@@ -3350,14 +3503,18 @@ namespace phmap
             }
 
             iterator erase(const_iterator iter) { return tree_.erase(iterator(iter)); }
+
             iterator erase(iterator iter) { return tree_.erase(iter); }
+
             iterator erase(const_iterator first, const_iterator last) { return tree_.erase(iterator(first), iterator(last)).second; }
+
             template <typename K = key_type>
             size_type erase(const key_arg<K>& key)
             {
                 auto er = this->equal_range(key);
                 return tree_.erase_range(er.first, er.second).first;
             }
+
             node_type extract(iterator position)
             {
                 // Use Move instead of Transfer, because the rebalancing code expects to
@@ -3371,12 +3528,16 @@ namespace phmap
 
         public:
             void clear() { tree_.clear(); }
+
             void swap(btree_container& x) { tree_.swap(x.tree_); }
+
             void verify() const { tree_.verify(); }
 
             size_type size() const { return tree_.size(); }
+
             size_type max_size() const { return tree_.max_size(); }
-            bool      empty() const { return tree_.empty(); }
+
+            bool empty() const { return tree_.empty(); }
 
             friend bool operator==(const btree_container& x, const btree_container& y)
             {
@@ -3387,10 +3548,7 @@ namespace phmap
 
             friend bool operator!=(const btree_container& x, const btree_container& y) { return !(x == y); }
 
-            friend bool operator<(const btree_container& x, const btree_container& y)
-            {
-                return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
-            }
+            friend bool operator<(const btree_container& x, const btree_container& y) { return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end()); }
 
             friend bool operator>(const btree_container& x, const btree_container& y) { return y < x; }
 
@@ -3402,7 +3560,8 @@ namespace phmap
             allocator_type get_allocator() const { return tree_.get_allocator(); }
 
             // The key comparator used by the btree.
-            key_compare   key_comp() const { return tree_.key_comp(); }
+            key_compare key_comp() const { return tree_.key_comp(); }
+
             value_compare value_comp() const { return tree_.value_comp(); }
 
             // Support absl::Hash.
@@ -3446,11 +3605,11 @@ namespace phmap
             using node_type          = typename super_type::node_type;
             using insert_return_type = InsertReturnType<iterator, node_type>;
             using super_type::super_type;
+
             btree_set_container() {}
 
             template <class InputIterator>
-            btree_set_container(InputIterator b, InputIterator e, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type())
-                : super_type(comp, alloc)
+            btree_set_container(InputIterator b, InputIterator e, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : super_type(comp, alloc)
             {
                 insert(b, e);
             }
@@ -3471,18 +3630,19 @@ namespace phmap
 
             // Insertion routines.
             std::pair<iterator, bool> insert(const value_type& x) { return this->tree_.insert_unique(params_type::key(x), x); }
+
             std::pair<iterator, bool> insert(value_type&& x) { return this->tree_.insert_unique(params_type::key(x), std::move(x)); }
+
             template <typename... Args>
             std::pair<iterator, bool> emplace(Args&&... args)
             {
                 init_type v(std::forward<Args>(args)...);
                 return this->tree_.insert_unique(params_type::key(v), std::move(v));
             }
+
             iterator insert(const_iterator hint, const value_type& x) { return this->tree_.insert_hint_unique(iterator(hint), params_type::key(x), x).first; }
-            iterator insert(const_iterator hint, value_type&& x)
-            {
-                return this->tree_.insert_hint_unique(iterator(hint), params_type::key(x), std::move(x)).first;
-            }
+
+            iterator insert(const_iterator hint, value_type&& x) { return this->tree_.insert_hint_unique(iterator(hint), params_type::key(x), std::move(x)).first; }
 
             template <typename... Args>
             iterator emplace_hint(const_iterator hint, Args&&... args)
@@ -3530,6 +3690,7 @@ namespace phmap
             {
                 return this->tree_.erase_unique(key);
             }
+
             using super_type::erase;
 
             template <typename K = key_type>
@@ -3544,7 +3705,11 @@ namespace phmap
             // Merge routines.
             // Moves elements from `src` into `this`. If the element already exists in
             // `this`, it is left unmodified in `src`.
-            template <typename T, typename phmap::enable_if_t<phmap::conjunction<std::is_same<value_type, typename T::value_type>, std::is_same<allocator_type, typename T::allocator_type>, std::is_same<typename params_type::is_map_container, typename T::params_type::is_map_container>>::value, int> = 0>
+            template <typename T,
+                      typename phmap::enable_if_t<phmap::conjunction<std::is_same<value_type, typename T::value_type>, std::is_same<allocator_type, typename T::allocator_type>,
+                                                                     std::is_same<typename params_type::is_map_container, typename T::params_type::is_map_container>>::value,
+                                                  int>
+                      = 0>
             void merge(btree_container<T>& src)
             { // NOLINT
                 for (auto src_it = src.begin(); src_it != src.end();)
@@ -3560,7 +3725,11 @@ namespace phmap
                 }
             }
 
-            template <typename T, typename phmap::enable_if_t<phmap::conjunction<std::is_same<value_type, typename T::value_type>, std::is_same<allocator_type, typename T::allocator_type>, std::is_same<typename params_type::is_map_container, typename T::params_type::is_map_container>>::value, int> = 0>
+            template <typename T,
+                      typename phmap::enable_if_t<phmap::conjunction<std::is_same<value_type, typename T::value_type>, std::is_same<allocator_type, typename T::allocator_type>,
+                                                                     std::is_same<typename params_type::is_map_container, typename T::params_type::is_map_container>>::value,
+                                                  int>
+                      = 0>
             void merge(btree_container<T>&& src)
             {
                 merge(src);
@@ -3590,6 +3759,7 @@ namespace phmap
 
             // Inherit constructors.
             using super_type::super_type;
+
             btree_map_container() {}
 
             // Insertion routines.
@@ -3598,6 +3768,7 @@ namespace phmap
             {
                 return this->tree_.insert_unique(k, std::piecewise_construct, std::forward_as_tuple(k), std::forward_as_tuple(std::forward<Args>(args)...));
             }
+
             template <typename... Args>
             std::pair<iterator, bool> try_emplace(key_type&& k, Args&&... args)
             {
@@ -3608,13 +3779,14 @@ namespace phmap
                 const key_type& key_ref = k;
                 return this->tree_.insert_unique(key_ref, std::piecewise_construct, std::forward_as_tuple(std::move(k)), std::forward_as_tuple(std::forward<Args>(args)...));
             }
+
             template <typename... Args>
             iterator try_emplace(const_iterator hint, const key_type& k, Args&&... args)
             {
-                return this->tree_
-                    .insert_hint_unique(iterator(hint), k, std::piecewise_construct, std::forward_as_tuple(k), std::forward_as_tuple(std::forward<Args>(args)...))
+                return this->tree_.insert_hint_unique(iterator(hint), k, std::piecewise_construct, std::forward_as_tuple(k), std::forward_as_tuple(std::forward<Args>(args)...))
                     .first;
             }
+
             template <typename... Args>
             iterator try_emplace(const_iterator hint, key_type&& k, Args&&... args)
             {
@@ -3627,7 +3799,9 @@ namespace phmap
                     .insert_hint_unique(iterator(hint), key_ref, std::piecewise_construct, std::forward_as_tuple(std::move(k)), std::forward_as_tuple(std::forward<Args>(args)...))
                     .first;
             }
+
             mapped_type& operator[](const key_type& k) { return try_emplace(k).first->second; }
+
             mapped_type& operator[](key_type&& k) { return try_emplace(std::move(k)).first->second; }
 
             template <typename K = key_type>
@@ -3638,6 +3812,7 @@ namespace phmap
                     base_internal::ThrowStdOutOfRange("phmap::btree_map::at");
                 return it->second;
             }
+
             template <typename K = key_type>
             const mapped_type& at(const key_arg<K>& key) const
             {
@@ -3672,6 +3847,7 @@ namespace phmap
 
             // Inherit constructors.
             using super_type::super_type;
+
             btree_multiset_container() {}
 
             // Range constructor.
@@ -3697,25 +3873,33 @@ namespace phmap
 
             // Insertion routines.
             iterator insert(const value_type& x) { return this->tree_.insert_multi(x); }
+
             iterator insert(value_type&& x) { return this->tree_.insert_multi(std::move(x)); }
+
             iterator insert(const_iterator hint, const value_type& x) { return this->tree_.insert_hint_multi(iterator(hint), x); }
+
             iterator insert(const_iterator hint, value_type&& x) { return this->tree_.insert_hint_multi(iterator(hint), std::move(x)); }
+
             template <typename InputIterator>
             void insert(InputIterator b, InputIterator e)
             {
                 this->tree_.insert_iterator_multi(b, e);
             }
+
             void insert(std::initializer_list<init_type> init) { this->tree_.insert_iterator_multi(init.begin(), init.end()); }
+
             template <typename... Args>
             iterator emplace(Args&&... args)
             {
                 return this->tree_.insert_multi(init_type(std::forward<Args>(args)...));
             }
+
             template <typename... Args>
             iterator emplace_hint(const_iterator hint, Args&&... args)
             {
                 return this->tree_.insert_hint_multi(iterator(hint), init_type(std::forward<Args>(args)...));
             }
+
             iterator insert(node_type&& node)
             {
                 if (!node)
@@ -3724,6 +3908,7 @@ namespace phmap
                 CommonAccess::Destroy(&node);
                 return res;
             }
+
             iterator insert(const_iterator hint, node_type&& node)
             {
                 if (!node)
@@ -3739,6 +3924,7 @@ namespace phmap
             {
                 return this->tree_.erase_multi(key);
             }
+
             using super_type::erase;
 
             // Node extraction routines.
@@ -3748,18 +3934,27 @@ namespace phmap
                 auto it = this->find(key);
                 return it == this->end() ? node_type() : extract(it);
             }
+
             using super_type::extract;
 
             // Merge routines.
             // Moves all elements from `src` into `this`.
-            template <typename T, typename phmap::enable_if_t<phmap::conjunction<std::is_same<value_type, typename T::value_type>, std::is_same<allocator_type, typename T::allocator_type>, std::is_same<typename params_type::is_map_container, typename T::params_type::is_map_container>>::value, int> = 0>
+            template <typename T,
+                      typename phmap::enable_if_t<phmap::conjunction<std::is_same<value_type, typename T::value_type>, std::is_same<allocator_type, typename T::allocator_type>,
+                                                                     std::is_same<typename params_type::is_map_container, typename T::params_type::is_map_container>>::value,
+                                                  int>
+                      = 0>
             void merge(btree_container<T>& src)
             { // NOLINT
                 insert(std::make_move_iterator(src.begin()), std::make_move_iterator(src.end()));
                 src.clear();
             }
 
-            template <typename T, typename phmap::enable_if_t<phmap::conjunction<std::is_same<value_type, typename T::value_type>, std::is_same<allocator_type, typename T::allocator_type>, std::is_same<typename params_type::is_map_container, typename T::params_type::is_map_container>>::value, int> = 0>
+            template <typename T,
+                      typename phmap::enable_if_t<phmap::conjunction<std::is_same<value_type, typename T::value_type>, std::is_same<allocator_type, typename T::allocator_type>,
+                                                                     std::is_same<typename params_type::is_map_container, typename T::params_type::is_map_container>>::value,
+                                                  int>
+                      = 0>
             void merge(btree_container<T>&& src)
             {
                 merge(src);
@@ -3778,6 +3973,7 @@ namespace phmap
 
             // Inherit constructors.
             using super_type::super_type;
+
             btree_multimap_container() {}
         };
 
@@ -3793,6 +3989,7 @@ namespace phmap
 
     public:
         btree_set() {}
+
         using Base::Base;
         using Base::begin;
         using Base::cbegin;
@@ -3856,6 +4053,7 @@ namespace phmap
 
     public:
         btree_multiset() {}
+
         using Base::Base;
         using Base::begin;
         using Base::cbegin;
@@ -3919,6 +4117,7 @@ namespace phmap
 
     public:
         btree_map() {}
+
         using Base::at;
         using Base::Base;
         using Base::begin;
@@ -3984,6 +4183,7 @@ namespace phmap
 
     public:
         btree_multimap() {}
+
         using Base::Base;
         using Base::begin;
         using Base::cbegin;

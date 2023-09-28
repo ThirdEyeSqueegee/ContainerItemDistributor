@@ -183,10 +183,10 @@ namespace phmap
 // -----------------------------------------------------------------------------
 
 #if defined(__pnacl__)
-#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION()                                                                                                                   \
-    if (volatile int x = 0)                                                                                                                                    \
-    {                                                                                                                                                          \
-        (void)x;                                                                                                                                               \
+#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION()                                                                                                                                       \
+    if (volatile int x = 0)                                                                                                                                                        \
+    {                                                                                                                                                                              \
+        (void)x;                                                                                                                                                                   \
     }
 #elif defined(__clang__)
   // Clang will not tail call given inline volatile assembly.
@@ -199,10 +199,10 @@ namespace phmap
 // The __nop() intrinsic blocks the optimisation.
 #define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION() __nop()
 #else
-#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION()                                                                                                                   \
-    if (volatile int x = 0)                                                                                                                                    \
-    {                                                                                                                                                          \
-        (void)x;                                                                                                                                               \
+#define PHMAP_BLOCK_TAIL_CALL_OPTIMIZATION()                                                                                                                                       \
+    if (volatile int x = 0)                                                                                                                                                        \
+    {                                                                                                                                                                              \
+        (void)x;                                                                                                                                                                   \
     }
 #endif
 
@@ -213,20 +213,24 @@ namespace phmap
 
 #ifdef PHMAP_HAVE_INTRINSIC_INT128
 __extension__ typedef unsigned __int128 phmap_uint128;
-inline uint64_t                         umul128(uint64_t a, uint64_t b, uint64_t* high)
+
+inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t* high)
 {
     auto result = static_cast<phmap_uint128>(a) * static_cast<phmap_uint128>(b);
     *high       = static_cast<uint64_t>(result >> 64);
     return static_cast<uint64_t>(result);
 }
+
 #define PHMAP_HAS_UMUL128 1
 #elif (defined(_MSC_VER))
 #if defined(_M_X64)
 #pragma intrinsic(_umul128)
+
 inline uint64_t umul128(uint64_t a, uint64_t b, uint64_t* high)
 {
     return _umul128(a, b, high);
 }
+
 #define PHMAP_HAS_UMUL128 1
 #endif
 #endif
@@ -489,10 +493,12 @@ namespace phmap
     {
         return __builtin_bswap64(host_int);
     }
+
     inline uint32_t gbswap_32(uint32_t host_int)
     {
         return __builtin_bswap32(host_int);
     }
+
     inline uint16_t gbswap_16(uint16_t host_int)
     {
         return __builtin_bswap16(host_int);
@@ -504,10 +510,12 @@ namespace phmap
     {
         return _byteswap_uint64(host_int);
     }
+
     inline uint32_t gbswap_32(uint32_t host_int)
     {
         return _byteswap_ulong(host_int);
     }
+
     inline uint16_t gbswap_16(uint16_t host_int)
     {
         return _byteswap_ushort(host_int);
@@ -519,10 +527,12 @@ namespace phmap
     {
         return OSSwapInt16(host_int);
     }
+
     inline uint32_t gbswap_32(uint32_t host_int)
     {
         return OSSwapInt32(host_int);
     }
+
     inline uint16_t gbswap_16(uint16_t host_int)
     {
         return OSSwapInt64(host_int);
@@ -547,7 +557,9 @@ namespace phmap
 #elif defined(__GLIBC__)
         return bswap_64(host_int);
 #else
-        return (((host_int & uint64_t{ 0xFF }) << 56) | ((host_int & uint64_t{ 0xFF00 }) << 40) | ((host_int & uint64_t{ 0xFF0000 }) << 24) | ((host_int & uint64_t{ 0xFF000000 }) << 8) | ((host_int & uint64_t{ 0xFF00000000 }) >> 8) | ((host_int & uint64_t{ 0xFF0000000000 }) >> 24) | ((host_int & uint64_t{ 0xFF000000000000 }) >> 40) | ((host_int & uint64_t{ 0xFF00000000000000 }) >> 56));
+        return (((host_int & uint64_t{ 0xFF }) << 56) | ((host_int & uint64_t{ 0xFF00 }) << 40) | ((host_int & uint64_t{ 0xFF0000 }) << 24)
+                | ((host_int & uint64_t{ 0xFF000000 }) << 8) | ((host_int & uint64_t{ 0xFF00000000 }) >> 8) | ((host_int & uint64_t{ 0xFF0000000000 }) >> 24)
+                | ((host_int & uint64_t{ 0xFF000000000000 }) >> 40) | ((host_int & uint64_t{ 0xFF00000000000000 }) >> 56));
 #endif // bswap_64
     }
 
@@ -556,7 +568,8 @@ namespace phmap
 #if defined(__GLIBC__)
         return bswap_32(host_int);
 #else
-        return (((host_int & uint32_t{ 0xFF }) << 24) | ((host_int & uint32_t{ 0xFF00 }) << 8) | ((host_int & uint32_t{ 0xFF0000 }) >> 8) | ((host_int & uint32_t{ 0xFF000000 }) >> 24));
+        return (((host_int & uint32_t{ 0xFF }) << 24) | ((host_int & uint32_t{ 0xFF00 }) << 8) | ((host_int & uint32_t{ 0xFF0000 }) >> 8)
+                | ((host_int & uint32_t{ 0xFF000000 }) >> 24));
 #endif
     }
 
@@ -583,10 +596,12 @@ namespace phmap
     {
         return gbswap_16(x);
     }
+
     inline uint32_t ghtonl(uint32_t x)
     {
         return gbswap_32(x);
     }
+
     inline uint64_t ghtonll(uint64_t x)
     {
         return gbswap_64(x);
@@ -601,10 +616,12 @@ namespace phmap
     {
         return x;
     }
+
     inline uint32_t ghtonl(uint32_t x)
     {
         return x;
     }
+
     inline uint64_t ghtonll(uint64_t x)
     {
         return x;
@@ -619,10 +636,12 @@ namespace phmap
     {
         return ghtons(x);
     }
+
     inline uint32_t gntohl(uint32_t x)
     {
         return ghtonl(x);
     }
+
     inline uint64_t gntohll(uint64_t x)
     {
         return ghtonll(x);
@@ -641,6 +660,7 @@ namespace phmap
         {
             return x;
         }
+
         inline uint16_t ToHost16(uint16_t x)
         {
             return x;
@@ -650,6 +670,7 @@ namespace phmap
         {
             return x;
         }
+
         inline uint32_t ToHost32(uint32_t x)
         {
             return x;
@@ -659,6 +680,7 @@ namespace phmap
         {
             return x;
         }
+
         inline uint64_t ToHost64(uint64_t x)
         {
             return x;
@@ -675,6 +697,7 @@ namespace phmap
         {
             return gbswap_16(x);
         }
+
         inline uint16_t ToHost16(uint16_t x)
         {
             return gbswap_16(x);
@@ -684,6 +707,7 @@ namespace phmap
         {
             return gbswap_32(x);
         }
+
         inline uint32_t ToHost32(uint32_t x)
         {
             return gbswap_32(x);
@@ -693,6 +717,7 @@ namespace phmap
         {
             return gbswap_64(x);
         }
+
         inline uint64_t ToHost64(uint64_t x)
         {
             return gbswap_64(x);
@@ -751,6 +776,7 @@ namespace phmap
         {
             return gbswap_16(x);
         }
+
         inline uint16_t ToHost16(uint16_t x)
         {
             return gbswap_16(x);
@@ -760,6 +786,7 @@ namespace phmap
         {
             return gbswap_32(x);
         }
+
         inline uint32_t ToHost32(uint32_t x)
         {
             return gbswap_32(x);
@@ -769,6 +796,7 @@ namespace phmap
         {
             return gbswap_64(x);
         }
+
         inline uint64_t ToHost64(uint64_t x)
         {
             return gbswap_64(x);
@@ -785,6 +813,7 @@ namespace phmap
         {
             return x;
         }
+
         inline uint16_t ToHost16(uint16_t x)
         {
             return x;
@@ -794,6 +823,7 @@ namespace phmap
         {
             return x;
         }
+
         inline uint32_t ToHost32(uint32_t x)
         {
             return x;
@@ -803,6 +833,7 @@ namespace phmap
         {
             return x;
         }
+
         inline uint64_t ToHost64(uint64_t x)
         {
             return x;

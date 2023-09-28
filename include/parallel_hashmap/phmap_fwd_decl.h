@@ -84,14 +84,16 @@ namespace phmap
               class Alloc = phmap::priv::Allocator<T>> // alias for std::allocator
     class flat_hash_set;
 
-    template <class K, class V, class Hash = phmap::priv::hash_default_hash<K>, class Eq = phmap::priv::hash_default_eq<K>, class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const K, V>>> // alias for std::allocator
+    template <class K, class V, class Hash = phmap::priv::hash_default_hash<K>, class Eq = phmap::priv::hash_default_eq<K>,
+              class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const K, V>>> // alias for std::allocator
     class flat_hash_map;
 
     template <class T, class Hash = phmap::priv::hash_default_hash<T>, class Eq = phmap::priv::hash_default_eq<T>,
               class Alloc = phmap::priv::Allocator<T>> // alias for std::allocator
     class node_hash_set;
 
-    template <class Key, class Value, class Hash = phmap::priv::hash_default_hash<Key>, class Eq = phmap::priv::hash_default_eq<Key>, class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const Key, Value>>> // alias for std::allocator
+    template <class Key, class Value, class Hash = phmap::priv::hash_default_hash<Key>, class Eq = phmap::priv::hash_default_eq<Key>,
+              class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const Key, Value>>> // alias for std::allocator
     class node_hash_map;
 
     template <class T, class Hash = phmap::priv::hash_default_hash<T>, class Eq = phmap::priv::hash_default_eq<T>,
@@ -100,9 +102,10 @@ namespace phmap
               class Mutex = phmap::NullMutex>          // use std::mutex to enable internal locks
     class parallel_flat_hash_set;
 
-    template <class K, class V, class Hash = phmap::priv::hash_default_hash<K>, class Eq = phmap::priv::hash_default_eq<K>, class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const K, V>>, // alias for std::allocator
-              size_t N    = 4,                // 2**N submaps
-              class Mutex = phmap::NullMutex> // use std::mutex to enable internal locks
+    template <class K, class V, class Hash = phmap::priv::hash_default_hash<K>, class Eq = phmap::priv::hash_default_eq<K>,
+              class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const K, V>>, // alias for std::allocator
+              size_t N    = 4,                                                     // 2**N submaps
+              class Mutex = phmap::NullMutex>                                      // use std::mutex to enable internal locks
     class parallel_flat_hash_map;
 
     template <class T, class Hash = phmap::priv::hash_default_hash<T>, class Eq = phmap::priv::hash_default_eq<T>,
@@ -111,9 +114,10 @@ namespace phmap
               class Mutex = phmap::NullMutex>          // use std::mutex to enable internal locks
     class parallel_node_hash_set;
 
-    template <class Key, class Value, class Hash = phmap::priv::hash_default_hash<Key>, class Eq = phmap::priv::hash_default_eq<Key>, class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const Key, Value>>, // alias for std::allocator
-              size_t N    = 4,                // 2**N submaps
-              class Mutex = phmap::NullMutex> // use std::mutex to enable internal locks
+    template <class Key, class Value, class Hash = phmap::priv::hash_default_hash<Key>, class Eq = phmap::priv::hash_default_eq<Key>,
+              class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const Key, Value>>, // alias for std::allocator
+              size_t N    = 4,                                                           // 2**N submaps
+              class Mutex = phmap::NullMutex>                                            // use std::mutex to enable internal locks
     class parallel_node_hash_map;
 
     // -----------------------------------------------------------------------------
@@ -122,13 +126,15 @@ namespace phmap
     template <class T, class Hash = phmap::priv::hash_default_hash<T>, class Eq = phmap::priv::hash_default_eq<T>, class Alloc = phmap::priv::Allocator<T>, size_t N = 4>
     using parallel_flat_hash_set_m = parallel_flat_hash_set<T, Hash, Eq, Alloc, N, std::mutex>;
 
-    template <class K, class V, class Hash = phmap::priv::hash_default_hash<K>, class Eq = phmap::priv::hash_default_eq<K>, class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const K, V>>, size_t N = 4>
+    template <class K, class V, class Hash = phmap::priv::hash_default_hash<K>, class Eq = phmap::priv::hash_default_eq<K>,
+              class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const K, V>>, size_t N = 4>
     using parallel_flat_hash_map_m = parallel_flat_hash_map<K, V, Hash, Eq, Alloc, N, std::mutex>;
 
     template <class T, class Hash = phmap::priv::hash_default_hash<T>, class Eq = phmap::priv::hash_default_eq<T>, class Alloc = phmap::priv::Allocator<T>, size_t N = 4>
     using parallel_node_hash_set_m = parallel_node_hash_set<T, Hash, Eq, Alloc, N, std::mutex>;
 
-    template <class K, class V, class Hash = phmap::priv::hash_default_hash<K>, class Eq = phmap::priv::hash_default_eq<K>, class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const K, V>>, size_t N = 4>
+    template <class K, class V, class Hash = phmap::priv::hash_default_hash<K>, class Eq = phmap::priv::hash_default_eq<K>,
+              class Alloc = phmap::priv::Allocator<phmap::priv::Pair<const K, V>>, size_t N = 4>
     using parallel_node_hash_map_m = parallel_node_hash_map<K, V, Hash, Eq, Alloc, N, std::mutex>;
 
     // ------------- forward declarations for btree containers ----------------------------------

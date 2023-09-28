@@ -152,7 +152,9 @@ namespace phmap
                 mask_   = mask;
                 offset_ = hashval & mask_;
             }
+
             size_t offset() const { return offset_; }
+
             size_t offset(size_t i) const { return (offset_ + i) & mask_; }
 
             void next()
@@ -161,6 +163,7 @@ namespace phmap
                 offset_ += index_;
                 offset_ &= mask_;
             }
+
             // 0-based probe index. The i-th probe in the probe sequence.
             size_t getindex() const { return index_; }
 
@@ -175,7 +178,9 @@ namespace phmap
         struct RequireUsableKey
         {
             template <class PassedKey, class... Args>
-            std::pair<decltype(std::declval<const Hash&>()(std::declval<const PassedKey&>())), decltype(std::declval<const Eq&>()(std::declval<const ContainerKey&>(), std::declval<const PassedKey&>()))>* operator()(const PassedKey&, const Args&...) const;
+            std::pair<decltype(std::declval<const Hash&>()(std::declval<const PassedKey&>())),
+                      decltype(std::declval<const Eq&>()(std::declval<const ContainerKey&>(), std::declval<const PassedKey&>()))>*
+            operator()(const PassedKey&, const Args&...) const;
         };
 
         // --------------------------------------------------------------------------
@@ -185,7 +190,8 @@ namespace phmap
         };
 
         template <class Policy, class Hash, class Eq, class... Ts>
-        struct IsDecomposable<phmap::void_t<decltype(Policy::apply(RequireUsableKey<typename Policy::key_type, Hash, Eq>(), std::declval<Ts>()...))>, Policy, Hash, Eq, Ts...> : std::true_type
+        struct IsDecomposable<phmap::void_t<decltype(Policy::apply(RequireUsableKey<typename Policy::key_type, Hash, Eq>(), std::declval<Ts>()...))>, Policy, Hash, Eq, Ts...>
+            : std::true_type
         {
         };
 
@@ -254,6 +260,7 @@ namespace phmap
             }
 
             explicit operator bool() const { return mask_ != 0; }
+
             uint32_t operator*() const { return LowestBitSet(); }
 
             uint32_t LowestBitSet() const { return priv::TrailingZeros(mask_) >> Shift; }
@@ -261,6 +268,7 @@ namespace phmap
             uint32_t HighestBitSet() const { return (sizeof(T) * CHAR_BIT - priv::LeadingZeros(mask_) - 1) >> Shift; }
 
             BitMask begin() const { return *this; }
+
             BitMask end() const { return BitMask(0); }
 
             uint32_t TrailingZeros() const { return priv::TrailingZeros(mask_) >> Shift; }
@@ -274,6 +282,7 @@ namespace phmap
 
         private:
             friend bool operator==(const BitMask& a, const BitMask& b) { return a.mask_ == b.mask_; }
+
             friend bool operator!=(const BitMask& a, const BitMask& b) { return a.mask_ != b.mask_; }
 
             T mask_;
@@ -313,8 +322,8 @@ namespace phmap
         // --------------------------------------------------------------------------
         inline ctrl_t* EmptyGroup()
         {
-            alignas(16) static constexpr ctrl_t empty_group[] = { kSentinel, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty,
-                                                                  kEmpty,    kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty };
+            alignas(16) static constexpr ctrl_t empty_group[]
+                = { kSentinel, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty, kEmpty };
             return const_cast<ctrl_t*>(empty_group);
         }
 
@@ -354,14 +363,17 @@ namespace phmap
         {
             return c == kEmpty;
         }
+
         inline bool IsFull(ctrl_t c)
         {
             return c >= static_cast<ctrl_t>(0);
         }
+
         inline bool IsDeleted(ctrl_t c)
         {
             return c == kDeleted;
         }
+
         inline bool IsEmptyOrDeleted(ctrl_t c)
         {
             return c < kSentinel;
@@ -634,6 +646,7 @@ namespace phmap
 
             // If it is a map, call get<0>().
             using std::get;
+
             template <typename T, typename = typename T::mapped_type>
             auto GetKey(const typename T::value_type& pair, int) -> decltype(get<0>(pair))
             {
@@ -691,27 +704,32 @@ namespace phmap
 
         inline void RecordRehashSlow(HashtablezInfo*, size_t) {}
 
-        static inline void RecordInsertSlow(HashtablezInfo*, size_t, size_t) {}
+        inline static void RecordInsertSlow(HashtablezInfo*, size_t, size_t) {}
 
-        static inline void RecordEraseSlow(HashtablezInfo*) {}
+        inline static void RecordEraseSlow(HashtablezInfo*) {}
 
-        static inline HashtablezInfo* SampleSlow(int64_t*)
+        inline static HashtablezInfo* SampleSlow(int64_t*)
         {
             return nullptr;
         }
-        static inline void UnsampleSlow(HashtablezInfo*) {}
+
+        inline static void UnsampleSlow(HashtablezInfo*) {}
 
         class HashtablezInfoHandle
         {
         public:
-            inline void        RecordStorageChanged(size_t, size_t) {}
-            inline void        RecordRehash(size_t) {}
-            inline void        RecordInsert(size_t, size_t) {}
-            inline void        RecordErase() {}
-            friend inline void swap(HashtablezInfoHandle&, HashtablezInfoHandle&) noexcept {}
+            inline void RecordStorageChanged(size_t, size_t) {}
+
+            inline void RecordRehash(size_t) {}
+
+            inline void RecordInsert(size_t, size_t) {}
+
+            inline void RecordErase() {}
+
+            inline friend void swap(HashtablezInfoHandle&, HashtablezInfoHandle&) noexcept {}
         };
 
-        static inline HashtablezInfoHandle Sample()
+        inline static HashtablezInfoHandle Sample()
         {
             return HashtablezInfoHandle();
         }
@@ -725,21 +743,27 @@ namespace phmap
                 static HashtablezSampler hzs;
                 return hzs;
             }
+
             HashtablezInfo* Register()
             {
                 static HashtablezInfo info;
                 return &info;
             }
+
             void Unregister(HashtablezInfo*) {}
 
             using DisposeCallback = void (*)(const HashtablezInfo&);
+
             DisposeCallback SetDisposeCallback(DisposeCallback) { return nullptr; }
-            int64_t         Iterate(const std::function<void(const HashtablezInfo& stack)>&) { return 0; }
+
+            int64_t Iterate(const std::function<void(const HashtablezInfo& stack)>&) { return 0; }
         };
 
-        static inline void SetHashtablezEnabled(bool) {}
-        static inline void SetHashtablezSampleParameter(int32_t) {}
-        static inline void SetHashtablezMaxSamples(int32_t) {}
+        inline static void SetHashtablezEnabled(bool) {}
+
+        inline static void SetHashtablezSampleParameter(int32_t) {}
+
+        inline static void SetHashtablezMaxSamples(int32_t) {}
 
         namespace memory_internal
         {
@@ -761,6 +785,7 @@ namespace phmap
                 {
                     return std::forward<F>(f)(T(std::forward<Args>(args)...));
                 }
+
                 F&& f;
             };
 
@@ -786,7 +811,8 @@ namespace phmap
             }
 
             template <class F, class K, class V>
-            decltype(std::declval<F>()(std::declval<const K&>(), std::piecewise_construct, std::declval<std::tuple<K>>(), std::declval<V>())) DecomposePairImpl(F&& f, std::pair<std::tuple<K>, V> p)
+            decltype(std::declval<F>()(std::declval<const K&>(), std::piecewise_construct, std::declval<std::tuple<K>>(), std::declval<V>()))
+            DecomposePairImpl(F&& f, std::pair<std::tuple<K>, V> p)
             {
                 const auto& key = std::get<0>(p.first);
                 return std::forward<F>(f)(key, std::piecewise_construct, std::move(p.first), std::move(p.second));
@@ -924,7 +950,8 @@ namespace phmap
             static_assert(std::is_lvalue_reference<reference>::value, "Policy::element() must return a reference");
 
             template <typename T>
-            struct SameAsElementReference : std::is_same<typename std::remove_cv<typename std::remove_reference<reference>::type>::type, typename std::remove_cv<typename std::remove_reference<T>::type>::type>
+            struct SameAsElementReference : std::is_same<typename std::remove_cv<typename std::remove_reference<reference>::type>::type,
+                                                         typename std::remove_cv<typename std::remove_reference<T>::type>::type>
             {
             };
 
@@ -975,6 +1002,7 @@ namespace phmap
                     skip_empty_or_deleted();
                     return *this;
                 }
+
                 // PRECONDITION: not an end() iterator.
                 iterator operator++(int)
                 {
@@ -1003,10 +1031,12 @@ namespace phmap
 #endif
 
                 friend bool operator==(const iterator& a, const iterator& b) { return a.ctrl_ == b.ctrl_; }
+
                 friend bool operator!=(const iterator& a, const iterator& b) { return !(a == b); }
 
             private:
                 iterator(ctrl_t* ctrl) : ctrl_(ctrl) {} // for end()
+
                 iterator(ctrl_t* ctrl, slot_type* slot) : ctrl_(ctrl), slot_(slot) {}
 
                 void skip_empty_or_deleted()
@@ -1024,6 +1054,7 @@ namespace phmap
                 }
 
                 ctrl_t* ctrl_ = nullptr;
+
                 // To avoid uninitialized member warnings, put slot_ in an anonymous union.
                 // The member is not initialized on singleton and end iterators.
                 union
@@ -1044,20 +1075,24 @@ namespace phmap
                 using difference_type   = typename raw_hash_set::difference_type;
 
                 const_iterator() {}
+
                 // Implicit construction from iterator.
                 const_iterator(iterator i) : inner_(std::move(i)) {}
 
                 reference operator*() const { return *inner_; }
-                pointer   operator->() const { return inner_.operator->(); }
+
+                pointer operator->() const { return inner_.operator->(); }
 
                 const_iterator& operator++()
                 {
                     ++inner_;
                     return *this;
                 }
+
                 const_iterator operator++(int) { return inner_++; }
 
                 friend bool operator==(const const_iterator& a, const const_iterator& b) { return a.inner_ == b.inner_; }
+
                 friend bool operator!=(const const_iterator& a, const const_iterator& b) { return !(a == b); }
 
             private:
@@ -1069,7 +1104,8 @@ namespace phmap
             using node_type          = node_handle<Policy, hash_policy_traits<Policy>, Alloc>;
             using insert_return_type = InsertReturnType<iterator, node_type>;
 
-            raw_hash_set() noexcept(std::is_nothrow_default_constructible<hasher>::value&& std::is_nothrow_default_constructible<key_equal>::value&& std::is_nothrow_default_constructible<allocator_type>::value)
+            raw_hash_set() noexcept(std::is_nothrow_default_constructible<hasher>::value&& std::is_nothrow_default_constructible<key_equal>::value&&
+                                                                                           std::is_nothrow_default_constructible<allocator_type>::value)
             {
             }
 
@@ -1092,7 +1128,8 @@ namespace phmap
             explicit raw_hash_set(const allocator_type& alloc) : raw_hash_set(0, hasher(), key_equal(), alloc) {}
 
             template <class InputIter>
-            raw_hash_set(InputIter first, InputIter last, size_t bucket_cnt = 0, const hasher& hashfn = hasher(), const key_equal& eq = key_equal(), const allocator_type& alloc = allocator_type())
+            raw_hash_set(InputIter first, InputIter last, size_t bucket_cnt = 0, const hasher& hashfn = hasher(), const key_equal& eq = key_equal(),
+                         const allocator_type& alloc = allocator_type())
                 : raw_hash_set(bucket_cnt, hashfn, eq, alloc)
             {
                 insert(first, last);
@@ -1105,8 +1142,7 @@ namespace phmap
             }
 
             template <class InputIter>
-            raw_hash_set(InputIter first, InputIter last, size_t bucket_cnt, const allocator_type& alloc)
-                : raw_hash_set(first, last, bucket_cnt, hasher(), key_equal(), alloc)
+            raw_hash_set(InputIter first, InputIter last, size_t bucket_cnt, const allocator_type& alloc) : raw_hash_set(first, last, bucket_cnt, hasher(), key_equal(), alloc)
             {
             }
 
@@ -1137,12 +1173,14 @@ namespace phmap
             //
             // RequiresNotInit<T> is a workaround for gcc prior to 7.1.
             template <class T, RequiresNotInit<T> = 0, RequiresInsertable<T> = 0>
-            raw_hash_set(std::initializer_list<T> init, size_t bucket_cnt = 0, const hasher& hashfn = hasher(), const key_equal& eq = key_equal(), const allocator_type& alloc = allocator_type())
+            raw_hash_set(std::initializer_list<T> init, size_t bucket_cnt = 0, const hasher& hashfn = hasher(), const key_equal& eq = key_equal(),
+                         const allocator_type& alloc = allocator_type())
                 : raw_hash_set(init.begin(), init.end(), bucket_cnt, hashfn, eq, alloc)
             {
             }
 
-            raw_hash_set(std::initializer_list<init_type> init, size_t bucket_cnt = 0, const hasher& hashfn = hasher(), const key_equal& eq = key_equal(), const allocator_type& alloc = allocator_type())
+            raw_hash_set(std::initializer_list<init_type> init, size_t bucket_cnt = 0, const hasher& hashfn = hasher(), const key_equal& eq = key_equal(),
+                         const allocator_type& alloc = allocator_type())
                 : raw_hash_set(init.begin(), init.end(), bucket_cnt, hashfn, eq, alloc)
             {
             }
@@ -1159,15 +1197,11 @@ namespace phmap
             }
 
             template <class T, RequiresNotInit<T> = 0, RequiresInsertable<T> = 0>
-            raw_hash_set(std::initializer_list<T> init, size_t bucket_cnt, const allocator_type& alloc)
-                : raw_hash_set(init, bucket_cnt, hasher(), key_equal(), alloc)
+            raw_hash_set(std::initializer_list<T> init, size_t bucket_cnt, const allocator_type& alloc) : raw_hash_set(init, bucket_cnt, hasher(), key_equal(), alloc)
             {
             }
 
-            raw_hash_set(std::initializer_list<init_type> init, size_t bucket_cnt, const allocator_type& alloc)
-                : raw_hash_set(init, bucket_cnt, hasher(), key_equal(), alloc)
-            {
-            }
+            raw_hash_set(std::initializer_list<init_type> init, size_t bucket_cnt, const allocator_type& alloc) : raw_hash_set(init, bucket_cnt, hasher(), key_equal(), alloc) {}
 
             template <class T, RequiresNotInit<T> = 0, RequiresInsertable<T> = 0>
             raw_hash_set(std::initializer_list<T> init, const allocator_type& alloc) : raw_hash_set(init, 0, hasher(), key_equal(), alloc)
@@ -1195,8 +1229,10 @@ namespace phmap
                 growth_left() -= that.size();
             }
 
-            raw_hash_set(raw_hash_set&& that) noexcept(std::is_nothrow_copy_constructible<hasher>::value&& std::is_nothrow_copy_constructible<key_equal>::value&& std::is_nothrow_copy_constructible<allocator_type>::value)
-                : ctrl_(phmap::exchange(that.ctrl_, EmptyGroup())), slots_(phmap::exchange(that.slots_, nullptr)), size_(phmap::exchange(that.size_, 0)), capacity_(phmap::exchange(that.capacity_, 0)), infoz_(phmap::exchange(that.infoz_, HashtablezInfoHandle())),
+            raw_hash_set(raw_hash_set&& that) noexcept(std::is_nothrow_copy_constructible<hasher>::value&& std::is_nothrow_copy_constructible<key_equal>::value&&
+                                                                                                           std::is_nothrow_copy_constructible<allocator_type>::value)
+                : ctrl_(phmap::exchange(that.ctrl_, EmptyGroup())), slots_(phmap::exchange(that.slots_, nullptr)), size_(phmap::exchange(that.size_, 0)),
+                  capacity_(phmap::exchange(that.capacity_, 0)), infoz_(phmap::exchange(that.infoz_, HashtablezInfoHandle())),
                   // Hash, equality and allocator are copied instead of moved because
                   // `that` must be left valid. If Hash is std::function<Key>, moving it
                   // would create a nullptr functor that cannot be called.
@@ -1235,7 +1271,8 @@ namespace phmap
                 return *this;
             }
 
-            raw_hash_set& operator=(raw_hash_set&& that) noexcept(phmap::allocator_traits<allocator_type>::is_always_equal::value&& std::is_nothrow_move_assignable<hasher>::value&& std::is_nothrow_move_assignable<key_equal>::value)
+            raw_hash_set& operator=(raw_hash_set&& that) noexcept(phmap::allocator_traits<allocator_type>::is_always_equal::value&& std::is_nothrow_move_assignable<hasher>::value&&
+                                                                      std::is_nothrow_move_assignable<key_equal>::value)
             {
                 // TODO(sbenza): We should only use the operations from the noexcept clause
                 // to make sure we actually adhere to that contract.
@@ -1250,6 +1287,7 @@ namespace phmap
                 it.skip_empty_or_deleted();
                 return it;
             }
+
             iterator end()
             {
 #if 0 // PHMAP_BIDIRECTIONAL
@@ -1260,13 +1298,19 @@ namespace phmap
             }
 
             const_iterator begin() const { return const_cast<raw_hash_set*>(this)->begin(); }
+
             const_iterator end() const { return const_cast<raw_hash_set*>(this)->end(); }
+
             const_iterator cbegin() const { return begin(); }
+
             const_iterator cend() const { return end(); }
 
-            bool   empty() const { return !size(); }
+            bool empty() const { return !size(); }
+
             size_t size() const { return size_; }
+
             size_t capacity() const { return capacity_; }
+
             size_t max_size() const { return (std::numeric_limits<size_t>::max)(); }
 
             PHMAP_ATTRIBUTE_REINITIALIZES void clear()
@@ -1629,6 +1673,7 @@ namespace phmap
                 PolicyTraits::destroy(&alloc_ref(), it.slot_);
                 erase_meta_only(it);
             }
+
             void _erase(const_iterator cit) { _erase(cit.inner_); }
 
             // This overload is necessary because otherwise erase<K>(const K&) would be
@@ -1685,7 +1730,9 @@ namespace phmap
                 return it == end() ? node_type() : extract(const_iterator{ it });
             }
 
-            void swap(raw_hash_set& that) noexcept(IsNoThrowSwappable<hasher>() && IsNoThrowSwappable<key_equal>() && (!AllocTraits::propagate_on_container_swap::value || IsNoThrowSwappable<allocator_type>(typename AllocTraits::propagate_on_container_swap{})))
+            void swap(raw_hash_set& that) noexcept(IsNoThrowSwappable<hasher>() && IsNoThrowSwappable<key_equal>()
+                                                   && (!AllocTraits::propagate_on_container_swap::value
+                                                       || IsNoThrowSwappable<allocator_type>(typename AllocTraits::propagate_on_container_swap{})))
             {
                 using std::swap;
                 swap(ctrl_, that.ctrl_);
@@ -1807,6 +1854,7 @@ namespace phmap
             {
                 return const_cast<raw_hash_set*>(this)->find(key, hashval);
             }
+
             template <class K = key_type>
             const_iterator find(const key_arg<K>& key) const
             {
@@ -1833,6 +1881,7 @@ namespace phmap
                     return { it, std::next(it) };
                 return { it, it };
             }
+
             template <class K = key_type>
             std::pair<const_iterator, const_iterator> equal_range(const key_arg<K>& key) const
             {
@@ -1843,15 +1892,20 @@ namespace phmap
             }
 
             size_t bucket_count() const { return capacity_; }
-            float  load_factor() const { return capacity_ ? static_cast<double>(size()) / capacity_ : 0.0; }
-            float  max_load_factor() const { return 1.0f; }
-            void   max_load_factor(float)
+
+            float load_factor() const { return capacity_ ? static_cast<double>(size()) / capacity_ : 0.0; }
+
+            float max_load_factor() const { return 1.0f; }
+
+            void max_load_factor(float)
             {
                 // Does nothing.
             }
 
-            hasher         hash_function() const { return hash_ref(); } // warning: doesn't match internal hash - use hash() member function
-            key_equal      key_eq() const { return eq_ref(); }
+            hasher hash_function() const { return hash_ref(); } // warning: doesn't match internal hash - use hash() member function
+
+            key_equal key_eq() const { return eq_ref(); }
+
             allocator_type get_allocator() const { return alloc_ref(); }
 
             friend bool operator==(const raw_hash_set& a, const raw_hash_set& b)
@@ -1908,6 +1962,7 @@ namespace phmap
                 {
                     return s.find(key);
                 }
+
                 const raw_hash_set& s;
             };
 
@@ -1918,6 +1973,7 @@ namespace phmap
                 {
                     return phmap_mix<sizeof(size_t)>()(h(key));
                 }
+
                 const hasher& h;
             };
 
@@ -1929,6 +1985,7 @@ namespace phmap
                 {
                     return eq(lhs, rhs);
                 }
+
                 const K1&        rhs;
                 const key_equal& eq;
             };
@@ -1952,6 +2009,7 @@ namespace phmap
                 {
                     return s.emplace_decomposable(key, s.hash(key), std::forward<Args>(args)...);
                 }
+
                 raw_hash_set& s;
             };
 
@@ -1962,6 +2020,7 @@ namespace phmap
                 {
                     return s.emplace_decomposable(key, hashval, std::forward<Args>(args)...);
                 }
+
                 raw_hash_set& s;
                 size_t        hashval;
             };
@@ -1985,6 +2044,7 @@ namespace phmap
                     }
                     return { s.iterator_at(res.first), res.second };
                 }
+
                 raw_hash_set& s;
                 // Constructed slot. Either moved into place or destroyed.
                 slot_type&& slot;
@@ -2008,6 +2068,7 @@ namespace phmap
                     }
                     return { s.iterator_at(res.first), res.second };
                 }
+
                 raw_hash_set& s;
                 // Constructed slot. Either moved into place or destroyed.
                 slot_type&& slot;
@@ -2233,6 +2294,7 @@ namespace phmap
                 size_t offset;
                 size_t probe_length;
             };
+
             FindInfo find_first_non_full(size_t hashval)
             {
                 auto seq = probe(hashval);
@@ -2256,6 +2318,7 @@ namespace phmap
                 swap(tmp);
                 return *this;
             }
+
             raw_hash_set& move_assign(raw_hash_set&& that, std::false_type)
             {
                 raw_hash_set tmp(std::move(that), alloc_ref());
@@ -2317,7 +2380,8 @@ namespace phmap
 #endif
             }
 
-            iterator       iterator_at(size_t i) { return { ctrl_ + i, slots_ + i }; }
+            iterator iterator_at(size_t i) { return { ctrl_ + i, slots_ + i }; }
+
             const_iterator iterator_at(size_t i) const { return { ctrl_ + i, slots_ + i }; }
 
         protected:
@@ -2381,11 +2445,16 @@ namespace phmap
             //  small tables.
             bool is_small() const { return capacity_ < Group::kWidth - 1; }
 
-            hasher&               hash_ref() { return std::get<1>(settings_); }
-            const hasher&         hash_ref() const { return std::get<1>(settings_); }
-            key_equal&            eq_ref() { return std::get<2>(settings_); }
-            const key_equal&      eq_ref() const { return std::get<2>(settings_); }
-            allocator_type&       alloc_ref() { return std::get<3>(settings_); }
+            hasher& hash_ref() { return std::get<1>(settings_); }
+
+            const hasher& hash_ref() const { return std::get<1>(settings_); }
+
+            key_equal& eq_ref() { return std::get<2>(settings_); }
+
+            const key_equal& eq_ref() const { return std::get<2>(settings_); }
+
+            allocator_type& alloc_ref() { return std::get<3>(settings_); }
+
             const allocator_type& alloc_ref() const { return std::get<3>(settings_); }
 
             // TODO(alkis): Investigate removing some of these fields:
@@ -2434,6 +2503,7 @@ namespace phmap
             using const_iterator = typename raw_hash_map::raw_hash_set::const_iterator;
 
             raw_hash_map() {}
+
             using Base::raw_hash_set; // use raw_hash_set constructor
 
             // The last two template parameters ensure that both arguments are rvalues
@@ -2599,8 +2669,8 @@ namespace phmap
             using KeyArgImpl   = KeyArg<IsTransparent<Eq>::value && IsTransparent<Hash>::value>;
 
             static_assert(N <= 12, "N = 12 means 4096 hash tables!");
-            constexpr static size_t num_tables = 1 << N;
-            constexpr static size_t mask       = num_tables - 1;
+            static constexpr size_t num_tables = 1 << N;
+            static constexpr size_t mask       = num_tables - 1;
 
         public:
             using EmbeddedSet           = RefSet<Policy, Hash, Eq, Alloc>;
@@ -2646,7 +2716,7 @@ namespace phmap
 
                 Inner() {}
 
-                Inner(Params const& p) : set_(p.bucket_cnt, p.hashfn, p.eq, p.alloc) {}
+                Inner(const Params& p) : set_(p.bucket_cnt, p.hashfn, p.eq, p.alloc) {}
 
                 bool operator==(const Inner& o) const
                 {
@@ -2668,7 +2738,8 @@ namespace phmap
             static_assert(std::is_lvalue_reference<reference>::value, "Policy::element() must return a reference");
 
             template <typename T>
-            struct SameAsElementReference : std::is_same<typename std::remove_cv<typename std::remove_reference<reference>::type>::type, typename std::remove_cv<typename std::remove_reference<T>::type>::type>
+            struct SameAsElementReference : std::is_same<typename std::remove_cv<typename std::remove_reference<reference>::type>::type,
+                                                         typename std::remove_cv<typename std::remove_reference<T>::type>::type>
             {
             };
 
@@ -2711,7 +2782,8 @@ namespace phmap
                 iterator() {}
 
                 reference operator*() const { return *it_; }
-                pointer   operator->() const { return &operator*(); }
+
+                pointer operator->() const { return &operator*(); }
 
                 iterator& operator++()
                 {
@@ -2777,20 +2849,24 @@ namespace phmap
                 using Inner             = typename parallel_hash_set::Inner;
 
                 const_iterator() {}
+
                 // Implicit construction from iterator.
                 const_iterator(iterator i) : iter_(std::move(i)) {}
 
                 reference operator*() const { return *(iter_); }
-                pointer   operator->() const { return iter_.operator->(); }
+
+                pointer operator->() const { return iter_.operator->(); }
 
                 const_iterator& operator++()
                 {
                     ++iter_;
                     return *this;
                 }
+
                 const_iterator operator++(int) { return iter_++; }
 
                 friend bool operator==(const const_iterator& a, const const_iterator& b) { return a.iter_ == b.iter_; }
+
                 friend bool operator!=(const const_iterator& a, const const_iterator& b) { return !(a == b); }
 
             private:
@@ -2807,7 +2883,8 @@ namespace phmap
 
             // ------------------------- c o n s t r u c t o r s ------------------
 
-            parallel_hash_set() noexcept(std::is_nothrow_default_constructible<hasher>::value&& std::is_nothrow_default_constructible<key_equal>::value&& std::is_nothrow_default_constructible<allocator_type>::value)
+            parallel_hash_set() noexcept(std::is_nothrow_default_constructible<hasher>::value&& std::is_nothrow_default_constructible<key_equal>::value&&
+                                                                                                std::is_nothrow_default_constructible<allocator_type>::value)
             {
             }
 
@@ -2818,7 +2895,7 @@ namespace phmap
             }
 
             template <std::size_t... i>
-            parallel_hash_set(typename Inner::Params const& p, phmap::index_sequence<i...>) : sets_{ ((void)i, p)... }
+            parallel_hash_set(typename const Inner::Params& p, phmap::index_sequence<i...>) : sets_{ ((void)i, p)... }
             {
             }
 #else
@@ -2829,17 +2906,15 @@ namespace phmap
             }
 #endif
 
-            parallel_hash_set(size_t bucket_cnt, const hasher& hash_param, const allocator_type& alloc)
-                : parallel_hash_set(bucket_cnt, hash_param, key_equal(), alloc)
-            {
-            }
+            parallel_hash_set(size_t bucket_cnt, const hasher& hash_param, const allocator_type& alloc) : parallel_hash_set(bucket_cnt, hash_param, key_equal(), alloc) {}
 
             parallel_hash_set(size_t bucket_cnt, const allocator_type& alloc) : parallel_hash_set(bucket_cnt, hasher(), key_equal(), alloc) {}
 
             explicit parallel_hash_set(const allocator_type& alloc) : parallel_hash_set(0, hasher(), key_equal(), alloc) {}
 
             template <class InputIter>
-            parallel_hash_set(InputIter first, InputIter last, size_t bucket_cnt = 0, const hasher& hash_param = hasher(), const key_equal& eq = key_equal(), const allocator_type& alloc = allocator_type())
+            parallel_hash_set(InputIter first, InputIter last, size_t bucket_cnt = 0, const hasher& hash_param = hasher(), const key_equal& eq = key_equal(),
+                              const allocator_type& alloc = allocator_type())
                 : parallel_hash_set(bucket_cnt, hash_param, eq, alloc)
             {
                 insert(first, last);
@@ -2885,12 +2960,14 @@ namespace phmap
             // RequiresNotInit<T> is a workaround for gcc prior to 7.1.
             // --------------------------------------------------------------------
             template <class T, RequiresNotInit<T> = 0, RequiresInsertable<T> = 0>
-            parallel_hash_set(std::initializer_list<T> init, size_t bucket_cnt = 0, const hasher& hash_param = hasher(), const key_equal& eq = key_equal(), const allocator_type& alloc = allocator_type())
+            parallel_hash_set(std::initializer_list<T> init, size_t bucket_cnt = 0, const hasher& hash_param = hasher(), const key_equal& eq = key_equal(),
+                              const allocator_type& alloc = allocator_type())
                 : parallel_hash_set(init.begin(), init.end(), bucket_cnt, hash_param, eq, alloc)
             {
             }
 
-            parallel_hash_set(std::initializer_list<init_type> init, size_t bucket_cnt = 0, const hasher& hash_param = hasher(), const key_equal& eq = key_equal(), const allocator_type& alloc = allocator_type())
+            parallel_hash_set(std::initializer_list<init_type> init, size_t bucket_cnt = 0, const hasher& hash_param = hasher(), const key_equal& eq = key_equal(),
+                              const allocator_type& alloc = allocator_type())
                 : parallel_hash_set(init.begin(), init.end(), bucket_cnt, hash_param, eq, alloc)
             {
             }
@@ -2907,8 +2984,7 @@ namespace phmap
             }
 
             template <class T, RequiresNotInit<T> = 0, RequiresInsertable<T> = 0>
-            parallel_hash_set(std::initializer_list<T> init, size_t bucket_cnt, const allocator_type& alloc)
-                : parallel_hash_set(init, bucket_cnt, hasher(), key_equal(), alloc)
+            parallel_hash_set(std::initializer_list<T> init, size_t bucket_cnt, const allocator_type& alloc) : parallel_hash_set(init, bucket_cnt, hasher(), key_equal(), alloc)
             {
             }
 
@@ -2932,7 +3008,8 @@ namespace phmap
                     sets_[i].set_ = { that.sets_[i].set_, a };
             }
 
-            parallel_hash_set(parallel_hash_set&& that) noexcept(std::is_nothrow_copy_constructible<hasher>::value&& std::is_nothrow_copy_constructible<key_equal>::value&& std::is_nothrow_copy_constructible<allocator_type>::value)
+            parallel_hash_set(parallel_hash_set&& that) noexcept(std::is_nothrow_copy_constructible<hasher>::value&& std::is_nothrow_copy_constructible<key_equal>::value&&
+                                                                                                                     std::is_nothrow_copy_constructible<allocator_type>::value)
                 : parallel_hash_set(std::move(that), that.alloc_ref())
             {
             }
@@ -2950,7 +3027,8 @@ namespace phmap
                 return *this;
             }
 
-            parallel_hash_set& operator=(parallel_hash_set&& that) noexcept(phmap::allocator_traits<allocator_type>::is_always_equal::value&& std::is_nothrow_move_assignable<hasher>::value&& std::is_nothrow_move_assignable<key_equal>::value)
+            parallel_hash_set& operator=(parallel_hash_set&& that) noexcept(phmap::allocator_traits<allocator_type>::is_always_equal::value&&
+                                                                                std::is_nothrow_move_assignable<hasher>::value&& std::is_nothrow_move_assignable<key_equal>::value)
             {
                 for (size_t i = 0; i < num_tables; ++i)
                     sets_[i].set_ = std::move(that.sets_[i].set_);
@@ -2966,10 +3044,14 @@ namespace phmap
                 return it;
             }
 
-            iterator       end() { return iterator(); }
+            iterator end() { return iterator(); }
+
             const_iterator begin() const { return const_cast<parallel_hash_set*>(this)->begin(); }
+
             const_iterator end() const { return const_cast<parallel_hash_set*>(this)->end(); }
+
             const_iterator cbegin() const { return begin(); }
+
             const_iterator cend() const { return end(); }
 
             bool empty() const { return !size(); }
@@ -3130,6 +3212,7 @@ namespace phmap
                 {
                     return s.emplace_decomposable_with_hash(key, hashval, std::forward<Args>(args)...);
                 }
+
                 parallel_hash_set& s;
                 size_t             hashval;
             };
@@ -3205,6 +3288,7 @@ namespace phmap
                 {
                     return s.emplace_decomposable(key, std::forward<Args>(args)...);
                 }
+
                 parallel_hash_set& s;
             };
 
@@ -3400,7 +3484,7 @@ namespace phmap
             template <class F>
             void for_each(F&& fCallback) const
             {
-                for (auto const& inner : sets_)
+                for (const auto& inner : sets_)
                 {
                     typename Lockable::SharedLock m(const_cast<Inner&>(inner));
                     std::for_each(inner.set_.begin(), inner.set_.end(), fCallback);
@@ -3422,7 +3506,7 @@ namespace phmap
             template <class ExecutionPolicy, class F>
             void for_each(ExecutionPolicy&& policy, F&& fCallback) const
             {
-                std::for_each(std::forward<ExecutionPolicy>(policy), sets_.begin(), sets_.end(), [&](auto const& inner) {
+                std::for_each(std::forward<ExecutionPolicy>(policy), sets_.begin(), sets_.end(), [&](const auto& inner) {
                     typename Lockable::SharedLock m(const_cast<Inner&>(inner));
                     std::for_each(inner.set_.begin(), inner.set_.end(), fCallback);
                 });
@@ -3518,6 +3602,7 @@ namespace phmap
 
                 set._erase(it.it_);
             }
+
             void _erase(const_iterator cit) { _erase(cit.iter_); }
 
             // This overload is necessary because otherwise erase<K>(const K&) would be
@@ -3573,7 +3658,9 @@ namespace phmap
             }
 
             template <class Mtx2_>
-            void swap(parallel_hash_set<N, RefSet, Mtx2_, Policy, Hash, Eq, Alloc>& that) noexcept(IsNoThrowSwappable<EmbeddedSet>() && (!AllocTraits::propagate_on_container_swap::value || IsNoThrowSwappable<allocator_type>(typename AllocTraits::propagate_on_container_swap{})))
+            void swap(parallel_hash_set<N, RefSet, Mtx2_, Policy, Hash, Eq, Alloc>& that) noexcept(
+                IsNoThrowSwappable<EmbeddedSet>()
+                && (!AllocTraits::propagate_on_container_swap::value || IsNoThrowSwappable<allocator_type>(typename AllocTraits::propagate_on_container_swap{})))
             {
                 using std::swap;
                 using Lockable2 = phmap::LockableImpl<Mtx2_>;
@@ -3720,19 +3807,19 @@ namespace phmap
             }
 
             float max_load_factor() const { return 1.0f; }
-            void  max_load_factor(float)
+
+            void max_load_factor(float)
             {
                 // Does nothing.
             }
 
-            hasher         hash_function() const { return hash_ref(); } // warning: doesn't match internal hash - use hash() member function
-            key_equal      key_eq() const { return eq_ref(); }
+            hasher hash_function() const { return hash_ref(); } // warning: doesn't match internal hash - use hash() member function
+
+            key_equal key_eq() const { return eq_ref(); }
+
             allocator_type get_allocator() const { return alloc_ref(); }
 
-            friend bool operator==(const parallel_hash_set& a, const parallel_hash_set& b)
-            {
-                return std::equal(a.sets_.begin(), a.sets_.end(), b.sets_.begin());
-            }
+            friend bool operator==(const parallel_hash_set& a, const parallel_hash_set& b) { return std::equal(a.sets_.begin(), a.sets_.end(), b.sets_.begin()); }
 
             friend bool operator!=(const parallel_hash_set& a, const parallel_hash_set& b) { return !(a == b); }
 
@@ -3767,6 +3854,7 @@ namespace phmap
                 {
                     return s.find(key);
                 }
+
                 const parallel_hash_set& s;
             };
 
@@ -3777,6 +3865,7 @@ namespace phmap
                 {
                     return phmap_mix<sizeof(size_t)>()(h(key));
                 }
+
                 const hasher& h;
             };
 
@@ -3788,6 +3877,7 @@ namespace phmap
                 {
                     return eq(lhs, rhs);
                 }
+
                 const K1&        rhs;
                 const key_equal& eq;
             };
@@ -3875,7 +3965,8 @@ namespace phmap
                 return find_or_prepare_insert_with_hash<K>(this->hash(key), key, mutexlock);
             }
 
-            iterator       iterator_at(Inner* inner, const EmbeddedIterator& it) { return { inner, &sets_[0] + num_tables, it }; }
+            iterator iterator_at(Inner* inner, const EmbeddedIterator& it) { return { inner, &sets_[0] + num_tables, it }; }
+
             const_iterator iterator_at(Inner* inner, const EmbeddedIterator& it) const { return { inner, &sets_[0] + num_tables, it }; }
 
             static size_t subidx(size_t hashval) { return ((hashval >> 8) ^ (hashval >> 16) ^ (hashval >> 24)) & mask; }
@@ -3893,11 +3984,16 @@ namespace phmap
                 return sz;
             }
 
-            hasher&               hash_ref() { return sets_[0].set_.hash_ref(); }
-            const hasher&         hash_ref() const { return sets_[0].set_.hash_ref(); }
-            key_equal&            eq_ref() { return sets_[0].set_.eq_ref(); }
-            const key_equal&      eq_ref() const { return sets_[0].set_.eq_ref(); }
-            allocator_type&       alloc_ref() { return sets_[0].set_.alloc_ref(); }
+            hasher& hash_ref() { return sets_[0].set_.hash_ref(); }
+
+            const hasher& hash_ref() const { return sets_[0].set_.hash_ref(); }
+
+            key_equal& eq_ref() { return sets_[0].set_.eq_ref(); }
+
+            const key_equal& eq_ref() const { return sets_[0].set_.eq_ref(); }
+
+            allocator_type& alloc_ref() { return sets_[0].set_.alloc_ref(); }
+
             const allocator_type& alloc_ref() const { return sets_[0].set_.alloc_ref(); }
 
         protected: // protected in case users want to derive fromm this
@@ -4085,7 +4181,8 @@ namespace phmap
                 typename Base::Inner*         inner = std::get<0>(res);
                 if (std::get<2>(res))
                 {
-                    inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)), std::forward_as_tuple(std::forward<Args>(args)...));
+                    inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)),
+                                           std::forward_as_tuple(std::forward<Args>(args)...));
                     inner->set_.set_ctrl(std::get<1>(res), H2(hashval));
                 }
                 else
@@ -4107,7 +4204,8 @@ namespace phmap
                 typename Base::Inner*         inner = std::get<0>(res);
                 if (std::get<2>(res))
                 {
-                    inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)), std::forward_as_tuple(std::forward<Args>(args)...));
+                    inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)),
+                                           std::forward_as_tuple(std::forward<Args>(args)...));
                     inner->set_.set_ctrl(std::get<1>(res), H2(hashval));
                 }
                 auto it = this->iterator_at(inner, inner->set_.iterator_at(std::get<1>(res)));
@@ -4160,7 +4258,8 @@ namespace phmap
                 typename Base::Inner*         inner = std::get<0>(res);
                 if (std::get<2>(res))
                 {
-                    inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)), std::forward_as_tuple(std::forward<Args>(args)...));
+                    inner->set_.emplace_at(std::get<1>(res), std::piecewise_construct, std::forward_as_tuple(std::forward<K>(k)),
+                                           std::forward_as_tuple(std::forward<Args>(args)...));
                     inner->set_.set_ctrl(std::get<1>(res), H2(hashval));
                 }
                 return { this->iterator_at(inner, inner->set_.iterator_at(std::get<1>(res))), std::get<2>(res) };
@@ -4182,7 +4281,8 @@ namespace phmap
         template <class T, class Tuple, class F>
         decltype(std::declval<F>()(std::declval<T>())) WithConstructed(Tuple&& t, F&& f)
         {
-            return memory_internal::WithConstructedImpl<T>(std::forward<Tuple>(t), phmap::make_index_sequence<std::tuple_size<typename std::decay<Tuple>::type>::value>(), std::forward<F>(f));
+            return memory_internal::WithConstructedImpl<T>(std::forward<Tuple>(t), phmap::make_index_sequence<std::tuple_size<typename std::decay<Tuple>::type>::value>(),
+                                                           std::forward<F>(f));
         }
 
         // ----------------------------------------------------------------------------
@@ -4222,7 +4322,8 @@ namespace phmap
         }
 
         template <class F, class S>
-        auto PairArgs(std::piecewise_construct_t, F&& f, S&& s) -> decltype(std::make_pair(memory_internal::TupleRef(std::forward<F>(f)), memory_internal::TupleRef(std::forward<S>(s))))
+        auto PairArgs(std::piecewise_construct_t, F&& f, S&& s)
+            -> decltype(std::make_pair(memory_internal::TupleRef(std::forward<F>(f)), memory_internal::TupleRef(std::forward<S>(s))))
         {
             return std::make_pair(memory_internal::TupleRef(std::forward<F>(f)), memory_internal::TupleRef(std::forward<S>(s)));
         }
@@ -4342,7 +4443,8 @@ namespace phmap
 
             static std::pair<const K, V>& element(slot_type* slot) { return slot->value; }
 
-            static V&       value(std::pair<const K, V>* kv) { return kv->second; }
+            static V& value(std::pair<const K, V>* kv) { return kv->second; }
+
             static const V& value(const std::pair<const K, V>* kv) { return kv->second; }
         };
 
@@ -4471,7 +4573,8 @@ namespace phmap
 
             static size_t element_space_used(const value_type*) { return sizeof(value_type); }
 
-            static Value&       value(value_type* elem) { return elem->second; }
+            static Value& value(value_type* elem) { return elem->second; }
+
             static const Value& value(const value_type* elem) { return elem->second; }
         };
 
@@ -4546,6 +4649,7 @@ namespace phmap
             struct Hash
             {
                 using is_transparent = void;
+
                 template <class U>
                 size_t operator()(const U& ptr) const
                 {
@@ -4558,6 +4662,7 @@ namespace phmap
             struct Eq
             {
                 using is_transparent = void;
+
                 template <class A, class B>
                 bool operator()(const A& a, const B& b) const
                 {
@@ -4601,6 +4706,7 @@ namespace phmap
             struct has_member_type_raw_hash_set : std::false_type
             {
             };
+
             template <typename T>
             struct has_member_type_raw_hash_set<T, phmap::void_t<typename T::raw_hash_set>> : std::true_type
             {
@@ -4622,7 +4728,8 @@ namespace phmap
                         priv::Group g{ set.ctrl_ + seq.offset() };
                         for (uint32_t i : g.Match(priv::H2(hashval)))
                         {
-                            if (Traits::apply(typename Set::template EqualElement<typename Set::key_type>{ key, set.eq_ref() }, Traits::element(set.slots_ + seq.offset((size_t)i))))
+                            if (Traits::apply(typename Set::template EqualElement<typename Set::key_type>{ key, set.eq_ref() },
+                                              Traits::element(set.slots_ + seq.offset((size_t)i))))
                                 return num_probes;
                             ++num_probes;
                         }
@@ -4679,6 +4786,7 @@ namespace phmap
             struct has_member_type_EmbeddedSet : std::false_type
             {
             };
+
             template <typename T>
             struct has_member_type_EmbeddedSet<T, phmap::void_t<typename T::EmbeddedSet>> : std::true_type
             {
@@ -4886,8 +4994,10 @@ namespace phmap
         using Base::reserve;
         using Base::size;
         using Base::swap;
+
         typename Base::hasher hash_funct() { return this->hash_function(); }
-        void                  resize(typename Base::size_type hint) { this->rehash(hint); }
+
+        void resize(typename Base::size_type hint) { this->rehash(hint); }
     };
 
     // -----------------------------------------------------------------------------
@@ -4951,8 +5061,10 @@ namespace phmap
         using Base::key_eq;
         using Base::load_factor;
         using Base::max_load_factor;
+
         typename Base::hasher hash_funct() { return this->hash_function(); }
-        void                  resize(typename Base::size_type hint) { this->rehash(hint); }
+
+        void resize(typename Base::size_type hint) { this->rehash(hint); }
     };
 
     // -----------------------------------------------------------------------------
@@ -5108,8 +5220,10 @@ namespace phmap
         using Base::subcnt;
         using Base::subidx;
         using Base::swap;
+
         typename Base::hasher hash_funct() { return this->hash_function(); }
-        void                  resize(typename Base::size_type hint) { this->rehash(hint); }
+
+        void resize(typename Base::size_type hint) { this->rehash(hint); }
     };
 
     // -----------------------------------------------------------------------------
@@ -5165,8 +5279,10 @@ namespace phmap
         using Base::key_eq;
         using Base::load_factor;
         using Base::max_load_factor;
+
         typename Base::hasher hash_funct() { return this->hash_function(); }
-        void                  resize(typename Base::size_type hint) { this->rehash(hint); }
+
+        void resize(typename Base::size_type hint) { this->rehash(hint); }
     };
 
 } // namespace phmap
