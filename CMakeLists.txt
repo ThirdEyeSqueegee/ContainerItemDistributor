@@ -28,6 +28,7 @@ set(
   headers
     include/Utility.h
     include/Maps.h
+    include/Hooks.h
 )
 
 set(
@@ -38,6 +39,7 @@ set(
     src/Parser.cpp
     src/Conflicts.cpp
     src/Distributor.cpp
+    src/Hooks.cpp
 
     ${CMAKE_CURRENT_BINARY_DIR}/version.rc
 )
