@@ -24,6 +24,7 @@ public:
     std::optional<int>         count{};
     std::optional<std::string> rhs{};
     std::optional<int>         rhs_count{};
+    std::optional<int>         chance;
 };
 
 class Container
@@ -49,6 +50,16 @@ public:
     std::optional<int>       count{};
     std::optional<int>       replace_with_count{};
     std::optional<Container> container{};
+    std::optional<int>       chance{};
+};
+
+class RuntimeDistrMap {
+public:
+    std::vector<DistrObject> to_add;
+    std::vector<DistrObject> to_remove;
+    std::vector<DistrObject> to_remove_all;
+    std::vector<DistrObject> to_replace;
+    std::vector<DistrObject> to_replace_all;
 };
 
 struct FormIDAndPluginName
@@ -71,6 +82,13 @@ public:
         return ptr ? static_cast<std::size_t>(ptr - s.data()) : ULLONG_MAX;
     }
 
+    static auto HasPos(const std::string_view s, const char c)
+    {
+        const auto ptr{ std::strrchr(s.data(), c) };
+
+        return ptr != nullptr;
+    }
+
     using TDistrTokenVec   = std::vector<DistrToken>;
     using TConflictTestMap = phmap::parallel_flat_hash_map<std::string, TDistrTokenVec>;
 
@@ -82,6 +100,8 @@ public:
 
     using TDistrVec = std::vector<DistrObject>;
     inline static TDistrVec distr_object_vec;
+
+    inline static std::unordered_map<RE::FormID, RuntimeDistrMap> runtime_map;
 };
 
 // fmt helpers
@@ -105,20 +125,20 @@ inline auto format_as(const DistrType& type)
 
 inline auto format_as(const DistrToken& token)
 {
-    const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count]{ token };
-    return fmt::format("[Type: {} / Filename: {} / To: {} / Identifier: {} / Count: {} / RHS: {} / RHS Count: {}]", type, filename, to_identifier, identifier, count.value_or(-1),
-                       rhs.value_or("null"), rhs_count.value_or(-1));
+    const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count, chance]{ token };
+    return fmt::format("[Type: {} / Filename: {} / To: {} / Identifier: {} / Count: {} / RHS: {} / RHS Count: {} / Chance: {}]", type, filename, to_identifier, identifier, count.value_or(-1),
+                       rhs.value_or("null"), rhs_count.value_or(-1), chance.value_or(100));
 }
 
 inline auto format_as(const DistrObject& obj)
 {
-    const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container]{ obj };
+    const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ obj };
     return fmt::format("[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Leveled list: {} (0x{:x} / Replace with obj: {} (0x{:x}) / Replace with list: {} (0x{:x}) "
-                       "/ Count: {} / Replace count: {} / Container: {} (0x{:x}) ({})]",
+                       "/ Count: {} / Replace count: {} / Container: {} (0x{:x}) ({})] / Chance: {}",
                        type, filename, bound_object ? bound_object->GetName() : "null", bound_object ? bound_object->GetFormID() : 0,
                        leveled_list ? leveled_list->GetFormEditorID() : "null", leveled_list ? leveled_list->GetFormID() : 0,
                        replace_with_obj ? replace_with_obj->GetName() : "null", replace_with_obj ? replace_with_obj->GetFormID() : 0,
                        replace_with_list ? replace_with_list->GetName() : "null", replace_with_list ? replace_with_list->GetFormID() : 0, count.value_or(-1),
                        replace_with_count.value_or(-1), container.has_value() ? container.value().container_name : "null",
-                       container.has_value() ? container.value().container_form_id : 0, container.has_value() ? container->container_type : RE::FormType::Container);
+                       container.has_value() ? container.value().container_form_id : 0, container.has_value() ? container->container_type : RE::FormType::Container, chance.value_or(100));
 }

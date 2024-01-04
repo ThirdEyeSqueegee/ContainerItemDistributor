@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include "Utility.h"
 
 DistrType Parser::ClassifyString(const std::string_view str) noexcept
 {
@@ -119,34 +120,34 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
     logger::debug("ADD conflict test map:");
     for (const auto& [key, distr_token_vec] : Maps::add_conflict_test_map) {
         logger::debug("\t* Key {}:", key);
-        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count] : distr_token_vec)
-            logger::debug("\t\t+ ADD {} {} to {}", count.value_or(-1), identifier, to_identifier);
+        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count, chance] : distr_token_vec)
+            logger::debug("\t\t+ ADD {} {} to {} with chance {}", count.value_or(-1), identifier, to_identifier, chance.value_or(100));
     }
 
     logger::debug("REMOVE conflict test map:");
     for (const auto& [key, distr_token_vec] : Maps::remove_conflict_test_map) {
         logger::debug("\t* Key {}:", key);
-        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count] : distr_token_vec) {
+        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count, chance] : distr_token_vec) {
             if (count.has_value())
-                logger::debug("\t\t- REMOVE {} {} from {}", count.value(), identifier, to_identifier);
+                logger::debug("\t\t- REMOVE {} {} from {} with chance {}", count.value(), identifier, to_identifier, chance.value_or(100));
             else
-                logger::debug("\t\t- REMOVE ALL {} from {}", identifier, to_identifier);
+                logger::debug("\t\t- REMOVE ALL {} from {} with chance {}", identifier, to_identifier, chance.value_or(100));
         }
     }
 
     logger::debug("REPLACE conflict test map:");
     for (const auto& [key, distr_token_vec] : Maps::replace_conflict_test_map) {
         logger::debug("\t* Key {}:", key);
-        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count] : distr_token_vec) {
+        for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count, chance] : distr_token_vec) {
             if (count.has_value())
-                logger::debug("\t\t^ REPLACE {} {} with {} {} in {}", count.value(), identifier, rhs_count.value_or(-1), rhs.value(), to_identifier);
+                logger::debug("\t\t^ REPLACE {} {} with {} {} in {} with chance {}", count.value(), identifier, rhs_count.value_or(-1), rhs.value(), to_identifier, chance.value_or(100));
             else
-                logger::debug("\t\t^ REPLACE ALL {} with {} {} in {}", identifier, rhs_count.value_or(-1), rhs.value(), to_identifier);
+                logger::debug("\t\t^ REPLACE ALL {} with {} {} in {} with chance {}", identifier, rhs_count.value_or(-1), rhs.value(), to_identifier, chance.value_or(100));
         }
     }
 }
 
-DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_container) noexcept
+DistrToken Parser::Tokenize(const std::string& str, std::string_view to_container) noexcept
 {
     const auto slash_pos{ Maps::GetPos(str, '/') };
 
@@ -161,7 +162,7 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
         const auto& identifier{ str.substr(0, bar_pos) };
         const auto  count{ Maps::ToInt(str.substr(bar_pos + 1)) };
 
-        DistrToken distr_token{ DistrType::Add, filename, to_container.data(), identifier, count, std::nullopt, std::nullopt };
+        DistrToken distr_token{ DistrType::Add, filename, to_container.data(), identifier, count, std::nullopt, std::nullopt, Utility::GetChance(str)};
 
         return distr_token;
     }
@@ -170,12 +171,12 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
         const auto& identifier{ str.substr(1, bar_pos - 1) };
         const auto  count{ Maps::ToInt(str.substr(bar_pos + 1)) };
 
-        DistrToken distr_token{ DistrType::Remove, filename, to_container.data(), identifier, count, std::nullopt, std::nullopt };
+        DistrToken distr_token{ DistrType::Remove, filename, to_container.data(), identifier, count, std::nullopt, std::nullopt, Utility::GetChance(str) };
 
         return distr_token;
     }
     case DistrType::RemoveAll: {
-        DistrToken distr_token{ DistrType::RemoveAll, filename, to_container.data(), str.substr(1), std::nullopt, std::nullopt, std::nullopt };
+        DistrToken distr_token{ DistrType::RemoveAll, filename, to_container.data(), str.substr(1), std::nullopt, std::nullopt, std::nullopt, Utility::GetChance(str) };
 
         return distr_token;
     }
@@ -193,7 +194,7 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
         const auto& rhs_distr{ rhs.substr(0, rhs_bar_pos) };
         const auto  rhs_count{ Maps::ToInt(rhs.substr(rhs_bar_pos + 1)) };
 
-        DistrToken distr_token{ DistrType::Replace, filename, to_container.data(), lhs_distr, lhs_count, rhs_distr, rhs_count };
+        DistrToken distr_token{ DistrType::Replace, filename, to_container.data(), lhs_distr, lhs_count, rhs_distr, rhs_count, Utility::GetChance(str) };
 
         return distr_token;
     }
@@ -207,11 +208,11 @@ DistrToken Parser::Tokenize(const std::string& str, const std::string_view to_co
             const auto& rhs_distr{ rhs.substr(0, rhs_bar_pos) };
             const auto  rhs_count{ Maps::ToInt(rhs.substr(rhs_bar_pos + 1)) };
 
-            DistrToken distr_token{ DistrType::ReplaceAll, filename, to_container.data(), lhs, std::nullopt, rhs_distr, rhs_count };
+            DistrToken distr_token{ DistrType::ReplaceAll, filename, to_container.data(), lhs, std::nullopt, rhs_distr, rhs_count, Utility::GetChance(str) };
 
             return distr_token;
         }
-        DistrToken distr_token{ DistrType::ReplaceAll, filename, to_container.data(), lhs, std::nullopt, rhs, std::nullopt };
+        DistrToken distr_token{ DistrType::ReplaceAll, filename, to_container.data(), lhs, std::nullopt, rhs, std::nullopt, Utility::GetChance(str) };
 
         return distr_token;
     }
