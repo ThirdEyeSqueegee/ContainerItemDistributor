@@ -6,6 +6,8 @@ class Utility : public Singleton<Utility>
 {
     static auto IsEditorID(const std::string_view identifier) { return std::strchr(identifier.data(), '~') == nullptr; }
 
+
+
     static FormIDAndPluginName GetFormIDAndPluginName(const std::string_view identifier)
     {
         if (const auto tilde{ std::strchr(identifier.data(), '~') }) {
@@ -81,6 +83,38 @@ class Utility : public Singleton<Utility>
 public:
     static auto CachePlayerLevel() { player_level = RE::PlayerCharacter::GetSingleton()->GetLevel(); }
 
+    static int GetRandomChance() {
+        std::random_device dev;
+        std::mt19937 rng(dev());
+        std::uniform_int_distribution<std::mt19937::result_type> distr(0, 100);
+
+        return distr(rng);
+    }
+
+    static int GetRandomCount(int count, unsigned int chance) {
+        std::random_device dev;
+        std::mt19937 rng(dev());
+        std::uniform_int_distribution<std::mt19937::result_type> distr(0, 100);
+
+        int actual_count = 0;
+        for (int i = 0; i < count; i++) {
+            if (distr(rng) < chance) {
+                actual_count++;
+            }
+        }
+
+        return actual_count;
+    }
+
+    static int GetChance(const std::string& str) {
+        const auto  quest_pos{ Maps::GetPos(str, '?') };
+
+        logger::info("Has Chance: {}", quest_pos != ULLONG_MAX);
+        const auto  chance = quest_pos == ULLONG_MAX ? 100 : Maps::ToInt(str.substr(quest_pos + 1));
+
+        return chance;
+    }
+
     static auto ResolveLeveledList(RE::TESLevItem* list)
     {
         RE::BSScrapArray<RE::CALCED_OBJECT> calced_objects{};
@@ -106,19 +140,19 @@ public:
                     if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) })
                         return { distr_token.type, nullptr, leveled_list, distr_token.filename, replace_with_obj, nullptr, distr_token.count, distr_token.rhs_count, cont };
                 }
-                return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont };
+                return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont, std::nullopt };
             }
         }
         else if (const auto bound_obj{ GetBoundObject(distr_token.identifier) }) {
             if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container) {
                 if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0) {
                     if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) })
-                        return { distr_token.type, bound_obj, nullptr, distr_token.filename, nullptr, replace_with_list, distr_token.count, distr_token.rhs_count, cont };
+                        return { distr_token.type, bound_obj, nullptr, distr_token.filename, nullptr, replace_with_list, distr_token.count, distr_token.rhs_count, cont, distr_token.chance };
 
                     if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) })
-                        return { distr_token.type, bound_obj, nullptr, distr_token.filename, replace_with_obj, nullptr, distr_token.count, distr_token.rhs_count, cont };
+                        return { distr_token.type, bound_obj, nullptr, distr_token.filename, replace_with_obj, nullptr, distr_token.count, distr_token.rhs_count, cont, distr_token.chance };
                 }
-                return { distr_token.type, bound_obj, nullptr, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont };
+                return { distr_token.type, bound_obj, nullptr, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont, distr_token.chance };
             }
         }
         logger::error("ERROR: Failed to build DistrObject for {}", distr_token);

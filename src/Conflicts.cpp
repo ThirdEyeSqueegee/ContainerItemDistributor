@@ -25,7 +25,7 @@ void Conflicts::PrepareDistributionImpl(const Maps::TConflictTestMap& test_map) 
 {
     for (auto distr_token_vec : test_map | std::views::values) {
         for (const auto& distr_token : distr_token_vec) {
-            const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count]{ distr_token };
+            const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count, chance]{ distr_token };
 
             DistrObject result;
 
