@@ -1,8 +1,8 @@
 #include "Conflicts.h"
 #include "Distributor.h"
+#include "Hooks.h"
 #include "Logging.h"
 #include "Settings.h"
-#include "Hooks.h"
 
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
@@ -28,7 +28,6 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     logger::info("{} {} is loading...", plugin->GetName(), version);
 
     Init(skse);
-
 
     if (const auto messaging{ SKSE::GetMessagingInterface() }; !messaging->RegisterListener(Listener))
         return false;

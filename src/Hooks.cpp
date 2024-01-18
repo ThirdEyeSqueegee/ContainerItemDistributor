@@ -1,5 +1,6 @@
 #include "Hooks.h"
 
-void Hooks::Install() {
+void Hooks::Install()
+{
     Hooks::InitItemImpl::Install();
 }

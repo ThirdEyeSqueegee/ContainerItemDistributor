@@ -140,7 +140,8 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
         logger::debug("\t* Key {}:", key);
         for (const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count, chance] : distr_token_vec) {
             if (count.has_value())
-                logger::debug("\t\t^ REPLACE {} {} with {} {} in {} with chance {}", count.value(), identifier, rhs_count.value_or(-1), rhs.value(), to_identifier, chance.value_or(100));
+                logger::debug("\t\t^ REPLACE {} {} with {} {} in {} with chance {}", count.value(), identifier, rhs_count.value_or(-1), rhs.value(), to_identifier,
+                              chance.value_or(100));
             else
                 logger::debug("\t\t^ REPLACE ALL {} with {} {} in {} with chance {}", identifier, rhs_count.value_or(-1), rhs.value(), to_identifier, chance.value_or(100));
         }
@@ -162,7 +163,7 @@ DistrToken Parser::Tokenize(const std::string& str, std::string_view to_containe
         const auto& identifier{ str.substr(0, bar_pos) };
         const auto  count{ Maps::ToInt(str.substr(bar_pos + 1)) };
 
-        DistrToken distr_token{ DistrType::Add, filename, to_container.data(), identifier, count, std::nullopt, std::nullopt, Utility::GetChance(str)};
+        DistrToken distr_token{ DistrType::Add, filename, to_container.data(), identifier, count, std::nullopt, std::nullopt, Utility::GetChance(str) };
 
         return distr_token;
     }

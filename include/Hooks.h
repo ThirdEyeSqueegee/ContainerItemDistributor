@@ -1,7 +1,8 @@
 #pragma once
 #include "Distributor.h"
 
-namespace Hooks {
+namespace Hooks
+{
 
     struct InitItemImpl
     {
@@ -13,8 +14,9 @@ namespace Hooks {
                 Distributor::RuntimeDistribute(a_ref);
             }
         }
-        static inline REL::Relocation<decltype(Thunk)> func;
-        static inline constexpr std::size_t            idx{ 0x13 };
+
+        inline static REL::Relocation<decltype(Thunk)> func;
+        inline static constexpr std::size_t            idx{ 0x13 };
 
         static void Install()
         {
@@ -24,4 +26,4 @@ namespace Hooks {
     };
 
     void Install();
-}
+} // namespace Hooks

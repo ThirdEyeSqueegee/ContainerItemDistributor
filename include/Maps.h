@@ -53,7 +53,8 @@ public:
     std::optional<int>       chance{};
 };
 
-class RuntimeDistrMap {
+class RuntimeDistrMap
+{
 public:
     std::vector<DistrObject> to_add;
     std::vector<DistrObject> to_remove;
@@ -126,19 +127,19 @@ inline auto format_as(const DistrType& type)
 inline auto format_as(const DistrToken& token)
 {
     const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count, chance]{ token };
-    return fmt::format("[Type: {} / Filename: {} / To: {} / Identifier: {} / Count: {} / RHS: {} / RHS Count: {} / Chance: {}]", type, filename, to_identifier, identifier, count.value_or(-1),
-                       rhs.value_or("null"), rhs_count.value_or(-1), chance.value_or(100));
+    return fmt::format("[Type: {} / Filename: {} / To: {} / Identifier: {} / Count: {} / RHS: {} / RHS Count: {} / Chance: {}]", type, filename, to_identifier, identifier,
+                       count.value_or(-1), rhs.value_or("null"), rhs_count.value_or(-1), chance.value_or(100));
 }
 
 inline auto format_as(const DistrObject& obj)
 {
     const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ obj };
-    return fmt::format("[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Leveled list: {} (0x{:x} / Replace with obj: {} (0x{:x}) / Replace with list: {} (0x{:x}) "
-                       "/ Count: {} / Replace count: {} / Container: {} (0x{:x}) ({})] / Chance: {}",
-                       type, filename, bound_object ? bound_object->GetName() : "null", bound_object ? bound_object->GetFormID() : 0,
-                       leveled_list ? leveled_list->GetFormEditorID() : "null", leveled_list ? leveled_list->GetFormID() : 0,
-                       replace_with_obj ? replace_with_obj->GetName() : "null", replace_with_obj ? replace_with_obj->GetFormID() : 0,
-                       replace_with_list ? replace_with_list->GetName() : "null", replace_with_list ? replace_with_list->GetFormID() : 0, count.value_or(-1),
-                       replace_with_count.value_or(-1), container.has_value() ? container.value().container_name : "null",
-                       container.has_value() ? container.value().container_form_id : 0, container.has_value() ? container->container_type : RE::FormType::Container, chance.value_or(100));
+    return fmt::format(
+        "[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Leveled list: {} (0x{:x} / Replace with obj: {} (0x{:x}) / Replace with list: {} (0x{:x}) "
+        "/ Count: {} / Replace count: {} / Container: {} (0x{:x}) ({})] / Chance: {}",
+        type, filename, bound_object ? bound_object->GetName() : "null", bound_object ? bound_object->GetFormID() : 0, leveled_list ? leveled_list->GetFormEditorID() : "null",
+        leveled_list ? leveled_list->GetFormID() : 0, replace_with_obj ? replace_with_obj->GetName() : "null", replace_with_obj ? replace_with_obj->GetFormID() : 0,
+        replace_with_list ? replace_with_list->GetName() : "null", replace_with_list ? replace_with_list->GetFormID() : 0, count.value_or(-1), replace_with_count.value_or(-1),
+        container.has_value() ? container.value().container_name : "null", container.has_value() ? container.value().container_form_id : 0,
+        container.has_value() ? container->container_type : RE::FormType::Container, chance.value_or(100));
 }
