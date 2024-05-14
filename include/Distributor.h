@@ -13,5 +13,5 @@ public:
 
     static void ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept;
 
-    static void RuntimeDistribute(RE::TESObjectREFR* a_ref);
+    static void RuntimeDistribute(RE::TESObjectREFR* a_ref) noexcept;
 };

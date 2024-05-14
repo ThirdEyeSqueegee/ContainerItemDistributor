@@ -24,8 +24,9 @@ void Distributor::AddDistribute(const Maps::TDistrVec& distr_vec) noexcept
 
     for (const auto& distr_obj : distr_vec) {
         const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
-        if (type <=> DistrType::Add != 0)
+        if (type != DistrType::Add) {
             continue;
+        }
 
         if (container.has_value()) {
             const auto& [cont, cont_form_id, cont_type, cont_name]{ container.value() };
@@ -35,11 +36,13 @@ void Distributor::AddDistribute(const Maps::TDistrVec& distr_vec) noexcept
                 continue;
             }
 
-            if (bound_object)
+            if (bound_object) {
                 cont->AddObjectToContainer(bound_object, count.value(), nullptr);
+            }
             else if (leveled_list) {
-                for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(leveled_list))
+                for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(leveled_list)) {
                     cont->AddObjectToContainer(lobj, lcount, nullptr);
+                }
             }
             logger::info("\t+ {}", distr_obj);
         }
@@ -58,8 +61,9 @@ void Distributor::RemoveDistribute(const Maps::TDistrVec& distr_vec) noexcept
 
     for (const auto& distr_obj : distr_vec) {
         const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
-        if (type <=> DistrType::Remove != 0 && type <=> DistrType::RemoveAll != 0)
+        if (type != DistrType::Remove && type != DistrType::RemoveAll) {
             continue;
+        }
 
         if (container.has_value()) {
             const auto& [cont, cont_form_id, cont_type, cont_name]{ container.value() };
@@ -70,10 +74,12 @@ void Distributor::RemoveDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     continue;
                 }
 
-                if (bound_object)
+                if (bound_object) {
                     cont->RemoveObjectFromContainer(bound_object, count.value());
-                else if (leveled_list)
+                }
+                else if (leveled_list) {
                     cont->RemoveObjectFromContainer(leveled_list, count.value());
+                }
                 logger::info("\t- {}", distr_obj);
             }
             else {
@@ -83,10 +89,12 @@ void Distributor::RemoveDistribute(const Maps::TDistrVec& distr_vec) noexcept
                 }
 
                 const auto& num_to_remove{ cont->CountObjectsInContainer(bound_object) };
-                if (bound_object)
+                if (bound_object) {
                     cont->RemoveObjectFromContainer(bound_object, num_to_remove);
-                else if (leveled_list)
+                }
+                else if (leveled_list) {
                     cont->RemoveObjectFromContainer(leveled_list, num_to_remove);
+                }
                 logger::info("\t- {}", distr_obj);
             }
         }
@@ -105,8 +113,9 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
 
     for (const auto& distr_obj : distr_vec) {
         const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
-        if (type <=> DistrType::Replace != 0 && type <=> DistrType::ReplaceAll != 0)
+        if (type != DistrType::Replace && type != DistrType::ReplaceAll) {
             continue;
+        }
 
         if (container.has_value()) {
             const auto& [cont, cont_form_id, cont_type, cont_name]{ container.value() };
@@ -124,8 +133,9 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(bound_object, count.value());
-                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list))
+                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list)) {
                             cont->AddObjectToContainer(lobj, lcount, nullptr);
+                        }
                     }
                 }
                 else if (leveled_list) {
@@ -135,8 +145,9 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(leveled_list, count.value());
-                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list))
+                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list)) {
                             cont->AddObjectToContainer(lobj, lcount, nullptr);
+                        }
                     }
                 }
                 logger::info("\t^ {}", distr_obj);
@@ -155,8 +166,9 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(bound_object, num_to_remove);
-                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list))
+                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list)) {
                             cont->AddObjectToContainer(lobj, lcount, nullptr);
+                        }
                     }
                 }
                 else if (leveled_list) {
@@ -166,8 +178,9 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(leveled_list, num_to_remove);
-                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list))
+                        for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list)) {
                             cont->AddObjectToContainer(lobj, lcount, nullptr);
+                        }
                     }
                 }
                 logger::info("\t^ {}", distr_obj);
@@ -179,74 +192,84 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
     logger::info("^-------Finished REPLACE distribution in {} us-------^", elapsed.count());
 }
 
-void Distributor::RuntimeDistribute(RE::TESObjectREFR* a_ref)
+void Distributor::RuntimeDistribute(RE::TESObjectREFR* a_ref) noexcept
 {
-    if (!a_ref)
+    logger::info("x---------Performing runtime distribution...---------x");
+
+    const auto start_time{ std::chrono::system_clock::now() };
+
+    if (!a_ref) {
         return;
+    }
 
-    RuntimeDistrMap* to_modify = nullptr;
+    RuntimeDistrMap* to_modify{};
 
-    if (Maps::runtime_map.count(a_ref->GetFormID())) {
-        to_modify = &Maps::runtime_map[a_ref->GetFormID()];
+    const auto form_id{ a_ref->GetFormID() };
+
+    if (Maps::runtime_map.count(form_id)) {
+        to_modify = &Maps::runtime_map[form_id];
     }
     else if (Maps::runtime_map.count(a_ref->GetBaseObject()->GetFormID())) {
         to_modify = &Maps::runtime_map[a_ref->GetBaseObject()->GetFormID()];
     }
 
     if (to_modify) {
-        auto counts = a_ref->GetInventoryCounts();
+        auto counts{ a_ref->GetInventoryCounts() };
 
-        for (auto& distr_obj : to_modify->to_add) {
+        for (const auto& distr_obj : to_modify->to_add) {
             const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
 
-            const auto num_to_add = Utility::GetRandomCount(count.value(), chance.value());
+            const auto num_to_add{ Utility::GetRandomCount(count.value(), chance.value()) };
 
-            logger::info("Adding {} {} to {}", num_to_add, bound_object->GetFormID(), a_ref->GetFormID());
+            logger::info("Adding {} {} to {}", num_to_add, bound_object->GetFormID(), form_id);
 
             a_ref->AddObjectToContainer(bound_object, nullptr, num_to_add, nullptr);
         }
 
-        for (auto& distr_obj : to_modify->to_remove) {
+        for (const auto& distr_obj : to_modify->to_remove) {
             const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
 
-            const auto num_to_remove = Utility::GetRandomCount(count.value(), chance.value());
+            const auto num_to_remove{ Utility::GetRandomCount(count.value(), chance.value()) };
 
-            logger::info("Removing {} {} from {}", num_to_remove, bound_object->GetFormID(), a_ref->GetFormID());
+            logger::info("Removing {} {} from {}", num_to_remove, bound_object->GetFormID(), form_id);
 
             a_ref->RemoveItem(bound_object, num_to_remove, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
         }
 
-        for (auto& distr_obj : to_modify->to_remove_all) {
+        for (const auto& distr_obj : to_modify->to_remove_all) {
             const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
 
             if (Utility::GetRandomChance() < chance.value()) {
-                const auto num_to_remove = counts[bound_object];
-                logger::info("Removing {} {} from {}", num_to_remove, bound_object->GetFormID(), a_ref->GetFormID());
+                const auto num_to_remove{ counts[bound_object] };
+                logger::info("Removing {} {} from {}", num_to_remove, bound_object->GetFormID(), form_id);
                 a_ref->RemoveItem(bound_object, num_to_remove, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
             }
         }
 
-        for (auto& distr_obj : to_modify->to_replace) {
+        for (const auto& distr_obj : to_modify->to_replace) {
             const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
 
-            const auto num_to_swap = Utility::GetRandomCount(count.value(), chance.value());
+            const auto num_to_swap{ Utility::GetRandomCount(count.value(), chance.value()) };
 
-            logger::info("Swapping {} {} for {} from {}", num_to_swap, bound_object->GetFormID(), replace_with_obj->GetFormID(), a_ref->GetFormID());
+            logger::info("Swapping {} {} for {} from {}", num_to_swap, bound_object->GetFormID(), replace_with_obj->GetFormID(), form_id);
 
             a_ref->RemoveItem(bound_object, num_to_swap, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
             a_ref->AddObjectToContainer(replace_with_obj, nullptr, replace_with_count.value(), nullptr);
         }
 
-        for (auto& distr_obj : to_modify->to_replace_all) {
+        for (const auto& distr_obj : to_modify->to_replace_all) {
             const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
 
             if (Utility::GetRandomChance() < chance.value()) {
-                const auto num_to_swap = counts[bound_object];
-                logger::info("Swapping {} {} for {} from {}", num_to_swap, bound_object->GetFormID(), replace_with_obj->GetFormID(), a_ref->GetFormID());
+                const auto num_to_swap{ counts[bound_object] };
+                logger::info("Swapping {} {} for {} from {}", num_to_swap, bound_object->GetFormID(), replace_with_obj->GetFormID(), form_id);
 
                 a_ref->RemoveItem(bound_object, num_to_swap, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
                 a_ref->AddObjectToContainer(replace_with_obj, nullptr, num_to_swap, nullptr);
             }
         }
     }
+
+    const auto elapsed{ std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start_time) };
+    logger::info("x-------Finished runtime distribution in {} us-------x", elapsed.count());
 }

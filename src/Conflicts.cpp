@@ -29,18 +29,18 @@ void Conflicts::PrepareDistributionImpl(const Maps::TConflictTestMap& test_map) 
 
             DistrObject result;
 
-            if (auto matching{ std::ranges::filter_view(distr_token_vec, [&](const DistrToken& other) { return other != distr_token && other.identifier <=> identifier == 0; })
+            if (auto matching{ std::ranges::filter_view(distr_token_vec, [&](const DistrToken& other) { return other != distr_token && other.identifier == identifier; })
                                | std::ranges::to<std::vector>() };
                 !matching.empty())
             {
                 matching.emplace_back(distr_token);
                 logger::info("Found conflicts for {} (origin {})", identifier, filename);
-                std::ranges::sort(matching, [](const DistrToken& l, const DistrToken& r) { return l.identifier <=> r.identifier < 0; });
+                std::ranges::sort(matching, [](const DistrToken& l, const DistrToken& r) { return l.identifier < r.identifier; });
                 const auto& winning{ matching.back() };
                 logger::info("\t{} wins for {}", winning.filename, distr_token);
                 result = Utility::BuildDistrObject(winning);
                 Maps::distr_object_vec.emplace_back(result);
-                const auto& [ret, last]{ std::ranges::remove_if(distr_token_vec, [&](const DistrToken& d) { return d.identifier <=> identifier == 0; }) };
+                const auto& [ret, last]{ std::ranges::remove_if(distr_token_vec, [&](const DistrToken& d) { return d.identifier == identifier; }) };
                 distr_token_vec.erase(ret, last);
             }
             else {

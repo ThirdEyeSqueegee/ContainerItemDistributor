@@ -1,18 +1,20 @@
 name: Test Build
 
 on:
-  workflow_run:
-    workflows: clang-format
-    types: completed
+  push:
+    branches: main
+    paths:
+      - "**.h"
+      - "**.cpp"
+      - "**.yml"
   workflow_dispatch:
 
 env:
-  VCPKG_COMMIT_ID: e44d60e6bf0964064bf69667cd9f3e91dc383c7c
+  VCPKG_COMMIT_ID: 28b1cf627c0570b3e094192df2fce31a3a2bc1d3
 
 jobs:
   test-build:
     runs-on: windows-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
       matrix:
         preset:
@@ -26,12 +28,15 @@ jobs:
         uses: lukka/get-cmake@latest
 
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11.1
+        uses: lukka/run-vcpkg@v11
         with:
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
 
+      - name: Initialize submodules
+        run: git submodule update --init --recursive
+
       - name: Run CMake
-        uses: lukka/run-cmake@v10.6
+        uses: lukka/run-cmake@v10
         with:
           configurePreset: build-${{ matrix.preset }}-msvc
           buildPreset: ${{ matrix.preset }}-msvc

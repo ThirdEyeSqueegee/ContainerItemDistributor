@@ -1,29 +1,18 @@
 #pragma once
+
 #include "Distributor.h"
 
 namespace Hooks
 {
+    void Install() noexcept;
 
-    struct InitItemImpl
+    class InitItemImpl : public Singleton<InitItemImpl>
     {
-        static void Thunk(RE::TESObjectREFR* a_ref)
-        {
-            func(a_ref);
+    public:
+        static void Thunk(RE::TESObjectREFR* a_ref) noexcept;
 
-            if (a_ref->HasContainer()) {
-                Distributor::RuntimeDistribute(a_ref);
-            }
-        }
+        inline static REL::Relocation<decltype(&Thunk)> func;
 
-        inline static REL::Relocation<decltype(Thunk)> func;
-        inline static constexpr std::size_t            idx{ 0x13 };
-
-        static void Install()
-        {
-            stl::write_vfunc<RE::TESObjectREFR, InitItemImpl>();
-            logger::info("Installed Object Reference hook");
-        }
+        static constexpr std::size_t idx{ 19 }; // 0x13
     };
-
-    void Install();
 } // namespace Hooks

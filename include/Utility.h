@@ -20,15 +20,17 @@ class Utility : public Singleton<Utility>
     static RE::TESBoundObject* GetBoundObject(const std::string_view identifier)
     {
         if (IsEditorID(identifier)) {
-            if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESBoundObject>(identifier) })
+            if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESBoundObject>(identifier) }) {
                 return obj;
+            }
         }
         else {
             const auto handler{ RE::TESDataHandler::GetSingleton() };
             const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
             if (const auto obj{ handler->LookupForm(form_id, plugin_name) }) {
-                if (const auto bound_obj{ obj->As<RE::TESBoundObject>() })
+                if (const auto bound_obj{ obj->As<RE::TESBoundObject>() }) {
                     return bound_obj;
+                }
             }
         }
         logger::error("ERROR: Failed to find bound object for {}", identifier);
@@ -39,15 +41,17 @@ class Utility : public Singleton<Utility>
     static RE::TESLevItem* GetLevItem(const std::string_view identifier)
     {
         if (IsEditorID(identifier)) {
-            if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESLevItem>(identifier) })
+            if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESLevItem>(identifier) }) {
                 return obj;
+            }
         }
         else {
             const auto handler{ RE::TESDataHandler::GetSingleton() };
             const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
             if (const auto obj{ handler->LookupForm(form_id, plugin_name) }) {
-                if (const auto lev_item{ obj->As<RE::TESLevItem>() })
+                if (const auto lev_item{ obj->As<RE::TESLevItem>() }) {
                     return lev_item;
+                }
             }
         }
         logger::error("ERROR: Failed to find leveled list for {}", identifier);
@@ -59,16 +63,18 @@ class Utility : public Singleton<Utility>
     {
         if (IsEditorID(to_identifier)) {
             if (const auto form{ RE::TESForm::LookupByEditorID(to_identifier) }) {
-                if (const auto cont{ form->As<RE::TESContainer>() })
+                if (const auto cont{ form->As<RE::TESContainer>() }) {
                     return { cont, form->GetFormID(), form->GetFormType(), form->GetName() };
+                }
             }
         }
         else {
             const auto handler{ RE::TESDataHandler::GetSingleton() };
             const auto [form_id, plugin_name]{ GetFormIDAndPluginName(to_identifier) };
             if (const auto form{ handler->LookupForm(form_id, plugin_name) }) {
-                if (const auto cont{ form->As<RE::TESContainer>() })
+                if (const auto cont{ form->As<RE::TESContainer>() }) {
                     return { cont, form->GetFormID(), form->GetFormType(), form->GetName() };
+                }
             }
         }
         logger::error("ERROR: Failed to find container for {}", to_identifier);
@@ -81,7 +87,7 @@ class Utility : public Singleton<Utility>
 public:
     static auto CachePlayerLevel() { player_level = RE::PlayerCharacter::GetSingleton()->GetLevel(); }
 
-    static int GetRandomChance()
+    static auto GetRandomChance()
     {
         std::random_device                                       dev;
         std::mt19937                                             rng(dev());
@@ -90,14 +96,14 @@ public:
         return distr(rng);
     }
 
-    static int GetRandomCount(int count, unsigned int chance)
+    static auto GetRandomCount(const int count, const unsigned int chance)
     {
         std::random_device                                       dev;
         std::mt19937                                             rng(dev());
         std::uniform_int_distribution<std::mt19937::result_type> distr(0, 100);
 
-        int actual_count = 0;
-        for (int i = 0; i < count; i++) {
+        auto actual_count{ 0 };
+        for (auto i{ 0 }; i < count; i++) {
             if (distr(rng) < chance) {
                 actual_count++;
             }
@@ -106,12 +112,11 @@ public:
         return actual_count;
     }
 
-    static int GetChance(const std::string& str)
+    static auto GetChance(const std::string_view str)
     {
         const auto quest_pos{ Maps::GetPos(str, '?') };
-
-        logger::info("Has Chance: {}", quest_pos != ULLONG_MAX);
-        const auto chance = quest_pos == ULLONG_MAX ? 100 : Maps::ToInt(str.substr(quest_pos + 1));
+        const auto chance{ quest_pos == ULLONG_MAX ? 100 : Maps::ToInt(str.substr(quest_pos + 1)) };
+        logger::debug("Chance: {}", chance);
 
         return chance;
     }
@@ -123,8 +128,9 @@ public:
 
         std::vector<std::pair<RE::TESBoundObject*, int>> obj_and_counts{};
         for (const auto& [form, count, pad0A, pad0C, containerItem] : calced_objects) {
-            if (const auto bound_obj{ form->As<RE::TESBoundObject>() })
+            if (const auto bound_obj{ form->As<RE::TESBoundObject>() }) {
                 obj_and_counts.emplace_back(bound_obj, count);
+            }
         }
 
         return obj_and_counts;
@@ -134,26 +140,29 @@ public:
     {
         if (const auto leveled_list{ GetLevItem(distr_token.identifier) }) {
             if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container) {
-                if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0) {
-                    if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) })
+                if (distr_token.type == DistrType::Replace || distr_token.type == DistrType::ReplaceAll) {
+                    if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) }) {
                         return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, replace_with_list, distr_token.count, distr_token.rhs_count, cont };
-
-                    if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) })
+                    }
+                    if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) }) {
                         return { distr_token.type, nullptr, leveled_list, distr_token.filename, replace_with_obj, nullptr, distr_token.count, distr_token.rhs_count, cont };
+                    }
                 }
                 return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont, std::nullopt };
             }
         }
         else if (const auto bound_obj{ GetBoundObject(distr_token.identifier) }) {
             if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container) {
-                if (distr_token.type <=> DistrType::Replace == 0 || distr_token.type <=> DistrType::ReplaceAll == 0) {
-                    if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) })
+                if (distr_token.type == DistrType::Replace || distr_token.type == DistrType::ReplaceAll) {
+                    if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) }) {
                         return { distr_token.type,      bound_obj, nullptr,           distr_token.filename, nullptr, replace_with_list, distr_token.count,
                                  distr_token.rhs_count, cont,      distr_token.chance };
+                    }
 
-                    if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) })
+                    if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) }) {
                         return { distr_token.type,      bound_obj, nullptr,           distr_token.filename, replace_with_obj, nullptr, distr_token.count,
                                  distr_token.rhs_count, cont,      distr_token.chance };
+                    }
                 }
                 return { distr_token.type, bound_obj, nullptr, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont, distr_token.chance };
             }
