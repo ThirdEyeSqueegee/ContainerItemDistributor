@@ -4,10 +4,8 @@
 
 void Conflicts::PrepareDistribution() noexcept
 {
-    logger::info(">--------------------------------Preparing distribution...---------------------------------<");
+    logger::info(">-------------------------------------------------------------Preparing distribution...--------------------------------------------------------------<");
     logger::info("");
-
-    const auto start_time{ std::chrono::system_clock::now() };
 
     PrepareDistributionImpl(Maps::add_conflict_test_map);
     PrepareDistributionImpl(Maps::remove_conflict_test_map);
@@ -15,9 +13,8 @@ void Conflicts::PrepareDistribution() noexcept
 
     Utility::CachePlayerLevel();
 
-    const auto elapsed{ std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start_time) };
     logger::info("");
-    logger::info(">-------------------------Finished preparing distribution in {} us-------------------------<", elapsed.count());
+    logger::info(">----------------------------------------------------------Finished preparing distribution-----------------------------------------------------------<");
     logger::info("");
 }
 

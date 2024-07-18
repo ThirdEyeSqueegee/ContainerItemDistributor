@@ -12,7 +12,7 @@ namespace Hooks
     {
         func(a_ref);
 
-        if (a_ref->HasContainer()) {
+        if (a_ref && a_ref->HasContainer()) {
             Distributor::RuntimeDistribute(a_ref);
         }
     }

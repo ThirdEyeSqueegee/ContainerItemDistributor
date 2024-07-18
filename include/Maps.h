@@ -2,6 +2,8 @@
 
 #include "parallel_hashmap/phmap.h"
 
+using uint = std::uint16_t;
+
 enum class DistrType
 {
     Add,
@@ -17,14 +19,14 @@ class DistrToken
 public:
     constexpr bool operator==(const DistrToken&) const noexcept = default;
 
-    DistrType                   type{};
-    std::string                 filename{};
-    std::string                 to_identifier{};
-    std::string                 identifier{};
-    std::optional<unsigned int> count{};
-    std::optional<std::string>  rhs{};
-    std::optional<unsigned int> rhs_count{};
-    std::optional<unsigned int> chance{};
+    DistrType                  type{};
+    std::string                filename{};
+    std::string                to_identifier{};
+    std::string                identifier{};
+    std::optional<uint>        count{};
+    std::optional<std::string> rhs{};
+    std::optional<uint>        rhs_count{};
+    std::optional<uint>        chance{};
 };
 
 class Container
@@ -41,19 +43,19 @@ public:
 class DistrObject
 {
 public:
-    DistrType                   type{};
-    RE::TESBoundObject*         bound_object{};
-    RE::TESLevItem*             leveled_list{};
-    std::string                 filename{};
-    RE::TESBoundObject*         replace_with_object{};
-    RE::TESLevItem*             replace_with_list{};
-    std::optional<unsigned int> count{};
-    std::optional<unsigned int> replace_with_count{};
-    std::optional<Container>    container{};
-    std::optional<unsigned int> chance{};
+    DistrType                type{};
+    RE::TESBoundObject*      bound_object{};
+    RE::TESLevItem*          leveled_list{};
+    std::string              filename{};
+    RE::TESBoundObject*      replace_with_object{};
+    RE::TESLevItem*          replace_with_list{};
+    std::optional<uint>      count{};
+    std::optional<uint>      replace_with_count{};
+    std::optional<Container> container{};
+    std::optional<uint>      chance{};
 };
 
-class RuntimeDistrMap
+class RuntimeDistrVecs
 {
 public:
     std::vector<DistrObject> to_add;
@@ -63,8 +65,9 @@ public:
     std::vector<DistrObject> to_replace_all;
 };
 
-struct FormIDAndPluginName
+class FormIDAndPluginName
 {
+public:
     RE::FormID  form_id{};
     std::string plugin_name{};
 };
@@ -72,9 +75,7 @@ struct FormIDAndPluginName
 class Maps : public Singleton<Maps>
 {
 public:
-    static auto ToInt(const std::string_view& s) noexcept { return static_cast<int>(std::strtol(s.data(), nullptr, 0)); }
-
-    static auto ToUnsignedInt(const std::string_view& s) noexcept { return static_cast<unsigned>(std::strtol(s.data(), nullptr, 0)); }
+    static auto ToUnsignedInt(const std::string_view& s) noexcept { return static_cast<uint>(std::strtol(s.data(), nullptr, 0)); }
 
     static auto GetPos(const std::string_view s, const char c) noexcept
     {
@@ -103,7 +104,7 @@ public:
 
     inline static TDistrVec distr_object_vec;
 
-    using TRuntimeMap = phmap::parallel_flat_hash_map<RE::FormID, RuntimeDistrMap>;
+    using TRuntimeMap = phmap::parallel_flat_hash_map<RE::FormID, RuntimeDistrVecs>;
 
     inline static TRuntimeMap runtime_map;
 };
@@ -131,19 +132,19 @@ inline auto format_as(const DistrToken& token) noexcept
 {
     const auto& [type, filename, to_identifier, identifier, count, rhs, rhs_count, chance]{ token };
     return fmt::format("[Type: {} / Filename: {} / To: {} / Identifier: {} / Count: {} / RHS: {} / RHS Count: {} / Chance: {}]", type, filename, to_identifier, identifier,
-                       count.value_or(-1), rhs.value_or("null"), rhs_count.value_or(-1), chance.value_or(100));
+                       count.value_or(-1), rhs.value_or(""), rhs_count.value_or(-1), chance.value_or(100));
 }
 
 inline auto format_as(const DistrObject& obj) noexcept
 {
     const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ obj };
     // clang-format off
-    return fmt::format("[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Leveled list: {} (0x{:x} / Replace with obj: {} (0x{:x}) / Replace with list: {} (0x{:x}) / "
+    return fmt::format("[Type: {} / Filename: {} / Bound object: {} (0x{:x}) / Leveled list: {} (0x{:x}) / Replace with obj: {} (0x{:x}) / Replace with list: {} (0x{:x}) / "
                        "Count: {} / Replace count: {} / Container: {} (0x{:x}) ({}) / Chance: {}]",
         // clang-format on
-        type, filename, bound_object ? bound_object->GetName() : "null", bound_object ? bound_object->GetFormID() : 0, leveled_list ? leveled_list->GetFormEditorID() : "null",
-        leveled_list ? leveled_list->GetFormID() : 0, replace_with_obj ? replace_with_obj->GetName() : "null", replace_with_obj ? replace_with_obj->GetFormID() : 0,
-        replace_with_list ? replace_with_list->GetName() : "null", replace_with_list ? replace_with_list->GetFormID() : 0, count.value_or(-1), replace_with_count.value_or(-1),
-        container.has_value() ? container.value().container_name : "null", container.has_value() ? container.value().container_form_id : 0,
+        type, filename, bound_object ? bound_object->GetName() : "", bound_object ? bound_object->GetFormID() : 0, leveled_list ? leveled_list->GetFormEditorID() : "",
+        leveled_list ? leveled_list->GetFormID() : 0, replace_with_obj ? replace_with_obj->GetName() : "", replace_with_obj ? replace_with_obj->GetFormID() : 0,
+        replace_with_list ? replace_with_list->GetName() : "", replace_with_list ? replace_with_list->GetFormID() : 0, count.value_or(0), replace_with_count.value_or(0),
+        container.has_value() ? container.value().container_name : "", container.has_value() ? container.value().container_form_id : 0,
         container.has_value() ? container->container_type : RE::FormType::Container, chance.value_or(100));
 }

@@ -8,7 +8,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
     if (message->type == SKSE::MessagingInterface::kDataLoaded) {
         if (!GetModuleHandle(L"po3_Tweaks")) {
             logger::error("ERROR: powerofthree's Tweaks not found");
-            return;
+            stl::report_and_fail("ERROR [ContainerItemDistributor.dll]: powerofthree's Tweaks not found");
         }
         Settings::LoadSettings();
         Conflicts::PrepareDistribution();

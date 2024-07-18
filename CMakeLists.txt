@@ -3,7 +3,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 
 project(
   ContainerItemDistributor
-  VERSION 1.2.0
+  VERSION 1.2.1
   LANGUAGES CXX
 )
 set(CMAKE_CXX_STANDARD 23)

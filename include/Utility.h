@@ -54,7 +54,7 @@ class Utility : public Singleton<Utility>
                 }
             }
         }
-        logger::error("ERROR: Failed to find leveled list for {}", identifier);
+        logger::warn("WARNING: Failed to find leveled list for {}", identifier);
 
         return nullptr;
     }
@@ -77,34 +77,30 @@ class Utility : public Singleton<Utility>
                 }
             }
         }
-        logger::error("ERROR: Failed to find container for {}", to_identifier);
+        logger::warn("WARNING: Failed to find container for {}", to_identifier);
 
         return { nullptr, 0, RE::FormType::Container, "" };
     }
 
-    inline static std::uint16_t player_level{};
+    inline static uint player_level{};
 
 public:
     static auto CachePlayerLevel() { player_level = RE::PlayerCharacter::GetSingleton()->GetLevel(); }
 
     static auto GetRandomChance()
     {
-        std::random_device                                       dev;
-        std::mt19937                                             rng(dev());
-        std::uniform_int_distribution<std::mt19937::result_type> distr(0, 100);
+        static std::random_device                  rd;
+        static std::mt19937                        rng(rd());
+        static std::uniform_int_distribution<uint> distr(0, 100);
 
         return distr(rng);
     }
 
-    static auto GetRandomCount(const int count, const unsigned int chance)
+    static auto GetRandomCount(const uint count, const uint chance)
     {
-        std::random_device                                       dev;
-        std::mt19937                                             rng(dev());
-        std::uniform_int_distribution<std::mt19937::result_type> distr(0, 100);
-
-        auto actual_count{ 0 };
-        for (auto i{ 0 }; i < count; i++) {
-            if (distr(rng) < chance) {
+        uint actual_count{ 0 };
+        for (uint i{ 0 }; i < count; i++) {
+            if (GetRandomChance() < chance) {
                 actual_count++;
             }
         }
@@ -112,10 +108,10 @@ public:
         return actual_count;
     }
 
-    static auto GetChance(const std::string_view str)
+    static uint GetChance(const std::string_view str)
     {
         const auto quest_pos{ Maps::GetPos(str, '?') };
-        const auto chance{ quest_pos == ULLONG_MAX ? 100 : Maps::ToInt(str.substr(quest_pos + 1)) };
+        const auto chance{ static_cast<uint>(quest_pos == ULLONG_MAX ? 100 : Maps::ToUnsignedInt(str.substr(quest_pos + 1))) };
         logger::debug("Chance: {}", chance);
 
         return chance;
@@ -158,7 +154,6 @@ public:
                         return { distr_token.type,      bound_obj, nullptr,           distr_token.filename, nullptr, replace_with_list, distr_token.count,
                                  distr_token.rhs_count, cont,      distr_token.chance };
                     }
-
                     if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) }) {
                         return { distr_token.type,      bound_obj, nullptr,           distr_token.filename, replace_with_obj, nullptr, distr_token.count,
                                  distr_token.rhs_count, cont,      distr_token.chance };
