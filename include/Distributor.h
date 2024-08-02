@@ -5,6 +5,8 @@
 class Distributor : public Singleton<Distributor>
 {
 public:
+    inline static std::set<RE::FormID> processed_refs;
+
     static void Distribute() noexcept;
 
     static void AddDistribute(const Maps::TDistrVec& distr_vec) noexcept;

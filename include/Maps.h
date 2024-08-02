@@ -2,9 +2,11 @@
 
 #include "parallel_hashmap/phmap.h"
 
-using uint = std::uint16_t;
+using u16 = std::uint16_t;
+using u32 = std::uint32_t;
+using i32 = std::int32_t;
 
-enum class DistrType
+enum struct DistrType
 {
     Add,
     Remove,
@@ -23,10 +25,10 @@ public:
     std::string                filename{};
     std::string                to_identifier{};
     std::string                identifier{};
-    std::optional<uint>        count{};
+    std::optional<u32>         count{};
     std::optional<std::string> rhs{};
-    std::optional<uint>        rhs_count{};
-    std::optional<uint>        chance{};
+    std::optional<u32>         rhs_count{};
+    std::optional<u32>         chance{};
 };
 
 class Container
@@ -40,24 +42,22 @@ public:
     std::string       container_name{};
 };
 
-class DistrObject
+struct DistrObject
 {
-public:
     DistrType                type{};
     RE::TESBoundObject*      bound_object{};
     RE::TESLevItem*          leveled_list{};
     std::string              filename{};
     RE::TESBoundObject*      replace_with_object{};
     RE::TESLevItem*          replace_with_list{};
-    std::optional<uint>      count{};
-    std::optional<uint>      replace_with_count{};
+    std::optional<i32>       count{};
+    std::optional<i32>       replace_with_count{};
     std::optional<Container> container{};
-    std::optional<uint>      chance{};
+    std::optional<u32>       chance{};
 };
 
-class RuntimeDistrVecs
+struct RuntimeDistrVecs
 {
-public:
     std::vector<DistrObject> to_add;
     std::vector<DistrObject> to_remove;
     std::vector<DistrObject> to_remove_all;
@@ -65,9 +65,8 @@ public:
     std::vector<DistrObject> to_replace_all;
 };
 
-class FormIDAndPluginName
+struct FormIDAndPluginName
 {
-public:
     RE::FormID  form_id{};
     std::string plugin_name{};
 };
@@ -75,21 +74,9 @@ public:
 class Maps : public Singleton<Maps>
 {
 public:
-    static auto ToUnsignedInt(const std::string_view& s) noexcept { return static_cast<uint>(std::strtol(s.data(), nullptr, 0)); }
+    static auto ToFormID(const std::string& s) noexcept { return static_cast<RE::FormID>(std::stoul(s, nullptr, 16)); }
 
-    static auto GetPos(const std::string_view s, const char c) noexcept
-    {
-        const auto ptr{ std::strrchr(s.data(), c) };
-
-        return ptr ? static_cast<std::size_t>(ptr - s.data()) : ULLONG_MAX;
-    }
-
-    static auto HasPos(const std::string_view s, const char c) noexcept
-    {
-        const auto ptr{ std::strrchr(s.data(), c) };
-
-        return ptr != nullptr;
-    }
+    static auto ToUnsignedInt(const std::string& s) noexcept { return static_cast<u32>(std::stoul(s)); }
 
     using TDistrTokenVec   = std::vector<DistrToken>;
     using TConflictTestMap = phmap::parallel_flat_hash_map<std::string, TDistrTokenVec>;

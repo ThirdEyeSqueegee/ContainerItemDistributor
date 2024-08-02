@@ -6,7 +6,7 @@
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
     if (message->type == SKSE::MessagingInterface::kDataLoaded) {
-        if (!GetModuleHandle(L"po3_Tweaks")) {
+        if (!REX::W32::GetModuleHandleW(L"po3_Tweaks")) {
             logger::error("ERROR: powerofthree's Tweaks not found");
             stl::report_and_fail("ERROR [ContainerItemDistributor.dll]: powerofthree's Tweaks not found");
         }

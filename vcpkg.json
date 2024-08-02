@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "container-item-distributor",
   "version-semver": "1.2.1",
-  "builtin-baseline": "198d68dbcc6c907cb3d0b9b1d93c3df6ecf93c62",
+  "builtin-baseline": "1a1d9c8a64c99dd636a62a2841ec9fc1466757df",
   "dependencies": [
     "fmt",
     "spdlog",

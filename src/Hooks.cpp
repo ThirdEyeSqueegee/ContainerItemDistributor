@@ -12,7 +12,8 @@ namespace Hooks
     {
         func(a_ref);
 
-        if (a_ref && a_ref->HasContainer()) {
+        if (a_ref && a_ref->HasContainer() && !Distributor::processed_refs.contains(a_ref->GetFormID())) {
+            Distributor::processed_refs.insert(a_ref->GetFormID());
             Distributor::RuntimeDistribute(a_ref);
         }
     }

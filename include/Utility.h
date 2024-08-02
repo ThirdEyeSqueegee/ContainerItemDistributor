@@ -4,52 +4,53 @@
 
 class Utility : public Singleton<Utility>
 {
-    static auto IsEditorID(const std::string_view identifier) { return std::strchr(identifier.data(), '~') == nullptr; }
+    static auto IsEditorID(const std::string_view identifier) { return !identifier.contains('~'); }
 
-    static FormIDAndPluginName GetFormIDAndPluginName(const std::string_view identifier)
+    static FormIDAndPluginName GetFormIDAndPluginName(const std::string& identifier)
     {
-        if (const auto tilde{ std::strchr(identifier.data(), '~') }) {
-            const auto tilde_pos{ static_cast<int>(tilde - identifier.data()) };
-            return { Maps::ToUnsignedInt(identifier.substr(0, tilde_pos)), identifier.substr(tilde_pos + 1).data() };
+        if (const auto tilde_pos{ identifier.find('~') }; tilde_pos != std::string_view::npos) {
+            const auto form_id{ Maps::ToFormID(identifier.substr(0, tilde_pos)) };
+            const auto plugin_name{ identifier.substr(tilde_pos + 1) };
+            return { form_id, plugin_name };
         }
         logger::error("ERROR: Failed to get FormID and plugin name for {}", identifier);
 
         return { 0, "" };
     }
 
-    static RE::TESBoundObject* GetBoundObject(const std::string_view identifier)
+    static RE::TESBoundObject* GetBoundObject(const std::string& identifier)
     {
         if (IsEditorID(identifier)) {
-            if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESBoundObject>(identifier) }) {
-                return obj;
+            if (const auto bound_obj{ RE::TESForm::LookupByEditorID<RE::TESBoundObject>(identifier) }) {
+                return bound_obj;
             }
         }
         else {
             const auto handler{ RE::TESDataHandler::GetSingleton() };
             const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
-            if (const auto obj{ handler->LookupForm(form_id, plugin_name) }) {
-                if (const auto bound_obj{ obj->As<RE::TESBoundObject>() }) {
+            if (const auto form{ handler->LookupForm(form_id, plugin_name) }) {
+                if (const auto bound_obj{ form->As<RE::TESBoundObject>() }) {
                     return bound_obj;
                 }
             }
         }
-        logger::error("ERROR: Failed to find bound object for {}", identifier);
+        logger::warn("WARNING: Failed to find bound object for {}", identifier);
 
         return nullptr;
     }
 
-    static RE::TESLevItem* GetLevItem(const std::string_view identifier)
+    static RE::TESLevItem* GetLevItem(const std::string& identifier)
     {
         if (IsEditorID(identifier)) {
-            if (const auto obj{ RE::TESForm::LookupByEditorID<RE::TESLevItem>(identifier) }) {
-                return obj;
+            if (const auto lev_item{ RE::TESForm::LookupByEditorID<RE::TESLevItem>(identifier) }) {
+                return lev_item;
             }
         }
         else {
             const auto handler{ RE::TESDataHandler::GetSingleton() };
             const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
-            if (const auto obj{ handler->LookupForm(form_id, plugin_name) }) {
-                if (const auto lev_item{ obj->As<RE::TESLevItem>() }) {
+            if (const auto form{ handler->LookupForm(form_id, plugin_name) }) {
+                if (const auto lev_item{ form->As<RE::TESLevItem>() }) {
                     return lev_item;
                 }
             }
@@ -59,7 +60,7 @@ class Utility : public Singleton<Utility>
         return nullptr;
     }
 
-    static Container GetContainer(const std::string_view to_identifier)
+    static Container GetContainer(const std::string& to_identifier)
     {
         if (IsEditorID(to_identifier)) {
             if (const auto form{ RE::TESForm::LookupByEditorID(to_identifier) }) {
@@ -82,39 +83,25 @@ class Utility : public Singleton<Utility>
         return { nullptr, 0, RE::FormType::Container, "" };
     }
 
-    inline static uint player_level{};
+    inline static u16 player_level{};
 
 public:
     static auto CachePlayerLevel() { player_level = RE::PlayerCharacter::GetSingleton()->GetLevel(); }
 
     static auto GetRandomChance()
     {
-        static std::random_device                  rd;
-        static std::mt19937                        rng(rd());
-        static std::uniform_int_distribution<uint> distr(0, 100);
+        static std::random_device                 rd;
+        static std::mt19937                       rng(rd());
+        static std::uniform_int_distribution<u32> distr(1, 100);
 
         return distr(rng);
     }
 
-    static auto GetRandomCount(const uint count, const uint chance)
+    static auto GetChance(const std::string& s)
     {
-        uint actual_count{ 0 };
-        for (uint i{ 0 }; i < count; i++) {
-            if (GetRandomChance() < chance) {
-                actual_count++;
-            }
-        }
+        const auto quest_pos{ s.find('?') };
 
-        return actual_count;
-    }
-
-    static uint GetChance(const std::string_view str)
-    {
-        const auto quest_pos{ Maps::GetPos(str, '?') };
-        const auto chance{ static_cast<uint>(quest_pos == ULLONG_MAX ? 100 : Maps::ToUnsignedInt(str.substr(quest_pos + 1))) };
-        logger::debug("Chance: {}", chance);
-
-        return chance;
+        return quest_pos == std::string_view::npos ? 100 : Maps::ToUnsignedInt(s.substr(quest_pos + 1));
     }
 
     static auto ResolveLeveledList(RE::TESLevItem* list)

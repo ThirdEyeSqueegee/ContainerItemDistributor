@@ -16,6 +16,7 @@ void Distributor::Distribute() noexcept
 void Distributor::AddDistribute(const Maps::TDistrVec& distr_vec) noexcept
 {
     logger::info("+----------------------------------Performing ADD distribution...----------------------------------+");
+    logger::info("");
 
     for (const auto& distr_obj : distr_vec) {
         const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
@@ -33,16 +34,21 @@ void Distributor::AddDistribute(const Maps::TDistrVec& distr_vec) noexcept
 
             if (bound_object) {
                 cont->AddObjectToContainer(bound_object, count.value(), nullptr);
+                logger::info("\t+ {}", distr_obj);
             }
             else if (leveled_list) {
                 for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(leveled_list)) {
                     cont->AddObjectToContainer(lobj, lcount, nullptr);
+                    logger::info("\t+ {}", distr_obj);
                 }
             }
-            logger::info("\t+ {}", distr_obj);
+            else {
+                logger::error("\tERROR: Failed to distribute {}", distr_obj);
+            }
         }
     }
 
+    logger::info("");
     logger::info("+------------------------------------Finished ADD distribution-------------------------------------+");
     logger::info("");
 }
@@ -50,6 +56,7 @@ void Distributor::AddDistribute(const Maps::TDistrVec& distr_vec) noexcept
 void Distributor::RemoveDistribute(const Maps::TDistrVec& distr_vec) noexcept
 {
     logger::info(">--------------------------------Performing REMOVE distribution...---------------------------------<");
+    logger::info("");
 
     for (const auto& distr_obj : distr_vec) {
         const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
@@ -68,11 +75,15 @@ void Distributor::RemoveDistribute(const Maps::TDistrVec& distr_vec) noexcept
 
                 if (bound_object) {
                     cont->RemoveObjectFromContainer(bound_object, count.value());
+                    logger::info("\t- {}", distr_obj);
                 }
                 else if (leveled_list) {
                     cont->RemoveObjectFromContainer(leveled_list, count.value());
+                    logger::info("\t- {}", distr_obj);
                 }
-                logger::info("\t- {}", distr_obj);
+                else {
+                    logger::error("\tERROR: Failed to distribute {}", distr_obj);
+                }
             }
             else {
                 if (chance.value_or(100) < 100) {
@@ -83,15 +94,20 @@ void Distributor::RemoveDistribute(const Maps::TDistrVec& distr_vec) noexcept
                 const auto& num_to_remove{ cont->CountObjectsInContainer(bound_object) };
                 if (bound_object) {
                     cont->RemoveObjectFromContainer(bound_object, num_to_remove);
+                    logger::info("\t- {}", distr_obj);
                 }
                 else if (leveled_list) {
                     cont->RemoveObjectFromContainer(leveled_list, num_to_remove);
+                    logger::info("\t- {}", distr_obj);
                 }
-                logger::info("\t- {}", distr_obj);
+                else {
+                    logger::error("\tERROR: Failed to distribute {}", distr_obj);
+                }
             }
         }
     }
 
+    logger::info("");
     logger::info(">-----------------------------------Finished REMOVE distribution-----------------------------------<");
     logger::info("");
 }
@@ -99,6 +115,7 @@ void Distributor::RemoveDistribute(const Maps::TDistrVec& distr_vec) noexcept
 void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
 {
     logger::info("^--------------------------------Performing REPLACE distribution...--------------------------------^");
+    logger::info("");
 
     for (const auto& distr_obj : distr_vec) {
         const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
@@ -119,27 +136,33 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     if (replace_with_obj) {
                         cont->RemoveObjectFromContainer(bound_object, count.value());
                         cont->AddObjectToContainer(replace_with_obj, replace_with_count.value(), nullptr);
+                        logger::info("\t^ {}", distr_obj);
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(bound_object, count.value());
                         for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list)) {
                             cont->AddObjectToContainer(lobj, lcount, nullptr);
                         }
+                        logger::info("\t^ {}", distr_obj);
                     }
                 }
                 else if (leveled_list) {
                     if (replace_with_obj) {
                         cont->RemoveObjectFromContainer(leveled_list, count.value());
                         cont->AddObjectToContainer(replace_with_obj, replace_with_count.value(), nullptr);
+                        logger::info("\t^ {}", distr_obj);
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(leveled_list, count.value());
                         for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list)) {
                             cont->AddObjectToContainer(lobj, lcount, nullptr);
                         }
+                        logger::info("\t^ {}", distr_obj);
                     }
                 }
-                logger::info("\t^ {}", distr_obj);
+                else {
+                    logger::error("\tERROR: Failed to distribute {}", distr_obj);
+                }
             }
             else {
                 if (chance.value_or(100) < 100) {
@@ -152,31 +175,38 @@ void Distributor::ReplaceDistribute(const Maps::TDistrVec& distr_vec) noexcept
                     if (replace_with_obj) {
                         cont->RemoveObjectFromContainer(bound_object, num_to_remove);
                         cont->AddObjectToContainer(replace_with_obj, num_to_remove, nullptr);
+                        logger::info("\t^ {}", distr_obj);
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(bound_object, num_to_remove);
                         for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list)) {
                             cont->AddObjectToContainer(lobj, lcount, nullptr);
                         }
+                        logger::info("\t^ {}", distr_obj);
                     }
                 }
                 else if (leveled_list) {
                     if (replace_with_obj) {
                         cont->RemoveObjectFromContainer(leveled_list, num_to_remove);
                         cont->AddObjectToContainer(replace_with_obj, num_to_remove, nullptr);
+                        logger::info("\t^ {}", distr_obj);
                     }
                     else if (replace_with_list) {
                         cont->RemoveObjectFromContainer(leveled_list, num_to_remove);
                         for (const auto& [lobj, lcount] : Utility::ResolveLeveledList(replace_with_list)) {
                             cont->AddObjectToContainer(lobj, lcount, nullptr);
                         }
+                        logger::info("\t^ {}", distr_obj);
                     }
                 }
-                logger::info("\t^ {}", distr_obj);
+                else {
+                    logger::error("\tERROR: Failed to distribute {}", distr_obj);
+                }
             }
         }
     }
 
+    logger::info("");
     logger::info("^----------------------------------Finished REPLACE distribution-----------------------------------^");
 }
 
@@ -184,90 +214,102 @@ void Distributor::RuntimeDistribute(RE::TESObjectREFR* a_ref) noexcept
 {
     const RuntimeDistrVecs* to_modify{};
     const auto              form_id{ a_ref->GetFormID() };
+    const auto              base_form_id{ a_ref->GetBaseObject()->GetFormID() };
 
-    if (Maps::runtime_map.count(form_id)) {
+    if (Maps::runtime_map.contains(form_id)) {
         to_modify = &Maps::runtime_map[form_id];
     }
-    else if (Maps::runtime_map.count(a_ref->GetBaseObject()->GetFormID())) {
-        to_modify = &Maps::runtime_map[a_ref->GetBaseObject()->GetFormID()];
+    else if (Maps::runtime_map.contains(base_form_id)) {
+        to_modify = &Maps::runtime_map[base_form_id];
     }
 
-    if (to_modify) {
-        auto counts{ a_ref->GetInventoryCounts() };
+    if (!to_modify) {
+        return;
+    }
 
-        for (const auto& distr_obj : to_modify->to_add) {
-            const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+    auto counts{ a_ref->GetInventoryCounts() };
 
-            const auto num_to_add{ Utility::GetRandomCount(count.value(), chance.value()) };
+    for (const auto& distr_obj : to_modify->to_add) {
+        if (const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+            Utility::GetRandomChance() <= chance.value())
+        {
+            logger::info("x-------------------Performing runtime distribution...--------------------x");
+            logger::info("");
 
-            if (num_to_add > 0) {
-                logger::info("x-------------------Performing runtime distribution...--------------------x");
+            a_ref->GetContainer()->AddObjectToContainer(bound_object, count.value(), nullptr);
 
-                a_ref->AddObjectToContainer(bound_object, nullptr, num_to_add, nullptr);
-
-                logger::info("\t+ {}", distr_obj);
-                logger::info("x----------------------Finished runtime distribution----------------------x");
-            }
+            logger::info("\t+ {}", distr_obj);
+            logger::info("");
+            logger::info("x----------------------Finished runtime distribution----------------------x");
+            logger::info("");
         }
+    }
 
-        for (const auto& distr_obj : to_modify->to_remove) {
-            const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+    for (const auto& distr_obj : to_modify->to_remove) {
+        if (const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+            Utility::GetRandomChance() <= chance.value())
+        {
+            logger::info("x-------------------Performing runtime distribution...--------------------x");
+            logger::info("");
 
-            const auto num_to_remove{ Utility::GetRandomCount(count.value(), chance.value()) };
+            a_ref->RemoveItem(bound_object, count.value(), RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 
-            if (num_to_remove > 0) {
-                logger::info("x-------------------Performing runtime distribution...--------------------x");
-
-                a_ref->RemoveItem(bound_object, num_to_remove, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-
-                logger::info("\t- {}", distr_obj);
-                logger::info("x----------------------Finished runtime distribution----------------------x");
-            }
+            logger::info("\t- {}", distr_obj);
+            logger::info("");
+            logger::info("x----------------------Finished runtime distribution----------------------x");
+            logger::info("");
         }
+    }
 
-        for (const auto& distr_obj : to_modify->to_remove_all) {
-            const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+    for (const auto& distr_obj : to_modify->to_remove_all) {
+        if (const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+            Utility::GetRandomChance() <= chance.value())
+        {
+            logger::info("x-------------------Performing runtime distribution...--------------------x");
+            logger::info("");
 
-            if (Utility::GetRandomChance() < chance.value()) {
-                logger::info("x-------------------Performing runtime distribution...--------------------x");
+            const auto num_to_remove{ counts[bound_object] };
+            a_ref->RemoveItem(bound_object, num_to_remove, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
 
-                const auto num_to_remove{ counts[bound_object] };
-                a_ref->RemoveItem(bound_object, num_to_remove, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-
-                logger::info("\t- {}", distr_obj);
-                logger::info("x----------------------Finished runtime distribution----------------------x");
-            }
+            logger::info("\t- {}", distr_obj);
+            logger::info("");
+            logger::info("x----------------------Finished runtime distribution----------------------x");
+            logger::info("");
         }
+    }
 
-        for (const auto& distr_obj : to_modify->to_replace) {
-            const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+    for (const auto& distr_obj : to_modify->to_replace) {
+        if (const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+            Utility::GetRandomChance() <= chance.value())
+        {
+            logger::info("x-------------------Performing runtime distribution...--------------------x");
+            logger::info("");
 
-            const auto num_to_swap{ Utility::GetRandomCount(count.value(), chance.value()) };
+            a_ref->RemoveItem(bound_object, std::max(counts[bound_object], replace_with_count.value()), RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+            a_ref->GetContainer()->AddObjectToContainer(replace_with_obj, replace_with_count.value(), nullptr);
 
-            if (num_to_swap > 0) {
-                logger::info("x-------------------Performing runtime distribution...--------------------x");
-
-                a_ref->RemoveItem(bound_object, num_to_swap, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-                a_ref->AddObjectToContainer(replace_with_obj, nullptr, replace_with_count.value(), nullptr);
-
-                logger::info("\t^ {}", distr_obj);
-                logger::info("x----------------------Finished runtime distribution----------------------x");
-            }
+            logger::info("\t^ {}", distr_obj);
+            logger::info("");
+            logger::info("x----------------------Finished runtime distribution----------------------x");
+            logger::info("");
         }
+    }
 
-        for (const auto& distr_obj : to_modify->to_replace_all) {
-            const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+    for (const auto& distr_obj : to_modify->to_replace_all) {
+        if (const auto& [type, bound_object, leveled_list, filename, replace_with_obj, replace_with_list, count, replace_with_count, container, chance]{ distr_obj };
+            Utility::GetRandomChance() <= chance.value())
+        {
+            const auto num_to_swap{ counts[bound_object] };
+            logger::info("x-------------------Performing runtime distribution...--------------------x");
+            logger::info("");
 
-            if (Utility::GetRandomChance() < chance.value()) {
-                const auto num_to_swap{ counts[bound_object] };
-                logger::info("x-------------------Performing runtime distribution...--------------------x");
+            a_ref->RemoveItem(bound_object, num_to_swap, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+            a_ref->GetContainer()->AddObjectToContainer(replace_with_obj, num_to_swap, nullptr);
 
-                a_ref->RemoveItem(bound_object, num_to_swap, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-                a_ref->AddObjectToContainer(replace_with_obj, nullptr, num_to_swap, nullptr);
-
-                logger::info("\t^ {}", distr_obj);
-                logger::info("x----------------------Finished runtime distribution----------------------x");
-            }
+            logger::info("\t^ {}", distr_obj);
+            logger::info("");
+            logger::info("x----------------------Finished runtime distribution----------------------x");
+            logger::info("");
         }
     }
 }
