@@ -1,7 +1,8 @@
-#include "Conflicts.h"
+#include "Events.h"
 #include "Hooks.h"
 #include "Logging.h"
 #include "Settings.h"
+#include "Utility.h"
 
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
@@ -11,15 +12,17 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
             stl::report_and_fail("ERROR [ContainerItemDistributor.dll]: powerofthree's Tweaks not found");
         }
         Settings::LoadSettings();
-        Conflicts::PrepareDistribution();
-        Distributor::Distribute();
         Hooks::Install();
+        Events::LoadGameEventHandler::Register();
+    }
+    if (message->type == SKSE::MessagingInterface::kPostLoadGame) {
+        Utility::CachePlayerLevel();
     }
 }
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
-    InitializeLogging();
+    InitLogging();
 
     const auto plugin{ SKSE::PluginDeclaration::GetSingleton() };
     const auto name{ plugin->GetName() };

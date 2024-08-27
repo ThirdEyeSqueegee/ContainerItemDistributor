@@ -5,6 +5,9 @@
 // Concepts library
 #include <concepts>
 
+// Coroutines library
+#include <coroutine>
+
 // Utilities library
 #include <any>
 #include <bitset>
@@ -67,6 +70,7 @@
 #include <forward_list>
 #include <list>
 #include <map>
+#include <mdspan>
 #include <queue>
 #include <set>
 #include <span>
@@ -113,7 +117,6 @@
 #include <spanstream>
 #include <sstream>
 #include <streambuf>
-#include <strstream>
 #include <syncstream>
 
 // Filesystem library
@@ -151,6 +154,15 @@ using namespace REL::literals;
 
 namespace logger = SKSE::log;
 
+using u8  = std::uint8_t;
+using u16 = std::uint16_t;
+using u32 = std::uint32_t;
+using u64 = std::uint64_t;
+using i8  = std::int8_t;
+using i16 = std::int16_t;
+using i32 = std::int32_t;
+using i64 = std::int64_t;
+
 template <typename T>
 class Singleton
 {
@@ -164,7 +176,7 @@ public:
     constexpr auto operator=(const Singleton&) = delete;
     constexpr auto operator=(Singleton&&)      = delete;
 
-    [[nodiscard]] static constexpr T* GetSingleton() noexcept
+    [[nodiscard]] static constexpr auto GetSingleton() noexcept
     {
         static T singleton;
         return std::addressof(singleton);
@@ -184,7 +196,7 @@ public:
     constexpr auto operator=(const EventSingleton&) = delete;
     constexpr auto operator=(EventSingleton&&)      = delete;
 
-    [[nodiscard]] static constexpr TDerived* GetSingleton() noexcept
+    [[nodiscard]] static constexpr auto GetSingleton() noexcept
     {
         static TDerived singleton;
         return std::addressof(singleton);
@@ -195,50 +207,58 @@ public:
         using TEventSource = RE::BSTEventSource<TEvent>;
 
         const std::string dirty_name{ typeid(TEvent).name() };
-        const std::regex  p{ "struct |RE::|SKSE::| * __ptr64" };
+        const std::regex  p{ "class |struct |RE::|SKSE::| * __ptr64" };
         const auto        name{ std::regex_replace(dirty_name, p, "") };
 
         if constexpr (std::is_base_of_v<TEventSource, RE::BSInputDeviceManager>) {
             const auto manager{ RE::BSInputDeviceManager::GetSingleton() };
             manager->AddEventSink(GetSingleton());
             logger::info("Registered {} handler", name);
+            logger::info("");
             return;
         }
         else if constexpr (std::is_base_of_v<TEventSource, RE::UI>) {
             const auto ui{ RE::UI::GetSingleton() };
             ui->AddEventSink(GetSingleton());
             logger::info("Registered {} handler", name);
+            logger::info("");
             return;
         }
         else if constexpr (std::is_same_v<TEvent, SKSE::ActionEvent>) {
             SKSE::GetActionEventSource()->AddEventSink(GetSingleton());
             logger::info("Registered {} handler", name);
+            logger::info("");
             return;
         }
         else if constexpr (std::is_same_v<TEvent, SKSE::CameraEvent>) {
             SKSE::GetCameraEventSource()->AddEventSink(GetSingleton());
             logger::info("Registered {} handler", name);
+            logger::info("");
             return;
         }
         else if constexpr (std::is_same_v<TEvent, SKSE::CrosshairRefEvent>) {
             SKSE::GetCrosshairRefEventSource()->AddEventSink(GetSingleton());
             logger::info("Registered {} handler", name);
+            logger::info("");
             return;
         }
         else if constexpr (std::is_same_v<TEvent, SKSE::ModCallbackEvent>) {
             SKSE::GetModCallbackEventSource()->AddEventSink(GetSingleton());
             logger::info("Registered {} handler", name);
+            logger::info("");
             return;
         }
         else if constexpr (std::is_same_v<TEvent, SKSE::NiNodeUpdateEvent>) {
             SKSE::GetNiNodeUpdateEventSource()->AddEventSink(GetSingleton());
             logger::info("Registered {} handler", name);
+            logger::info("");
             return;
         }
         else if constexpr (std::is_base_of_v<TEventSource, RE::ScriptEventSourceHolder>) {
             const auto holder{ RE::ScriptEventSourceHolder::GetSingleton() };
             holder->AddEventSink(GetSingleton());
             logger::info("Registered {} handler", name);
+            logger::info("");
             return;
         }
         const auto plugin{ SKSE::PluginDeclaration::GetSingleton() };
@@ -292,23 +312,8 @@ namespace stl
         {
         };
 
-        template <typename Rep, typename Duration>
-        struct is_chrono_duration<std::chrono::duration<Rep, Duration>> : std::true_type
-        {
-        };
-
-        template <typename Rep, typename Duration>
-        struct is_chrono_duration<const std::chrono::duration<Rep, Duration>> : std::true_type
-        {
-        };
-
-        template <typename Rep, typename Duration>
-        struct is_chrono_duration<volatile std::chrono::duration<Rep, Duration>> : std::true_type
-        {
-        };
-
-        template <typename Rep, typename Duration>
-        struct is_chrono_duration<const volatile std::chrono::duration<Rep, Duration>> : std::true_type
+        template <typename Rep, typename Period>
+        struct is_chrono_duration<std::chrono::duration<Rep, Period>> : std::true_type
         {
         };
 
@@ -316,7 +321,7 @@ namespace stl
         concept is_duration = is_chrono_duration<T>::value;
     } // namespace detail
 
-    auto add_thread_task(const std::function<void()>& a_fn, const detail::is_duration auto a_wait_for = 0ms) noexcept
+    auto add_thread_task(const std::function<void()>& a_fn, const detail::is_duration auto a_wait_for) noexcept
     {
         std::jthread([=] {
             std::this_thread::sleep_for(a_wait_for);

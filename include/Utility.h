@@ -1,24 +1,24 @@
 #pragma once
 
-#include "Maps.h"
+#include "Map.h"
 
 class Utility : public Singleton<Utility>
 {
-    static auto IsEditorID(const std::string_view identifier) { return !identifier.contains('~'); }
+    static auto IsEditorID(const std::string_view identifier) noexcept { return !identifier.contains('~'); }
 
-    static FormIDAndPluginName GetFormIDAndPluginName(const std::string& identifier)
+    static FormIDAndPluginName GetFormIDAndPluginName(const std::string& identifier) noexcept
     {
         if (const auto tilde_pos{ identifier.find('~') }; tilde_pos != std::string_view::npos) {
-            const auto form_id{ Maps::ToFormID(identifier.substr(0, tilde_pos)) };
+            const auto form_id{ Map::ToFormID(identifier.substr(0, tilde_pos)) };
             const auto plugin_name{ identifier.substr(tilde_pos + 1) };
-            return { form_id, plugin_name };
+            return { .form_id = form_id, .plugin_name = plugin_name };
         }
         logger::error("ERROR: Failed to get FormID and plugin name for {}", identifier);
 
-        return { 0, "" };
+        return { .form_id = 0x0, .plugin_name = "" };
     }
 
-    static RE::TESBoundObject* GetBoundObject(const std::string& identifier)
+    static RE::TESBoundObject* GetBoundObject(const std::string& identifier) noexcept
     {
         if (IsEditorID(identifier)) {
             if (const auto bound_obj{ RE::TESForm::LookupByEditorID<RE::TESBoundObject>(identifier) }) {
@@ -39,56 +39,41 @@ class Utility : public Singleton<Utility>
         return nullptr;
     }
 
-    static RE::TESLevItem* GetLevItem(const std::string& identifier)
-    {
-        if (IsEditorID(identifier)) {
-            if (const auto lev_item{ RE::TESForm::LookupByEditorID<RE::TESLevItem>(identifier) }) {
-                return lev_item;
-            }
-        }
-        else {
-            const auto handler{ RE::TESDataHandler::GetSingleton() };
-            const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
-            if (const auto form{ handler->LookupForm(form_id, plugin_name) }) {
-                if (const auto lev_item{ form->As<RE::TESLevItem>() }) {
-                    return lev_item;
-                }
-            }
-        }
-        logger::warn("WARNING: Failed to find leveled list for {}", identifier);
-
-        return nullptr;
-    }
-
-    static Container GetContainer(const std::string& to_identifier)
+    static auto GetContainerFormID(const std::string& to_identifier) noexcept
     {
         if (IsEditorID(to_identifier)) {
-            if (const auto form{ RE::TESForm::LookupByEditorID(to_identifier) }) {
-                if (const auto cont{ form->As<RE::TESContainer>() }) {
-                    return { cont, form->GetFormID(), form->GetFormType(), form->GetName() };
-                }
-            }
+            return RE::TESForm::LookupByEditorID(to_identifier)->GetFormID();
         }
-        else {
-            const auto handler{ RE::TESDataHandler::GetSingleton() };
-            const auto [form_id, plugin_name]{ GetFormIDAndPluginName(to_identifier) };
-            if (const auto form{ handler->LookupForm(form_id, plugin_name) }) {
-                if (const auto cont{ form->As<RE::TESContainer>() }) {
-                    return { cont, form->GetFormID(), form->GetFormType(), form->GetName() };
-                }
-            }
-        }
-        logger::warn("WARNING: Failed to find container for {}", to_identifier);
+        const auto [form_id, plugin_name]{ GetFormIDAndPluginName(to_identifier) };
+        const auto handler{ RE::TESDataHandler::GetSingleton() };
 
-        return { nullptr, 0, RE::FormType::Container, "" };
+        return handler->LookupFormID(form_id, plugin_name);
+    }
+
+    static auto ResolveLeveledList(RE::TESLevItem* leveled_list, const u32 count) noexcept
+    {
+        RE::BSScrapArray<RE::CALCED_OBJECT> calced_objects;
+        leveled_list->CalculateCurrentFormList(player_level, static_cast<i16>(count), calced_objects, 0, true);
+        ankerl::unordered_dense::map<RE::TESBoundObject*, u32> result;
+        for (const auto& c : calced_objects) {
+            if (const auto bound_obj{ c.form->As<RE::TESBoundObject>() }) {
+                result[bound_obj] = c.count;
+            }
+        }
+        return result;
     }
 
     inline static u16 player_level{};
 
 public:
-    static auto CachePlayerLevel() { player_level = RE::PlayerCharacter::GetSingleton()->GetLevel(); }
+    static auto CachePlayerLevel() noexcept
+    {
+        player_level = RE::PlayerCharacter::GetSingleton()->GetLevel();
+        logger::info("Cached player level: {}", player_level);
+        logger::info("");
+    }
 
-    static auto GetRandomChance()
+    static auto GetRandomChance() noexcept
     {
         static std::random_device                 rd;
         static std::mt19937                       rng(rd());
@@ -97,60 +82,46 @@ public:
         return distr(rng);
     }
 
-    static auto GetChance(const std::string& s)
+    static auto GetChanceFromToken(const std::string& s) noexcept
     {
-        const auto quest_pos{ s.find('?') };
+        const auto pos{ s.find('?') };
 
-        return quest_pos == std::string_view::npos ? 100 : Maps::ToUnsignedInt(s.substr(quest_pos + 1));
+        return pos == std::string_view::npos ? 100 : Map::ToUnsignedInt(s.substr(pos + 1));
     }
 
-    static auto ResolveLeveledList(RE::TESLevItem* list)
+    static auto AddObjectsFromResolvedList(RE::TESObjectREFR* ref, RE::TESLevItem* leveled_list, const u32 count) noexcept
     {
-        RE::BSScrapArray<RE::CALCED_OBJECT> calced_objects{};
-        list->CalculateCurrentFormList(player_level, 1, calced_objects, 0, true);
-
-        std::vector<std::pair<RE::TESBoundObject*, int>> obj_and_counts{};
-        for (const auto& [form, count, pad0A, pad0C, containerItem] : calced_objects) {
-            if (const auto bound_obj{ form->As<RE::TESBoundObject>() }) {
-                obj_and_counts.emplace_back(bound_obj, count);
-            }
+        const auto ref_id{ ref->GetFormID() };
+        logger::info("Adding resolved leveled list to ref {} ({:#x})", ref->GetName(), ref_id);
+        for (const auto& [bound_obj, c] : ResolveLeveledList(leveled_list, count)) {
+            ref->AddObjectToContainer(bound_obj, nullptr, c, nullptr);
+            logger::info("\t+ {} {} ({:#x})", c, bound_obj->GetName(), bound_obj->GetFormID());
+            Map::leveled_reset_map[ref_id][bound_obj] = c;
         }
+    }
 
-        return obj_and_counts;
+    static auto RemoveResolvedList(RE::TESObjectREFR* ref, const ankerl::unordered_dense::map<RE::TESBoundObject*, u32>& resolved_list) noexcept
+    {
+        const auto ref_id{ ref->GetFormID() };
+        logger::info("\tRemoving resolved leveled list from ref {} ({:#x})", ref->GetName(), ref_id);
+        for (const auto& [bound_obj, count] : resolved_list) {
+            ref->RemoveItem(bound_obj, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+            logger::info("\t\t- {} {} ({:#x})", count, bound_obj->GetName(), bound_obj->GetFormID());
+        }
+        Map::leveled_reset_map.erase(ref_id);
     }
 
     static DistrObject BuildDistrObject(const DistrToken& distr_token) noexcept
     {
-        if (const auto leveled_list{ GetLevItem(distr_token.identifier) }) {
-            if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container) {
-                if (distr_token.type == DistrType::Replace || distr_token.type == DistrType::ReplaceAll) {
-                    if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) }) {
-                        return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, replace_with_list, distr_token.count, distr_token.rhs_count, cont };
-                    }
-                    if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) }) {
-                        return { distr_token.type, nullptr, leveled_list, distr_token.filename, replace_with_obj, nullptr, distr_token.count, distr_token.rhs_count, cont };
-                    }
-                }
-                return { distr_token.type, nullptr, leveled_list, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont, std::nullopt };
-            }
-        }
-        else if (const auto bound_obj{ GetBoundObject(distr_token.identifier) }) {
-            if (const auto cont{ GetContainer(distr_token.to_identifier) }; cont.container) {
-                if (distr_token.type == DistrType::Replace || distr_token.type == DistrType::ReplaceAll) {
-                    if (const auto replace_with_list{ GetLevItem(distr_token.rhs.value()) }) {
-                        return { distr_token.type,      bound_obj, nullptr,           distr_token.filename, nullptr, replace_with_list, distr_token.count,
-                                 distr_token.rhs_count, cont,      distr_token.chance };
-                    }
-                    if (const auto replace_with_obj{ GetBoundObject(distr_token.rhs.value()) }) {
-                        return { distr_token.type,      bound_obj, nullptr,           distr_token.filename, replace_with_obj, nullptr, distr_token.count,
-                                 distr_token.rhs_count, cont,      distr_token.chance };
-                    }
-                }
-                return { distr_token.type, bound_obj, nullptr, distr_token.filename, nullptr, nullptr, distr_token.count, std::nullopt, cont, distr_token.chance };
-            }
+        if (const auto bound_obj{ GetBoundObject(distr_token.identifier) }) {
+            return { .type              = distr_token.type,
+                     .bound_object      = bound_obj,
+                     .count             = distr_token.count,
+                     .container_form_id = GetContainerFormID(distr_token.to_identifier),
+                     .chance            = distr_token.chance };
         }
         logger::error("ERROR: Failed to build DistrObject for {}", distr_token);
 
-        return { DistrType::Error, nullptr, nullptr, distr_token.filename, nullptr, nullptr, std::nullopt, std::nullopt, std::nullopt };
+        return { .type = DistrType::Error, .bound_object = nullptr, .count = 0, .container_form_id = 0x0, .chance = 0 };
     }
 };

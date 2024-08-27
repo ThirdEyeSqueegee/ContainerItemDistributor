@@ -3,7 +3,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 
 project(
   ContainerItemDistributor
-  VERSION 1.2.1
+  VERSION 2.0.0
   LANGUAGES CXX
 )
 set(CMAKE_CXX_STANDARD 23)
@@ -53,13 +53,13 @@ add_commonlibsse_plugin(
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 find_path(SIMPLEINI_INCLUDE_DIRS "SimpleIni.h")
-find_path(PHMAP_INCLUDE_DIRS "parallel_hashmap/phmap.h")
+
+find_package(unordered_dense CONFIG REQUIRED)
 
 target_include_directories(
   ${PROJECT_NAME}
   PRIVATE
   ${SIMPLEINI_INCLUDE_DIRS}
-  ${PHMAP_INCLUDE_DIRS}
   PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -69,6 +69,12 @@ target_precompile_headers(
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include/PCH.h
   ${SIMPLEINI_INCLUDE_DIRS}/SimpleIni.h
+)
+
+target_link_libraries(
+  ${PROJECT_NAME}
+  PRIVATE
+  unordered_dense::unordered_dense
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL Debug)

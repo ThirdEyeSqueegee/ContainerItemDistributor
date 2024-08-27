@@ -1,18 +1,26 @@
 #pragma once
 
-#include "Distributor.h"
-
 namespace Hooks
 {
     void Install() noexcept;
 
-    class InitItemImpl : public Singleton<InitItemImpl>
+    class Load3D : public Singleton<Load3D>
     {
     public:
-        static void Thunk(RE::TESObjectREFR* a_ref) noexcept;
+        static RE::NiAVObject* Thunk(RE::TESObjectREFR* a_this, bool a_backgroundLoading) noexcept;
 
         inline static REL::Relocation<decltype(&Thunk)> func;
 
-        static constexpr std::size_t idx{ 19 }; // 0x13
+        static constexpr std::size_t idx{ 106 }; // 0x6a
+    };
+
+    class ResetInventory : public Singleton<ResetInventory>
+    {
+    public:
+        static void Thunk(RE::TESObjectREFR* a_this, bool a_leveledOnly) noexcept;
+
+        inline static REL::Relocation<decltype(&Thunk)> func;
+
+        static constexpr std::size_t idx{ 138 }; // 0x8a
     };
 } // namespace Hooks

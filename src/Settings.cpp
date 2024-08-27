@@ -9,7 +9,6 @@ void Settings::LoadSettings() noexcept
     CSimpleIniA ini;
 
     ini.SetUnicode();
-    ini.SetMultiKey();
     ini.LoadFile(R"(.\Data\SKSE\Plugins\ContainerItemDistributor.ini)");
 
     debug_logging = ini.GetBoolValue("Log", "Debug");
@@ -21,6 +20,8 @@ void Settings::LoadSettings() noexcept
 
     logger::info("Loaded settings");
     logger::info("");
+
+    ini.Reset();
 
     Parser::ParseINIs(ini);
 }
