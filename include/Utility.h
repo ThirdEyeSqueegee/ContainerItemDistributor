@@ -13,7 +13,7 @@ class Utility : public Singleton<Utility>
             const auto plugin_name{ identifier.substr(tilde_pos + 1) };
             return { .form_id = form_id, .plugin_name = plugin_name };
         }
-        logger::error("ERROR: Failed to get FormID and plugin name for {}", identifier);
+        logger::error("\t\tERROR: Failed to get FormID and plugin name for {}", identifier);
 
         return { .form_id = 0x0, .plugin_name = "" };
     }
@@ -34,7 +34,7 @@ class Utility : public Singleton<Utility>
                 }
             }
         }
-        logger::warn("WARNING: Failed to find bound object for {}", identifier);
+        logger::warn("\t\tWARNING: Failed to find bound object for {}", identifier);
 
         return nullptr;
     }
@@ -42,12 +42,18 @@ class Utility : public Singleton<Utility>
     static auto GetContainerFormID(const std::string& to_identifier) noexcept
     {
         if (IsEditorID(to_identifier)) {
-            return RE::TESForm::LookupByEditorID(to_identifier)->GetFormID();
+            if (const auto form{ RE::TESForm::LookupByEditorID(to_identifier) }) {
+                return form->GetFormID();
+            }
         }
-        const auto [form_id, plugin_name]{ GetFormIDAndPluginName(to_identifier) };
-        const auto handler{ RE::TESDataHandler::GetSingleton() };
+        else {
+            const auto [form_id, plugin_name]{ GetFormIDAndPluginName(to_identifier) };
+            const auto handler{ RE::TESDataHandler::GetSingleton() };
 
-        return handler->LookupFormID(form_id, plugin_name);
+            return handler->LookupFormID(form_id, plugin_name);
+        }
+
+        return 0x0U;
     }
 
     static auto ResolveLeveledList(RE::TESLevItem* leveled_list, const u32 count) noexcept
@@ -120,7 +126,7 @@ public:
                      .container_form_id = GetContainerFormID(distr_token.to_identifier),
                      .chance            = distr_token.chance };
         }
-        logger::error("ERROR: Failed to build DistrObject for {}", distr_token);
+        logger::error("\t\tERROR: Failed to build DistrObject for {}", distr_token);
 
         return { .type = DistrType::Error, .bound_object = nullptr, .count = 0, .container_form_id = 0x0, .chance = 0 };
     }
