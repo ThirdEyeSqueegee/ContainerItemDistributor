@@ -58,27 +58,26 @@ class Utility : public Singleton<Utility>
 
     static auto ResolveLeveledList(RE::TESLevItem* leveled_list, const u32 count) noexcept
     {
-        RE::BSScrapArray<RE::CALCED_OBJECT> calced_objects;
-        leveled_list->CalculateCurrentFormList(player_level, static_cast<i16>(count), calced_objects, 0, true);
+        RE::BSScrapArray<RE::CALCED_OBJECT>                    calced_objects;
         ankerl::unordered_dense::map<RE::TESBoundObject*, u32> result;
+
+        if (const auto player{ RE::PlayerCharacter::GetSingleton() }) {
+            leveled_list->CalculateCurrentFormList(player->GetLevel(), static_cast<i16>(count), calced_objects, 0, true);
+        }
+        else {
+            logger::error("\t\tERROR: Failed to find player level for resolving leveled list");
+        }
+
         for (const auto& c : calced_objects) {
             if (const auto bound_obj{ c.form->As<RE::TESBoundObject>() }) {
                 result[bound_obj] = c.count;
             }
         }
+
         return result;
     }
 
-    inline static u16 player_level{};
-
 public:
-    static auto CachePlayerLevel() noexcept
-    {
-        player_level = RE::PlayerCharacter::GetSingleton()->GetLevel();
-        logger::info("Cached player level: {}", player_level);
-        logger::info("");
-    }
-
     static auto GetRandomChance() noexcept
     {
         static std::random_device                 rd;

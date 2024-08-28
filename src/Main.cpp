@@ -1,8 +1,8 @@
+#include "Distributor.h"
 #include "Events.h"
 #include "Hooks.h"
 #include "Logging.h"
 #include "Settings.h"
-#include "Utility.h"
 
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
@@ -16,7 +16,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
         Events::LoadGameEventHandler::Register();
     }
     if (message->type == SKSE::MessagingInterface::kPostLoadGame) {
-        Utility::CachePlayerLevel();
+        Distributor::MerchantDistribute();
     }
 }
 
