@@ -15,17 +15,17 @@ struct DistrToken
     DistrType   type{};
     std::string to_identifier{};
     std::string identifier{};
-    u32         count{};
-    u32         chance{};
+    u16         count{};
+    u16         chance{};
 };
 
 struct DistrObject
 {
     DistrType           type{};
     RE::TESBoundObject* bound_object{};
-    u32                 count{};
+    u16                 count{};
     RE::FormID          container_form_id{};
-    u32                 chance{};
+    u16                 chance{};
 };
 
 struct FormIDAndPluginName
@@ -54,13 +54,11 @@ class Map : public Singleton<Map>
 public:
     static auto ToFormID(const std::string& s) noexcept { return static_cast<RE::FormID>(std::stoul(s, nullptr, 16)); }
 
-    static auto ToUnsignedInt(const std::string& s) noexcept { return static_cast<u32>(std::stoul(s)); }
+    static auto ToUnsignedInt(const std::string& s) noexcept { return static_cast<u16>(std::stoul(s)); }
 
     inline static map<RE::FormID, DistrVecs> distr_map;
 
     inline static map<RE::FormID, std::pair<RE::TESLevItem*, u32>> leveled_distr_map;
-
-    inline static map<RE::FormID, map<RE::TESBoundObject*, u32>> leveled_reset_map;
 
     inline static set<RE::FormID> processed_containers;
 

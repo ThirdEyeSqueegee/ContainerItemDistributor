@@ -25,29 +25,42 @@ DistrToken Parser::Tokenize(const std::string& s, const std::string& to_containe
     using enum DistrType;
     switch (distr_type) {
     case Add: {
-        const auto bar_pos{ s.find('|') };
+        const auto bar_pos{ s.rfind('|') };
+        const auto quest_pos{ s.rfind('?') };
+        const u16  chance{ quest_pos == std::string_view::npos ? 100U : Map::ToUnsignedInt(s.substr(quest_pos + 1)) };
 
-        DistrToken distr_token{ .type          = Add,
-                                .to_identifier = to_container,
-                                .identifier    = s.substr(0, bar_pos),
-                                .count         = Map::ToUnsignedInt(s.substr(bar_pos + 1)),
-                                .chance        = Utility::GetChanceFromToken(s) };
+        DistrToken distr_token{
+            .type = Add, .to_identifier = to_container, .identifier = s.substr(0, bar_pos), .count = Map::ToUnsignedInt(s.substr(bar_pos + 1)), .chance = chance
+        };
 
         return distr_token;
     }
     case Remove: {
         const auto bar_pos{ s.find('|') };
+        const auto quest_pos{ s.rfind('?') };
+        const u16  chance{ quest_pos == std::string_view::npos ? 100U : Map::ToUnsignedInt(s.substr(quest_pos + 1)) };
 
-        DistrToken distr_token{ .type          = Remove,
-                                .to_identifier = to_container,
-                                .identifier    = s.substr(1, bar_pos - 1),
-                                .count         = Map::ToUnsignedInt(s.substr(bar_pos + 1)),
-                                .chance        = Utility::GetChanceFromToken(s) };
+        DistrToken distr_token{
+            .type = Remove, .to_identifier = to_container, .identifier = s.substr(1, bar_pos - 1), .count = Map::ToUnsignedInt(s.substr(bar_pos + 1)), .chance = chance
+        };
 
         return distr_token;
     }
     case RemoveAll: {
-        DistrToken distr_token{ .type = RemoveAll, .to_identifier = to_container, .identifier = s.substr(1), .count = 0, .chance = Utility::GetChanceFromToken(s) };
+        const auto quest_pos{ s.rfind('?') };
+
+        u16         chance{};
+        std::string identifier{};
+        if (quest_pos == std::string_view::npos) {
+            identifier = s.substr(1);
+            chance     = 100U;
+        }
+        else {
+            identifier = s.substr(1, quest_pos - 1);
+            chance     = Map::ToUnsignedInt(s.substr(quest_pos + 1));
+        }
+
+        DistrToken distr_token{ .type = RemoveAll, .to_identifier = to_container, .identifier = identifier, .count = 0, .chance = chance };
 
         return distr_token;
     }

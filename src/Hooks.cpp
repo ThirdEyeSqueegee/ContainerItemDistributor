@@ -18,12 +18,12 @@ namespace Hooks
     RE::NiAVObject* Load3D::Thunk(RE::TESObjectREFR* a_this, bool a_backgroundLoading) noexcept
     {
         if (a_this && a_this->HasContainer()) {
-            Distributor::Distribute(a_this);
-            if (const auto cont{ a_this->As<RE::TESObjectCONT>() }) {
+            if (const auto cont{ a_this->GetBaseObject()->As<RE::TESObjectCONT>() }) {
                 if (cont->data.flags & RE::CONT_DATA::Flag::kRespawn) {
                     Map::respawn_containers.insert(a_this->GetFormID());
                 }
             }
+            Distributor::Distribute(a_this);
         }
 
         return func(a_this, a_backgroundLoading);
@@ -34,7 +34,8 @@ namespace Hooks
         func(a_this, a_leveledOnly);
 
         if (a_this && Map::respawn_containers.contains(a_this->GetFormID())) {
-            Distributor::Distribute(a_this, true);
+            Map::processed_containers.erase(a_this->GetFormID());
+            Distributor::Distribute(a_this);
         }
     }
 } // namespace Hooks
