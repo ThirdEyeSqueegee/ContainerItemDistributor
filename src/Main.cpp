@@ -15,9 +15,6 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
         Hooks::Install();
         Events::LoadGameEventHandler::Register();
     }
-    if (message->type == SKSE::MessagingInterface::kPostLoadGame) {
-        Distributor::MerchantDistribute();
-    }
 }
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)

@@ -56,8 +56,12 @@ class Utility : public Singleton<Utility>
         return 0x0U;
     }
 
-    static auto ResolveLeveledList(RE::TESLevItem* leveled_list, const u32 count) noexcept
+    static ankerl::unordered_dense::map<RE::TESBoundObject*, u32> ResolveLeveledList(RE::TESLevItem* leveled_list, const u32 count, const bool is_nested = false) noexcept
     {
+        if (is_nested) {
+            logger::debug("\t\tResolving nested leveled list {} ({:#x})", GetFormEditorID(leveled_list), leveled_list->GetFormID());
+        }
+
         RE::BSScrapArray<RE::CALCED_OBJECT>                    calced_objects;
         ankerl::unordered_dense::map<RE::TESBoundObject*, u32> result;
 
@@ -65,10 +69,14 @@ class Utility : public Singleton<Utility>
             leveled_list->CalculateCurrentFormList(player->GetLevel(), static_cast<i16>(count), calced_objects, 0, true);
         }
         else {
-            logger::error("\t\tERROR: Failed to find player level for resolving leveled list");
+            logger::error("\t\tERROR: Failed to find player level for resolving leveled list {} ({:#x})", GetFormEditorID(leveled_list), leveled_list->GetFormID());
         }
 
         for (const auto& c : calced_objects) {
+            if (const auto lev_item{ c.form->As<RE::TESLevItem>() }) {
+                const auto nested_result{ ResolveLeveledList(lev_item, c.count, true) };
+                result.insert(nested_result.begin(), nested_result.end());
+            }
             if (const auto bound_obj{ c.form->As<RE::TESBoundObject>() }) {
                 result[bound_obj] = c.count;
             }
@@ -97,23 +105,25 @@ public:
     static auto AddObjectsFromResolvedList(RE::TESObjectREFR* ref, RE::TESLevItem* leveled_list, const u32 count) noexcept
     {
         const auto ref_id{ ref->GetFormID() };
-        logger::info("Adding resolved leveled list to ref {} ({:#x})", ref->GetName(), ref_id);
+        logger::info("Adding resolved leveled list {} ({:#x}) to ref {} ({:#x})", GetFormEditorID(leveled_list), leveled_list->GetFormID(), GetFormEditorID(ref), ref_id);
         for (const auto& [bound_obj, c] : ResolveLeveledList(leveled_list, count)) {
             ref->AddObjectToContainer(bound_obj, nullptr, c, nullptr);
             logger::info("\t+ {} {} ({:#x})", c, bound_obj->GetName(), bound_obj->GetFormID());
             Map::leveled_reset_map[ref_id][bound_obj] = c;
         }
+        logger::info("");
     }
 
     static auto RemoveResolvedList(RE::TESObjectREFR* ref, const ankerl::unordered_dense::map<RE::TESBoundObject*, u32>& resolved_list) noexcept
     {
         const auto ref_id{ ref->GetFormID() };
-        logger::info("\tRemoving resolved leveled list from ref {} ({:#x})", ref->GetName(), ref_id);
+        logger::info("\tRemoving previously resolved leveled list from ref {} ({:#x})", GetFormEditorID(ref), ref_id);
         for (const auto& [bound_obj, count] : resolved_list) {
             ref->RemoveItem(bound_obj, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
             logger::info("\t\t- {} {} ({:#x})", count, bound_obj->GetName(), bound_obj->GetFormID());
         }
         Map::leveled_reset_map.erase(ref_id);
+        logger::info("");
     }
 
     static DistrObject BuildDistrObject(const DistrToken& distr_token) noexcept

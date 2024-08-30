@@ -17,7 +17,7 @@ namespace Hooks
 
     RE::NiAVObject* Load3D::Thunk(RE::TESObjectREFR* a_this, bool a_backgroundLoading) noexcept
     {
-        if (a_this && a_this->HasContainer() && !Map::processed_refs.contains(a_this->GetFormID())) {
+        if (a_this && a_this->HasContainer()) {
             Distributor::Distribute(a_this);
             if (const auto cont{ a_this->As<RE::TESObjectCONT>() }) {
                 if (cont->data.flags & RE::CONT_DATA::Flag::kRespawn) {
