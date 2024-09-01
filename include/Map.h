@@ -16,15 +16,19 @@ struct DistrToken
     std::string to_identifier{};
     std::string identifier{};
     u16         count{};
+    std::string location{};
+    std::string location_keyword{};
     u16         chance{};
 };
 
 struct DistrObject
 {
     DistrType           type{};
+    RE::FormID          container_form_id{};
     RE::TESBoundObject* bound_object{};
     u16                 count{};
-    RE::FormID          container_form_id{};
+    RE::BGSLocation*    location{};
+    RE::BGSKeyword*     location_keyword{};
     u16                 chance{};
 };
 
@@ -52,51 +56,54 @@ class Map : public Singleton<Map>
     using set = ankerl::unordered_dense::set<K>;
 
 public:
-    static auto ToFormID(const std::string& s) noexcept { return static_cast<RE::FormID>(std::stoul(s, nullptr, 16)); }
+    [[nodiscard]] static auto ToFormID(const std::string& s) noexcept { return static_cast<RE::FormID>(std::stoul(s, nullptr, 16)); }
 
-    static auto ToUnsignedInt(const std::string& s) noexcept { return static_cast<u16>(std::stoul(s)); }
+    [[nodiscard]] static auto ToUnsignedInt(const std::string& s) noexcept { return static_cast<u16>(std::stoul(s)); }
 
-    inline static map<RE::FormID, DistrVecs> distr_map;
+    inline static map<RE::FormID, DistrVecs> distr_map{};
 
-    inline static map<RE::FormID, std::pair<RE::TESLevItem*, u32>> leveled_distr_map;
+    inline static set<RE::FormID> processed_containers{};
 
-    inline static set<RE::FormID> processed_containers;
-
-    inline static set<RE::FormID> respawn_containers;
+    inline static set<RE::FormID> respawn_containers{};
 };
 
-inline std::string GetFormEditorID(const RE::TESForm* form) noexcept
+[[nodiscard]] inline std::string GetFormEditorID(const RE::TESForm* form) noexcept
 {
-    using TGetFormEditorID = const char* (*)(std::uint32_t);
+    if (!form) {
+        return "";
+    }
 
+    using TGetFormEditorID = const char* (*)(u32);
+
+    using enum RE::FormType;
     switch (form->GetFormType()) {
-    case RE::FormType::Keyword:
-    case RE::FormType::LocationRefType:
-    case RE::FormType::Action:
-    case RE::FormType::MenuIcon:
-    case RE::FormType::Global:
-    case RE::FormType::HeadPart:
-    case RE::FormType::Race:
-    case RE::FormType::Sound:
-    case RE::FormType::Script:
-    case RE::FormType::Navigation:
-    case RE::FormType::Cell:
-    case RE::FormType::WorldSpace:
-    case RE::FormType::Land:
-    case RE::FormType::NavMesh:
-    case RE::FormType::Dialogue:
-    case RE::FormType::Quest:
-    case RE::FormType::Idle:
-    case RE::FormType::AnimatedObject:
-    case RE::FormType::ImageAdapter:
-    case RE::FormType::VoiceType:
-    case RE::FormType::Ragdoll:
-    case RE::FormType::DefaultObject:
-    case RE::FormType::MusicType:
-    case RE::FormType::StoryManagerBranchNode:
-    case RE::FormType::StoryManagerQuestNode:
-    case RE::FormType::StoryManagerEventNode:
-    case RE::FormType::SoundRecord:
+    case Keyword:
+    case LocationRefType:
+    case Action:
+    case MenuIcon:
+    case Global:
+    case HeadPart:
+    case Race:
+    case Sound:
+    case Script:
+    case Navigation:
+    case Cell:
+    case WorldSpace:
+    case Land:
+    case NavMesh:
+    case Dialogue:
+    case Quest:
+    case Idle:
+    case AnimatedObject:
+    case ImageAdapter:
+    case VoiceType:
+    case Ragdoll:
+    case DefaultObject:
+    case MusicType:
+    case StoryManagerBranchNode:
+    case StoryManagerQuestNode:
+    case StoryManagerEventNode:
+    case SoundRecord:
         return form->GetFormEditorID();
     default: {
         static auto po3_tweaks{ REX::W32::GetModuleHandleW(L"po3_Tweaks") };
@@ -125,13 +132,15 @@ inline auto format_as(const DistrType& type) noexcept
 
 inline auto format_as(const DistrToken& token) noexcept
 {
-    const auto& [type, to_identifier, identifier, count, chance]{ token };
-    return fmt::format("[Type: {} / To: {} / Identifier: {} / Count: {} / Chance: {}]", type, to_identifier, identifier, count, chance);
+    const auto& [type, to_identifier, identifier, count, location, location_keyword, chance]{ token };
+    return fmt::format("[Type: {} / To: {} / Identifier: {} / Count: {} / Location: {} / Location keyword: {} / Chance: {}]", type, to_identifier, identifier, count, location,
+                       location_keyword, chance);
 }
 
 inline auto format_as(const DistrObject& obj) noexcept
 {
-    const auto& [type, bound_object, count, container_form_id, chance]{ obj };
-    return fmt::format("[Type: {} / Bound object: {} ({:#x}) / Count: {} / Container: {:#x} / Chance: {}]", type, GetFormEditorID(bound_object),
-                       bound_object ? bound_object->GetFormID() : 0, count, container_form_id, chance);
+    const auto& [type, container_form_id, bound_object, count, location, location_keyword, chance]{ obj };
+    return fmt::format("[Type: {} / Container: {:#x} / Bound object: {} ({:#x}) / Count: {} / Location: {} ({:#x}) / Location keyword: {} ({:#x}) / Chance: {}]", type,
+                       container_form_id, GetFormEditorID(bound_object), bound_object ? bound_object->GetFormID() : 0x0U, count, GetFormEditorID(location),
+                       location ? location->GetFormID() : 0x0U, GetFormEditorID(location_keyword), location_keyword ? location_keyword->GetFormID() : 0x0U, chance);
 }

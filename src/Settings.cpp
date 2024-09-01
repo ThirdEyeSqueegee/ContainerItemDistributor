@@ -1,7 +1,5 @@
 #include "Settings.h"
 
-#include "Parser.h"
-
 void Settings::LoadSettings() noexcept
 {
     logger::info("Loading settings");
@@ -20,8 +18,4 @@ void Settings::LoadSettings() noexcept
 
     logger::info("Loaded settings");
     logger::info("");
-
-    ini.Reset();
-
-    Parser::ParseINIs(ini);
 }

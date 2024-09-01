@@ -4,9 +4,9 @@
 
 class Utility : public Singleton<Utility>
 {
-    static auto IsEditorID(const std::string_view identifier) noexcept { return !identifier.contains('~'); }
+    [[nodiscard]] static auto IsEditorID(const std::string_view identifier) noexcept { return !identifier.contains('~'); }
 
-    static FormIDAndPluginName GetFormIDAndPluginName(const std::string& identifier) noexcept
+    [[nodiscard]] static FormIDAndPluginName GetFormIDAndPluginName(const std::string& identifier) noexcept
     {
         if (const auto tilde_pos{ identifier.find('~') }; tilde_pos != std::string_view::npos) {
             const auto form_id{ Map::ToFormID(identifier.substr(0, tilde_pos)) };
@@ -18,7 +18,7 @@ class Utility : public Singleton<Utility>
         return { .form_id = 0x0, .plugin_name = "" };
     }
 
-    static RE::TESBoundObject* GetBoundObject(const std::string& identifier) noexcept
+    [[nodiscard]] static RE::TESBoundObject* GetBoundObject(const std::string& identifier) noexcept
     {
         if (IsEditorID(identifier)) {
             if (const auto bound_obj{ RE::TESForm::LookupByEditorID<RE::TESBoundObject>(identifier) }) {
@@ -39,7 +39,7 @@ class Utility : public Singleton<Utility>
         return nullptr;
     }
 
-    static auto GetContainerFormID(const std::string& to_identifier) noexcept
+    [[nodiscard]] static RE::FormID GetContainerFormID(const std::string& to_identifier) noexcept
     {
         if (IsEditorID(to_identifier)) {
             if (const auto form{ RE::TESForm::LookupByEditorID(to_identifier) }) {
@@ -56,7 +56,57 @@ class Utility : public Singleton<Utility>
         return 0x0U;
     }
 
-    static ankerl::unordered_dense::map<RE::TESBoundObject*, u32> ResolveLeveledList(RE::TESLevItem* leveled_list, const u32 count) noexcept
+    [[nodiscard]] static RE::BGSLocation* GetLocation(const std::string& identifier) noexcept
+    {
+        if (identifier.empty()) {
+            return nullptr;
+        }
+
+        if (IsEditorID(identifier)) {
+            if (const auto location{ RE::TESForm::LookupByEditorID<RE::BGSLocation>(identifier) }) {
+                return location;
+            }
+        }
+        else {
+            const auto handler{ RE::TESDataHandler::GetSingleton() };
+            const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
+            if (const auto form{ handler->LookupForm(form_id, plugin_name) }) {
+                if (const auto location{ form->As<RE::BGSLocation>() }) {
+                    return location;
+                }
+            }
+        }
+        logger::warn("\t\tWARNING: Failed to find location for {}", identifier);
+
+        return nullptr;
+    }
+
+    [[nodiscard]] static RE::BGSKeyword* GetLocationKeyword(const std::string& identifier) noexcept
+    {
+        if (identifier.empty()) {
+            return nullptr;
+        }
+
+        if (IsEditorID(identifier)) {
+            if (const auto location_keyword{ RE::TESForm::LookupByEditorID<RE::BGSKeyword>(identifier) }) {
+                return location_keyword;
+            }
+        }
+        else {
+            const auto handler{ RE::TESDataHandler::GetSingleton() };
+            const auto [form_id, plugin_name]{ GetFormIDAndPluginName(identifier) };
+            if (const auto form{ handler->LookupForm(form_id, plugin_name) }) {
+                if (const auto location_keyword{ form->As<RE::BGSKeyword>() }) {
+                    return location_keyword;
+                }
+            }
+        }
+        logger::warn("\t\tWARNING: Failed to find location keyword for {}", identifier);
+
+        return nullptr;
+    }
+
+    [[nodiscard]] static auto ResolveLeveledList(RE::TESLevItem* leveled_list, const u32 count) noexcept
     {
         RE::BSScrapArray<RE::CALCED_OBJECT>                    calced_objects;
         ankerl::unordered_dense::map<RE::TESBoundObject*, u32> result;
@@ -78,7 +128,7 @@ class Utility : public Singleton<Utility>
     }
 
 public:
-    static auto GetRandomChance() noexcept
+    [[nodiscard]] static auto GetRandomChance() noexcept
     {
         static std::random_device                 rd;
         static std::mt19937                       rng(rd());
@@ -97,21 +147,50 @@ public:
             logger::info("\t+ {} {} ({:#x})", c, bound_obj->GetName(), bound_obj->GetFormID());
         }
 
-        Map::leveled_distr_map[ref_id] = std::make_pair(leveled_list, count);
         logger::info("");
     }
 
-    static DistrObject BuildDistrObject(const DistrToken& distr_token) noexcept
+    [[nodiscard]] static DistrObject BuildDistrObject(const DistrToken& distr_token) noexcept
     {
         if (const auto bound_obj{ GetBoundObject(distr_token.identifier) }) {
             return { .type              = distr_token.type,
+                     .container_form_id = GetContainerFormID(distr_token.to_identifier),
                      .bound_object      = bound_obj,
                      .count             = distr_token.count,
-                     .container_form_id = GetContainerFormID(distr_token.to_identifier),
+                     .location          = GetLocation(distr_token.location),
+                     .location_keyword  = GetLocationKeyword(distr_token.location_keyword),
                      .chance            = distr_token.chance };
         }
         logger::error("\t\tERROR: Failed to build DistrObject for {}", distr_token);
 
-        return { .type = DistrType::Error, .bound_object = nullptr, .count = 0, .container_form_id = 0x0, .chance = 0 };
+        return { .type = DistrType::Error, .container_form_id = 0x0U, .bound_object = nullptr, .count = 0U, .location = nullptr, .location_keyword = nullptr, .chance = 0U };
+    }
+
+    [[nodiscard]] static auto ShouldSkip(RE::TESObjectREFR* ref, std::string_view ref_edid, RE::FormID ref_form_id, RE::BGSLocation* location,
+                                         RE::BGSKeyword* location_keyword) noexcept
+    {
+        if (const auto ref_location{ ref->GetCurrentLocation() }) {
+            if (location) {
+                if (ref_location->GetFormID() == location->GetFormID()) {
+                    logger::debug("! Skipping {} ({:#x}), location {} does not match {} ({:#x})", ref_edid, ref_form_id, GetFormEditorID(ref->GetCurrentLocation()),
+                                  GetFormEditorID(location), location->GetFormID());
+                    logger::debug("");
+                    return true;
+                }
+            }
+            if (location_keyword) {
+                if (!ref_location->HasKeyword(location_keyword)) {
+                    logger::debug("! Skipping {} ({:#x}), location {} does not have keyword {} ({:#x})", ref_edid, ref_form_id, GetFormEditorID(ref->GetCurrentLocation()),
+                                  GetFormEditorID(location_keyword), location_keyword->GetFormID());
+                    logger::debug("");
+                    return true;
+                }
+            }
+        }
+        else {
+            logger::error("ERROR: Failed to get current location for {} ({:#x})", GetFormEditorID(ref), ref->GetFormID());
+        }
+
+        return false;
     }
 };

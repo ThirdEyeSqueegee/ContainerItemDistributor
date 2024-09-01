@@ -1,7 +1,7 @@
-#include "Distributor.h"
 #include "Events.h"
 #include "Hooks.h"
 #include "Logging.h"
+#include "Parser.h"
 #include "Settings.h"
 
 void Listener(SKSE::MessagingInterface::Message* message) noexcept
@@ -12,6 +12,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
             stl::report_and_fail("ERROR [ContainerItemDistributor.dll]: powerofthree's Tweaks not found");
         }
         Settings::LoadSettings();
+        Parser::ParseINIs();
         Hooks::Install();
         Events::LoadGameEventHandler::Register();
     }

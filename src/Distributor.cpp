@@ -29,7 +29,10 @@ void Distributor::Distribute(RE::TESObjectREFR* a_ref) noexcept
     Map::processed_containers.insert(form_id);
 
     for (const auto& distr_obj : to_modify->to_add) {
-        if (const auto& [type, bound_object, count, container, chance]{ distr_obj }; Utility::GetRandomChance() <= chance) {
+        if (const auto& [type, container, bound_object, count, location, location_keyword, chance]{ distr_obj }; Utility::GetRandomChance() <= chance) {
+            if (Utility::ShouldSkip(a_ref, edid, form_id, location, location_keyword)) {
+                continue;
+            }
             if (const auto lev_item{ bound_object->As<RE::TESLevItem>() }) {
                 Utility::AddObjectsFromResolvedList(a_ref, lev_item, count);
             }
@@ -42,8 +45,8 @@ void Distributor::Distribute(RE::TESObjectREFR* a_ref) noexcept
     }
 
     for (const auto& distr_obj : to_modify->to_remove) {
-        if (const auto& [type, bound_object, count, container, chance]{ distr_obj }; Utility::GetRandomChance() <= chance) {
-            if (bound_object->As<RE::TESLevItem>()) {
+        if (const auto& [type, container, bound_object, count, location, location_keyword, chance]{ distr_obj }; Utility::GetRandomChance() <= chance) {
+            if (bound_object->As<RE::TESLevItem>() || Utility::ShouldSkip(a_ref, edid, form_id, location, location_keyword)) {
                 continue;
             }
             a_ref->RemoveItem(bound_object, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
@@ -53,8 +56,8 @@ void Distributor::Distribute(RE::TESObjectREFR* a_ref) noexcept
     }
 
     for (const auto& distr_obj : to_modify->to_remove_all) {
-        if (const auto& [type, bound_object, count, container, chance]{ distr_obj }; Utility::GetRandomChance() <= chance) {
-            if (bound_object->As<RE::TESLevItem>()) {
+        if (const auto& [type, container, bound_object, count, location, location_keyword, chance]{ distr_obj }; Utility::GetRandomChance() <= chance) {
+            if (bound_object->As<RE::TESLevItem>() || Utility::ShouldSkip(a_ref, edid, form_id, location, location_keyword)) {
                 continue;
             }
             const auto inv_map{ a_ref->GetInventoryCounts() };

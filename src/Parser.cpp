@@ -7,10 +7,10 @@ DistrType Parser::ClassifyString(const std::string_view s) noexcept
     const auto has_leading_minus{ s.starts_with('-') };
     const auto bar_count{ std::ranges::count(s, '|') };
 
-    if (!has_leading_minus && bar_count == 1) {
+    if (!has_leading_minus && bar_count > 0) {
         return DistrType::Add;
     }
-    if (has_leading_minus && bar_count == 1) {
+    if (has_leading_minus && bar_count > 0) {
         return DistrType::Remove;
     }
     if (has_leading_minus && bar_count == 0) {
@@ -20,62 +20,65 @@ DistrType Parser::ClassifyString(const std::string_view s) noexcept
     return DistrType::Error;
 }
 
-DistrToken Parser::Tokenize(const std::string& s, const std::string& to_container, const DistrType distr_type) noexcept
+DistrToken Parser::Tokenize(std::string s, const std::string& to_container, const DistrType distr_type) noexcept
 {
+    auto max_split_size{ 4 };
+    auto min_split_size{ 2 };
+
     using enum DistrType;
     switch (distr_type) {
     case Add: {
-        const auto bar_pos{ s.rfind('|') };
-        const auto quest_pos{ s.rfind('?') };
-        const u16  chance{ quest_pos == std::string_view::npos ? 100U : Map::ToUnsignedInt(s.substr(quest_pos + 1)) };
-
-        DistrToken distr_token{
-            .type = Add, .to_identifier = to_container, .identifier = s.substr(0, bar_pos), .count = Map::ToUnsignedInt(s.substr(bar_pos + 1)), .chance = chance
-        };
-
-        return distr_token;
-    }
-    case Remove: {
-        const auto bar_pos{ s.find('|') };
-        const auto quest_pos{ s.rfind('?') };
-        const u16  chance{ quest_pos == std::string_view::npos ? 100U : Map::ToUnsignedInt(s.substr(quest_pos + 1)) };
-
-        DistrToken distr_token{
-            .type = Remove, .to_identifier = to_container, .identifier = s.substr(1, bar_pos - 1), .count = Map::ToUnsignedInt(s.substr(bar_pos + 1)), .chance = chance
-        };
-
-        return distr_token;
-    }
-    case RemoveAll: {
-        const auto quest_pos{ s.rfind('?') };
-
-        u16         chance{};
-        std::string identifier{};
-        if (quest_pos == std::string_view::npos) {
-            identifier = s.substr(1);
-            chance     = 100U;
-        }
-        else {
-            identifier = s.substr(1, quest_pos - 1);
-            chance     = Map::ToUnsignedInt(s.substr(quest_pos + 1));
-        }
-
-        DistrToken distr_token{ .type = RemoveAll, .to_identifier = to_container, .identifier = identifier, .count = 0, .chance = chance };
-
-        return distr_token;
-    }
-    default:
         break;
     }
-    logger::error("ERROR: Failed to tokenize {}", s);
+    case Remove: {
+        s.erase(0, 1);
+        break;
+    }
+    case RemoveAll: {
+        s.erase(0, 1);
+        max_split_size = 3;
+        min_split_size = 1;
+        break;
+    }
+    default:
+        logger::error("ERROR: Failed to tokenize {}", s);
 
-    return { .type = Error, .to_identifier = to_container, .identifier = "", .count = 0, .chance = 0 };
+        return { .type = Error, .to_identifier = to_container, .identifier = "", .count = 0, .location = "", .location_keyword = "", .chance = 0 };
+    }
+
+    const auto chance_sep{ s.rfind('?') };
+    u16        chance{ 100U };
+    if (chance_sep != std::string::npos) {
+        chance = Map::ToUnsignedInt(s.substr(chance_sep + 1));
+        s.erase(chance_sep);
+    }
+
+    const auto  location_keyword_sep{ s.rfind('@') };
+    std::string location_keyword{};
+    if (location_keyword_sep != std::string::npos) {
+        location_keyword = s.substr(location_keyword_sep + 1);
+        s.erase(location_keyword_sep);
+    }
+
+    const auto split{ s | std::ranges::views::split('|') | std::ranges::to<std::vector<std::string>>() };
+
+    if (split.size() > max_split_size || split.size() < min_split_size) {
+        logger::error("ERROR: {} is ill-formed", s);
+
+        return { .type = Error, .to_identifier = to_container, .identifier = "", .count = 0, .location = "", .location_keyword = "", .chance = 0 };
+    }
+
+    return { .type             = distr_type,
+             .to_identifier    = to_container,
+             .identifier       = split[0],
+             .count            = distr_type != RemoveAll ? Map::ToUnsignedInt(split[1]) : static_cast<u16>(0U),
+             .location         = split.size() > 2 ? split[2] : "",
+             .location_keyword = location_keyword,
+             .chance           = chance };
 }
 
-void Parser::ParseINIs(CSimpleIniA& ini) noexcept
+void Parser::ParseINIs() noexcept
 {
-    ini.SetMultiKey();
-
     const std::filesystem::path data_dir{ R"(.\Data)" };
     const auto                  pattern{ L"_CID.ini" };
 
@@ -110,6 +113,10 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
     std::sort(std::execution::par, cid_inis.begin(), cid_inis.end());
 
     for (const auto& f : cid_inis) {
+        CSimpleIniA ini;
+        ini.SetUnicode();
+        ini.SetMultiKey();
+
         const auto filename{ f.filename().string() };
 
         logger::info("Loading config file: {}", filename);
@@ -132,9 +139,14 @@ void Parser::ParseINIs(CSimpleIniA& ini) noexcept
                 const auto& distr_type{ ClassifyString(v.pItem) };
                 logger::debug("\t\t* {} {}", distr_type, v.pItem);
 
-                auto distr_obj{ Utility::BuildDistrObject(Tokenize(v.pItem, k.pItem, distr_type)) };
+                const auto distr_obj{ Utility::BuildDistrObject(Tokenize(v.pItem, k.pItem, distr_type)) };
 
                 if (distr_obj.type == DistrType::Error) {
+                    continue;
+                }
+
+                if (distr_obj.location && distr_obj.location_keyword) {
+                    logger::error("\t\tERROR: {:?} contains both location and location_keyword. Please only define one or the other", v.pItem);
                     continue;
                 }
 
