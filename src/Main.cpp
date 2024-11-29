@@ -1,6 +1,5 @@
 #include "Events.h"
 #include "Hooks.h"
-#include "Logging.h"
 #include "Parser.h"
 #include "Settings.h"
 
@@ -20,11 +19,11 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
-    InitLogging();
-
     const auto plugin{ SKSE::PluginDeclaration::GetSingleton() };
     const auto name{ plugin->GetName() };
     const auto version{ plugin->GetVersion() };
+
+    logger::init();
 
     logger::info("{} {} is loading...", name, version);
 

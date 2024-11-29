@@ -2,7 +2,7 @@
 
 #include "Map.h"
 
-class Utility : public Singleton<Utility>
+class Utility
 {
     [[nodiscard]] static auto IsEditorID(const std::string_view identifier) noexcept { return !identifier.contains('~'); }
 
@@ -139,12 +139,12 @@ public:
 
     static auto AddObjectsFromResolvedList(RE::TESObjectREFR* ref, RE::TESLevItem* leveled_list, const u32 count) noexcept
     {
-        const auto ref_id{ ref->GetFormID() };
-        logger::info("Adding {} {} ({:#x}) to ref {} ({:#x})", count, GetFormEditorID(leveled_list), leveled_list->GetFormID(), GetFormEditorID(ref), ref_id);
+        logger::info("Adding {} {} to ref {}", count, leveled_list, ref);
 
         for (const auto& [bound_obj, c] : ResolveLeveledList(leveled_list, count)) {
             ref->AddObjectToContainer(bound_obj, nullptr, c, nullptr);
-            logger::info("\t+ {} {} ({:#x})", c, bound_obj->GetName(), bound_obj->GetFormID());
+            Map::added_objects[ref].emplace_back(bound_obj, c);
+            logger::info("\t+ {} {}", c, bound_obj);
         }
 
         logger::info("");
@@ -166,22 +166,21 @@ public:
         return { .type = DistrType::Error, .container_form_id = 0x0U, .bound_object = nullptr, .count = 0U, .location = nullptr, .location_keyword = nullptr, .chance = 0U };
     }
 
-    [[nodiscard]] static auto ShouldSkip(RE::TESObjectREFR* ref, std::string_view ref_edid, RE::FormID ref_form_id, RE::BGSLocation* location,
-                                         RE::BGSKeyword* location_keyword) noexcept
+    [[nodiscard]] static auto ShouldSkip(RE::TESObjectREFR* ref, const RE::BGSLocation* location, const RE::BGSKeyword* location_keyword) noexcept
     {
         if (const auto ref_location{ ref->GetCurrentLocation() }) {
             if (location) {
                 if (ref_location->GetFormID() == location->GetFormID()) {
-                    logger::debug("! Skipping {} ({:#x}), location {} does not match {} ({:#x})", ref_edid, ref_form_id, GetFormEditorID(ref->GetCurrentLocation()),
-                                  GetFormEditorID(location), location->GetFormID());
+                    logger::debug("! Skipping {}, location {} does not match {} ({:#x})", ref, GetFormEditorID(ref->GetCurrentLocation()), GetFormEditorID(location),
+                                  location->GetFormID());
                     logger::debug("");
                     return true;
                 }
             }
             if (location_keyword) {
                 if (!ref_location->HasKeyword(location_keyword)) {
-                    logger::debug("! Skipping {} ({:#x}), location {} does not have keyword {} ({:#x})", ref_edid, ref_form_id, GetFormEditorID(ref->GetCurrentLocation()),
-                                  GetFormEditorID(location_keyword), location_keyword->GetFormID());
+                    logger::debug("! Skipping {}, location {} does not have keyword {} ({:#x})", ref, GetFormEditorID(ref->GetCurrentLocation()), GetFormEditorID(location_keyword),
+                                  location_keyword->GetFormID());
                     logger::debug("");
                     return true;
                 }

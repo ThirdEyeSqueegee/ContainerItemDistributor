@@ -84,7 +84,7 @@ void Parser::ParseINIs() noexcept
 
     if (!exists(data_dir)) {
         logger::error("ERROR: Failed to find Data directory");
-        stl::report_and_fail(fmt::format("{}: Failed to find Data directory", SKSE::PluginDeclaration::GetSingleton()->GetName()));
+        stl::report_and_fail(std::format("{}: Failed to find Data directory", SKSE::PluginDeclaration::GetSingleton()->GetName()));
     }
 
     logger::info(">------------------------------------------------------------ Parsing _CID.ini files... -------------------------------------------------------------<");

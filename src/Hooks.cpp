@@ -12,6 +12,9 @@ namespace Hooks
 
         stl::write_vfunc<RE::TESObjectREFR, ResetInventory>();
         logger::info("Installed TESObjectREFR::ResetInventory hook");
+
+        stl::write_vfunc<RE::TESObjectREFR, SaveGame>();
+        logger::info("Installed TESObjectREFR::SaveGame hook");
         logger::info("");
     }
 
@@ -38,4 +41,23 @@ namespace Hooks
             Distributor::Distribute(a_this);
         }
     }
+
+    void SaveGame::Thunk(RE::TESObjectREFR* a_this, RE::BGSSaveFormBuffer* a_buf) noexcept
+    {
+        if (!Map::processed_containers.contains(a_this->GetFormID())) {
+            func(a_this, a_buf);
+            return;
+        }
+
+        for (const auto& [ref, vec] : Map::added_objects) {
+            logger::debug("Removing added objects from {}", ref);
+            for (const auto& [obj, count] : vec) {
+                ref->RemoveItem(obj, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+                logger::debug("\tRemoved {} ({})", obj, count);
+            }
+        }
+
+        func(a_this, a_buf);
+    }
+
 } // namespace Hooks

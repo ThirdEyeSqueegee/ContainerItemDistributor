@@ -2,7 +2,7 @@
 
 #include "Map.h"
 
-class Parser : public Singleton<Parser>
+class Parser
 {
 public:
     [[nodiscard]] static DistrType ClassifyString(std::string_view s) noexcept;

@@ -1,6 +1,6 @@
 #pragma once
 
-class Distributor : public Singleton<Distributor>
+class Distributor
 {
 public:
     static void Distribute(RE::TESObjectREFR* a_ref) noexcept;
