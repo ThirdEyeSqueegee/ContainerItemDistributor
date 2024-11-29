@@ -4,7 +4,7 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 # -------------------------------------------------- Setup project ----------------------------------------------------
 project(
   ContainerItemDistributor
-  VERSION 2.1.1
+  VERSION 2.1.2
   LANGUAGES CXX
 )
 

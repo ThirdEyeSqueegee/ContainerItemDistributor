@@ -44,17 +44,16 @@ namespace Hooks
 
     void SaveGame::Thunk(RE::TESObjectREFR* a_this, RE::BGSSaveFormBuffer* a_buf) noexcept
     {
-        if (!Map::processed_containers.contains(a_this->GetFormID())) {
+        if (!Map::processed_containers.contains(a_this->GetFormID()) || !Map::added_objects.contains(a_this)) {
             func(a_this, a_buf);
             return;
         }
 
-        for (const auto& [ref, vec] : Map::added_objects) {
-            logger::debug("Removing added objects from {}", ref);
-            for (const auto& [obj, count] : vec) {
-                ref->RemoveItem(obj, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
-                logger::debug("\tRemoved {} ({})", obj, count);
-            }
+        logger::debug("Removing added objects from {}", a_this);
+
+        for (const auto& [obj, count] : Map::added_objects[a_this]) {
+            a_this->RemoveItem(obj, count, RE::ITEM_REMOVE_REASON::kRemove, nullptr, nullptr);
+            logger::debug("\tRemoved {} ({})", obj, count);
         }
 
         func(a_this, a_buf);
