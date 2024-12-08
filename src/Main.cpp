@@ -19,6 +19,8 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
+    Init(skse);
+
     const auto plugin{ SKSE::PluginDeclaration::GetSingleton() };
     const auto name{ plugin->GetName() };
     const auto version{ plugin->GetVersion() };
@@ -26,8 +28,6 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     logger::init();
 
     logger::info("{} {} is loading...", name, version);
-
-    Init(skse);
 
     if (const auto messaging{ SKSE::GetMessagingInterface() }; !messaging->RegisterListener(Listener)) {
         return false;
