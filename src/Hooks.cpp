@@ -10,6 +10,9 @@ namespace Hooks
         stl::write_vfunc<RE::TESObjectREFR, Load3D>();
         logger::info("Installed TESObjectREFR::Load3D hook");
 
+        stl::write_vfunc<RE::Character, Load3DCharacter>();
+        logger::info("Installed Character::Load3DCharacter hook");
+
         stl::write_vfunc<RE::TESObjectREFR, ResetInventory>();
         logger::info("Installed TESObjectREFR::ResetInventory hook");
 
@@ -18,8 +21,7 @@ namespace Hooks
         logger::info("");
     }
 
-    RE::NiAVObject* Load3D::Thunk(RE::TESObjectREFR* a_this, bool a_backgroundLoading) noexcept
-    {
+    void Load3dEvent(RE::TESObjectREFR* a_this) {
         if (a_this && a_this->HasContainer()) {
             if (const auto cont{ a_this->GetBaseObject()->As<RE::TESObjectCONT>() }) {
                 if (cont->data.flags & RE::CONT_DATA::Flag::kRespawn) {
@@ -28,7 +30,17 @@ namespace Hooks
             }
             Distributor::Distribute(a_this);
         }
+    }
 
+    RE::NiAVObject* Load3D::Thunk(RE::TESObjectREFR* a_this, bool a_backgroundLoading) noexcept
+    {
+        Load3dEvent(a_this);
+        return func(a_this, a_backgroundLoading);
+    }
+
+    RE::NiAVObject* Load3DCharacter::Thunk(RE::Character* a_this, bool a_backgroundLoading) noexcept
+    {
+        Load3dEvent(a_this);
         return func(a_this, a_backgroundLoading);
     }
 

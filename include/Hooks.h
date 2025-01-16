@@ -14,6 +14,16 @@ namespace Hooks
         static constexpr std::size_t idx{ 106 }; // 0x6a
     };
 
+    class Load3DCharacter
+    {
+    public:
+        static RE::NiAVObject* Thunk(RE::Character* a_this, bool a_backgroundLoading) noexcept;
+
+        inline static REL::Relocation<decltype(&Thunk)> func;
+
+        static constexpr std::size_t idx{ 106 }; // 0x6a
+    };
+
     class ResetInventory
     {
     public:
