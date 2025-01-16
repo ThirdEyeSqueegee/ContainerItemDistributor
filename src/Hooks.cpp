@@ -21,7 +21,8 @@ namespace Hooks
         logger::info("");
     }
 
-    void Load3dEvent(RE::TESObjectREFR* a_this) {
+    RE::NiAVObject* Load3D::Thunk(RE::TESObjectREFR* a_this, bool a_backgroundLoading) noexcept
+    {
         if (a_this && a_this->HasContainer()) {
             if (const auto cont{ a_this->GetBaseObject()->As<RE::TESObjectCONT>() }) {
                 if (cont->data.flags & RE::CONT_DATA::Flag::kRespawn) {
@@ -30,17 +31,15 @@ namespace Hooks
             }
             Distributor::Distribute(a_this);
         }
-    }
-
-    RE::NiAVObject* Load3D::Thunk(RE::TESObjectREFR* a_this, bool a_backgroundLoading) noexcept
-    {
-        Load3dEvent(a_this);
         return func(a_this, a_backgroundLoading);
     }
 
     RE::NiAVObject* Load3DCharacter::Thunk(RE::Character* a_this, bool a_backgroundLoading) noexcept
     {
-        Load3dEvent(a_this);
+        if (a_this && a_this->HasContainer()) {
+            Distributor::Distribute(a_this);
+        }
+
         return func(a_this, a_backgroundLoading);
     }
 
